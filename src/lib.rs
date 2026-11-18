@@ -146,7 +146,7 @@ impl Hooks for SunriseQol {
         zoom::current(host, event)
     }
 
-    fn player_command(&self, host: &dyn Host, event: &mut PlayerCommandEvent<'_>) -> Flow {
+    fn player_command(&self, host: &mut dyn ServerHost, event: &mut PlayerCommandEvent<'_>) -> Flow {
         self.help.command(host, event)
     }
 
