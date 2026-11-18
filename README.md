@@ -7,14 +7,11 @@ Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's 
 > **Development status — not a stable release.** Version 1.0.0 is the initial version label, not a claim of feature parity. The source archive has passed structural Python checks, but successful Rust/WASM compilation, loading into Sunrise, multiplayer correctness, and gameplay parity are **not yet verified**. Do not assume a module works merely because it appears in the configuration interface.
 
 ## Features
-
-Sunrise QOL is an **incomplete port of Serilum's quality-of-life bundle**, with additional gameplay and interface improvements.
-
 **Checklist legend:** `[x]` means a matching implementation is present in the source archive, even if partial; `[ ]` means the behavior has not been ported. **No checked item has been certified as 1:1 or verified in-game.** Some entries require new Sunrise hooks.
 
 ### Bundle-inspired quality-of-life features
 
-- [x] Guaranteed skull drops when a wither skeleton dies *(source: initial implementation)*
+- [x] Guaranteed skull drops when a wither skeleton dies *(initial support)*
 - [ ] Nearby doors open automatically and close after a delay
 - [ ] Beacon bases can be placed by using mineral blocks on a beacon
 - [ ] Conduits and their surrounding blocks become easier to place
@@ -30,7 +27,7 @@ Sunrise QOL is an **incomplete port of Serilum's quality-of-life bundle**, with 
 - [ ] Tamed companions follow their owners during command teleportation
 - [ ] Metal equipment can be smelted back into materials
 - [ ] Hoes gain faster farming actions and soil-tilling controls
-- [x] Undying totems can activate from inventory slots *(source: partial)*
+- [x] Undying totems can activate from inventory slots *(partial)*
 - [ ] Farmland stays tilled after harvesting melon or pumpkin stems
 - [ ] Kelp can be used as a fertilizer
 - [ ] Boats can be moved without breaking them
@@ -38,21 +35,21 @@ Sunrise QOL is an **incomplete port of Serilum's quality-of-life bundle**, with 
 - [ ] Animals can be tempted again without a waiting period
 - [ ] Slow-falling effects prevent accidental farmland trampling
 - [ ] Drinking milk restores configurable hunger and saturation
-- [x] Connected ore veins can be harvested together *(source: partial)*
+- [x] Connected ore veins can be harvested together *(partial)*
 - [ ] Paths can be created across a selected route
 - [ ] Some utility blocks can be accessed without placing them
 - [ ] Fishing lines can be recast automatically after a catch
 - [ ] Harvested crops can be replanted using their drops
-- [x] Shulkers can return after a configurable respawn delay *(source: partial)*
+- [x] Shulkers can return after a configurable respawn delay *(partial)*
 - [ ] Connected scaffolding drops are collected near the broken block
 - [ ] Allowed sleeping times can be adjusted
 - [ ] Landing on hay bales can eliminate fall damage
 - [ ] Used-up hand stacks refill from inventory automatically
 - [ ] Lapis lazuli can stay in an enchanting table for reuse
-- [x] Slime spawning can be disabled in superflat worlds *(source: requires manual world confirmation)*
+- [x] Slime spawning can be disabled in superflat worlds *(partial; requires manual world confirmation)*
 - [ ] Mushrooms can be planted under bright surface conditions
 - [ ] Leggings protect players from sweet berry bush damage
-- [x] Entire trees can be felled with accelerated leaf decay and replanting *(source: partial)*
+- [x] Entire trees can be felled with accelerated leaf decay and replanting *(partial)*
 - [ ] Enchanting tables can function underwater with surrounding bookshelves
 - [ ] Village bells receive a crafting recipe
 - [ ] Wool crafting, dyeing, and string conversion become more flexible
