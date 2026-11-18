@@ -71,5 +71,8 @@
   "horizon_qol_suite.option.automatic_doors": "Automatic Doors: ON/OFF",
   "qol.option.auto_door_open_time": "Open Duration (ms)",
   "qol.option.auto_iron_doors": "Include Iron Doors",
-  "qol.option.auto_prevent_sneak": "Don't Open While Sneaking"
+  "qol.option.auto_prevent_sneak": "Don't Open While Sneaking",
+  "qol.module.beacon_placement": "Beacon Placement",
+  "horizon_qol_suite.option.beacon_placement": "Beacon Placement: ON/OFF",
+  "qol.option.beacon_break_base": "Recover Base When Beacon Breaks"
 }

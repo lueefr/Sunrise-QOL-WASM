@@ -48,7 +48,7 @@ class AutomaticDoorTests(unittest.TestCase):
         self.assertTrue(entries[0].startswith("Guaranteed skull drops"))
         self.assertTrue(entries[1].startswith("Nearby doors open automatically"))
         self.assertIn("- [x] Nearby doors open automatically", features)
-        self.assertIn("- [ ] Beacon bases can be placed", features)
+        self.assertIn("- [x] Beacon bases can be placed", features)
 
 
 if __name__ == "__main__":
