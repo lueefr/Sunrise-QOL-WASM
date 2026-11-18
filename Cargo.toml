@@ -1,0 +1,16 @@
+[package]
+name = "horizon-qol-sunrise"
+version = "1.0.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[package.metadata.sunrise]
+sdk = "2d8126336e579777eabf9b2fd8b3d476236a04f2"
+
+[dependencies]
+sunrise-mod-api = { path = ".sunrise/sdk/api/crates/sunrise-mod-api" }
+
+[workspace]
