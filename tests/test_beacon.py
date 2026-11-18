@@ -39,7 +39,7 @@ class BeaconTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text()
         self.assertLess(readme.index('Nearby doors open automatically'), readme.index('Beacon bases can be placed'))
         self.assertIn('- [x] Beacon bases can be placed', readme)
-        self.assertIn('- [ ] Conduits and their surrounding blocks', readme)
+        self.assertIn('- [x] Conduits and their surrounding blocks', readme)
 
 
 if __name__ == "__main__":

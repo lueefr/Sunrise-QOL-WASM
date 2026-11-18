@@ -7,6 +7,7 @@ mod decay;
 mod doors;
 mod automatic_doors;
 mod beacon;
+mod conduit;
 mod compass;
 mod clock;
 mod zoom;
@@ -47,6 +48,7 @@ pub struct SunriseQol {
     doors: doors::Doors,
     automatic_doors: automatic_doors::AutomaticDoors,
     beacon: beacon::Beacon,
+    conduit: conduit::Conduit,
     compass: compass::Compass,
     clock: clock::Clock,
     shulkers: shulkers::Shulkers,
@@ -107,6 +109,7 @@ impl Hooks for SunriseQol {
     fn player_destroyed_block(&self, host: &mut dyn ServerHost, event: &mut PlayerDestroyedBlockEvent) {
         self.mining.block(host, event);
         self.beacon.broken(host, event);
+        self.conduit.broken(host, event);
     }
 
     fn block_changed(&self, level: &dyn LevelHost, event: &mut BlockChangedEvent) {
@@ -117,6 +120,7 @@ impl Hooks for SunriseQol {
     fn right_click_block(&self, side: HostSide<'_>, event: &mut RightClickBlockEvent<'_>) -> Flow {
         let HostSide::Server(host) = side else { return Flow::Continue; };
         if self.beacon.click(host, event) == Flow::Cancel { return Flow::Cancel; }
+        if self.conduit.click(host, event) == Flow::Cancel { return Flow::Cancel; }
         self.doors.clicked(HostSide::Server(host), event)
     }
 

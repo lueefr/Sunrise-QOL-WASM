@@ -87,7 +87,7 @@ impl Beacon {
             if player.place_block(host, level, pos, state, true).is_err() { continue; }
             if !creative {
                 let count = held.count() - 1;
-                let next = if count == 0 { None } else if held.set_count(count) { Some(held) } else {
+                let next = if count == 0 { None } else if held.set_count(count).is_ok() { Some(held) } else {
                     let _ = level.set_block(host, pos, previous,
                         BlockUpdateFlags::NEIGHBORS | BlockUpdateFlags::CLIENTS);
                     break;

@@ -74,5 +74,8 @@
   "qol.option.auto_prevent_sneak": "Don't Open While Sneaking",
   "qol.module.beacon_placement": "Beacon Placement",
   "horizon_qol_suite.option.beacon_placement": "Beacon Placement: ON/OFF",
-  "qol.option.beacon_break_base": "Recover Base When Beacon Breaks"
+  "qol.option.beacon_break_base": "Recover Base When Beacon Breaks",
+  "qol.module.conduit_placement": "Conduit Placement",
+  "horizon_qol_suite.option.conduit_placement": "Conduit Placement: ON/OFF",
+  "qol.option.conduit_break_frame": "Recover Frame When Conduit Breaks"
 }
