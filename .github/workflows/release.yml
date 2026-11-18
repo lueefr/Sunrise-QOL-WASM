@@ -60,6 +60,15 @@ jobs:
           components: rust-src
           targets: wasm32-unknown-unknown
 
+      - name: Validate Rust source syntax
+        if: steps.version.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in src/*.rs; do
+            rustfmt --edition 2024 --emit stdout "$file" > /dev/null
+          done
+
       - name: Read pinned Sunrise SDK revision
         if: steps.version.outputs.changed == 'true'
         id: sdk
