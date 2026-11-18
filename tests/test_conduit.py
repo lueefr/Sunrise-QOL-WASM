@@ -40,7 +40,7 @@ class ConduitTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text()
         self.assertLess(readme.index("Beacon bases can be placed"), readme.index("Conduits and their surrounding blocks"))
         self.assertIn("- [x] Conduits and their surrounding blocks", readme)
-        self.assertIn("- [ ] Mob spawners can be disabled", readme)
+        self.assertIn("- [x] Mob spawners can be disabled", readme)
 
 
 if __name__ == "__main__":

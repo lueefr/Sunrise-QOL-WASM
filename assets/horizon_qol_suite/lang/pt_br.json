@@ -77,5 +77,7 @@
   "qol.option.beacon_break_base": "Recover Base When Beacon Breaks",
   "qol.module.conduit_placement": "Conduit Placement",
   "horizon_qol_suite.option.conduit_placement": "Conduit Placement: ON/OFF",
-  "qol.option.conduit_break_frame": "Recover Frame When Conduit Breaks"
+  "qol.option.conduit_break_frame": "Recover Frame When Conduit Breaks",
+  "qol.module.spawner_control": "Spawner Control",
+  "horizon_qol_suite.option.spawner_control": "Spawner Control: ON/OFF"
 }

@@ -15,7 +15,7 @@ Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's 
 - [x] Nearby doors open automatically and close after a delay *(initial support; in-game validation pending)*
 - [x] Beacon bases can be placed by using mineral blocks on a beacon *(initial support; only empty positions, in-game validation pending)*
 - [x] Conduits and their surrounding blocks become easier to place *(initial support; frame blocks placed only in water or empty spaces, in-game validation pending)*
-- [ ] Mob spawners can be disabled with a torch arrangement
+- [x] Mob spawners can be disabled with a torch arrangement *(initial support; five surrounding torches, in-game validation pending)*
 - [ ] Glass bottles can temporarily restore underwater air
 - [ ] The help command gains clearer, paginated output
 - [ ] Active conduit effects suppress nearby drowned spawning
@@ -115,6 +115,6 @@ python3 -m unittest discover -s tests -p 'test*.py' -v
 
 ## Credits and upstream projects
 
-Sunrise QOL is an independent, incomplete port/reimplementation of Serilum's quality-of-life mod bundle for Sunrise, based on earlier Horizon QoL work. The original mod collection is by [Serilum](https://github.com/Serilum). Additional reference projects include [Unlimited Enchantments](https://github.com/SayNooty/Unlimited-Enchantments), [Tax Free Levels](https://github.com/Fourmisain/TaxFreeLevels), [Enchantment Level Language Patch](https://github.com/teddyxlandlee/enchlevel-langpatch), [Leaves Be Gone](https://github.com/Fuzss/leaves-be-gone), [Leaves Us In Peace](https://gitlab.com/supersaiyansubtlety/leaves_us_in_peace), and [Grind Enchantments](https://code.mschae23.de/mschae23/grind-enchantments). The automatic-door behavior references [Automatic Doors](https://github.com/Serilum/Automatic-Doors). Beacon placement references [Better Beacon Placement](https://github.com/Serilum/Better-Beacon-Placement). Conduit placement references [Better Conduit Placement](https://github.com/Serilum/Better-Conduit-Placement).
+Sunrise QOL is an independent, incomplete port/reimplementation of Serilum's quality-of-life mod bundle for Sunrise, based on earlier Horizon QoL work. The original mod collection is by [Serilum](https://github.com/Serilum). Additional reference projects include [Unlimited Enchantments](https://github.com/SayNooty/Unlimited-Enchantments), [Tax Free Levels](https://github.com/Fourmisain/TaxFreeLevels), [Enchantment Level Language Patch](https://github.com/teddyxlandlee/enchlevel-langpatch), [Leaves Be Gone](https://github.com/Fuzss/leaves-be-gone), [Leaves Us In Peace](https://gitlab.com/supersaiyansubtlety/leaves_us_in_peace), and [Grind Enchantments](https://code.mschae23.de/mschae23/grind-enchantments). The automatic-door behavior references [Automatic Doors](https://github.com/Serilum/Automatic-Doors). Beacon placement references [Better Beacon Placement](https://github.com/Serilum/Better-Beacon-Placement). Conduit placement references [Better Conduit Placement](https://github.com/Serilum/Better-Conduit-Placement). Spawner control references [Better Spawner Control](https://github.com/Serilum/Better-Spawner-Control).
 
 Original projects retain their own licensing and attribution requirements. Do not assume that an implementation, test, or API hook proves 1:1 compatibility.

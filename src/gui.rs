@@ -242,6 +242,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "automatic_doors", label: "Automatic Doors", options: AUTO_DOORS, category: Category::World },
     ModuleSpec { key: "beacon_placement", label: "Beacon Placement", options: BEACON, category: Category::World },
     ModuleSpec { key: "conduit_placement", label: "Conduit Placement", options: CONDUIT, category: Category::World },
+    ModuleSpec { key: "spawner_control", label: "Spawner Control", options: &[], category: Category::World },
     ModuleSpec { key: "friendly_griefing", label: "Mob Griefing", options: &[], category: Category::World },
     ModuleSpec { key: "superflat_world_no_slimes", label: "Superflat Slime Spawns", options: SUPERFLAT, category: Category::World },
     ModuleSpec { key: "shulker_drops_two", label: "Shulker Shell Drops", options: SHULKER, category: Category::Creatures },

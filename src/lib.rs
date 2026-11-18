@@ -8,6 +8,7 @@ mod doors;
 mod automatic_doors;
 mod beacon;
 mod conduit;
+mod spawner;
 mod compass;
 mod clock;
 mod zoom;
@@ -36,7 +37,7 @@ use mod_api::{
     ScreenMouseDraggedPreEvent, ScreenKeyPressedPreEvent, ScreenCharTypedPreEvent,
     ScreenMouseScrolledPreEvent, ScreenRenderPreEvent, SettingChangedEvent,
     RightClickBlockEvent, GuiRenderPostEvent, LivingDeathEvent, LivingDeathPostEvent,
-    PlayerXpChangeEvent, ItemTooltipEvent,
+    PlayerXpChangeEvent, ItemTooltipEvent, MobSpawnPositionCheckEvent,
 };
 
 #[derive(Default)]
@@ -135,6 +136,10 @@ impl Hooks for SunriseQol {
 
     fn zoom(&self, host: &dyn ClientHost, event: &mut mod_api::ZoomEvent) -> Option<mod_api::Zoom> {
         zoom::current(host, event)
+    }
+
+    fn mob_spawn_position_check(&self, host: &dyn Host, event: &mut MobSpawnPositionCheckEvent<'_>) {
+        spawner::check(host, event);
     }
 
     fn server_tick(&self, host: &mut dyn ServerHost, event: &mut ServerTickEvent<'_>) {
