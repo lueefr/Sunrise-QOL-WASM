@@ -1,86 +1,88 @@
 # Sunrise QOL
 
-**An experimental, modular quality-of-life suite for [Sunrise](https://github.com/sunrise-org/sunrise), written in Rust for its sandboxed WebAssembly mod API.**
+**A modular quality-of-life suite for Sunrise, developed in Rust and WebAssembly.**
 
-Sunrise QOL is essentially an **incomplete port/reimplementation of [Serilum's QoL Bundle](https://modrinth.com/mod/QC7wpUjM)**, adapted for the Sunrise runtime. It is a separate project, not an official Serilum release or a repack of the original Java mods. Features and configuration parity remain work in progress.
-
-[Releases](https://github.com/lueefr/Sunrise-QOL-WASM/releases) · [Source code](https://github.com/lueefr/Sunrise-QOL-WASM) · [Implementation status](docs/PARITY.md)
+Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's quality-of-life bundle**, adapted to the Sunrise runtime. It also includes several independent convenience features. This is not an official Serilum release; feature and configuration parity remain in development.
 
 > **Development status — not a stable release.** Version 1.0.0 is the initial version label, not a claim of feature parity. The source archive has passed structural Python checks, but successful Rust/WASM compilation, loading into Sunrise, multiplayer correctness, and gameplay parity are **not yet verified**. Do not assume a module works merely because it appears in the configuration interface.
 
-## Repository status
+## Features
 
-The repository was initialized with version metadata and a release workflow. **The original 1.0.0 source archive must also be imported** before the project can be compiled on GitHub. If the `src/` directory and the installation scripts are absent from the default branch, the import is incomplete, and the release workflow cannot produce a usable mod.
+Sunrise QOL is an **incomplete port of Serilum's quality-of-life bundle**, with additional gameplay and interface improvements.
 
-The mod ID is `horizon_qol_suite` for compatibility with older saves and settings. The visible mod name is **Sunrise QOL**.
+**Checklist legend:** `[x]` means a matching implementation is present in the source archive, even if partial; `[ ]` means the behavior has not been ported. **No checked item has been certified as 1:1 or verified in-game.** Some entries require new Sunrise hooks.
 
-## Features and implementation coverage
+### Bundle-inspired quality-of-life features
 
-The source archive contains implementations or initial hook handlers for 24 of the 25 modules in the inherited suite catalog. **Leaf Decay is a separate additional module.** None of these implementations is certified as an exact 1:1 port.
+- [x] Guaranteed skull drops when a wither skeleton dies *(source: initial implementation)*
+- [ ] Nearby doors open automatically and close after a delay
+- [ ] Beacon bases can be placed by using mineral blocks on a beacon
+- [ ] Conduits and their surrounding blocks become easier to place
+- [ ] Mob spawners can be disabled with a torch arrangement
+- [ ] Glass bottles can temporarily restore underwater air
+- [ ] The help command gains clearer, paginated output
+- [ ] Active conduit effects suppress nearby drowned spawning
+- [ ] Placed paintings can be cycled without breaking them
+- [ ] Passengers can be removed from mounted entities more conveniently
+- [ ] Fireworks can launch Elytra flight directly from the ground
+- [ ] Commands can apply enchantments above vanilla level limits
+- [ ] Bone meal supports additional plants and faster growth
+- [ ] Tamed companions follow their owners during command teleportation
+- [ ] Metal equipment can be smelted back into materials
+- [ ] Hoes gain faster farming actions and soil-tilling controls
+- [x] Undying totems can activate from inventory slots *(source: partial)*
+- [ ] Farmland stays tilled after harvesting melon or pumpkin stems
+- [ ] Kelp can be used as a fertilizer
+- [ ] Boats can be moved without breaking them
+- [ ] Minecarts can be repositioned without breaking them
+- [ ] Animals can be tempted again without a waiting period
+- [ ] Slow-falling effects prevent accidental farmland trampling
+- [ ] Drinking milk restores configurable hunger and saturation
+- [x] Connected ore veins can be harvested together *(source: partial)*
+- [ ] Paths can be created across a selected route
+- [ ] Some utility blocks can be accessed without placing them
+- [ ] Fishing lines can be recast automatically after a catch
+- [ ] Harvested crops can be replanted using their drops
+- [x] Shulkers can return after a configurable respawn delay *(source: partial)*
+- [ ] Connected scaffolding drops are collected near the broken block
+- [ ] Allowed sleeping times can be adjusted
+- [ ] Landing on hay bales can eliminate fall damage
+- [ ] Used-up hand stacks refill from inventory automatically
+- [ ] Lapis lazuli can stay in an enchanting table for reuse
+- [x] Slime spawning can be disabled in superflat worlds *(source: requires manual world confirmation)*
+- [ ] Mushrooms can be planted under bright surface conditions
+- [ ] Leggings protect players from sweet berry bush damage
+- [x] Entire trees can be felled with accelerated leaf decay and replanting *(source: partial)*
+- [ ] Enchanting tables can function underwater with surrounding bookshelves
+- [ ] Village bells receive a crafting recipe
+- [ ] Wool crafting, dyeing, and string conversion become more flexible
+- [ ] Death drops can be protected inside a chest with equipment displayed
+- [ ] Zombies can be prevented from breaking doors
 
-| Area | Modules | Current limitations |
-| --- | --- | --- |
-| Trees and mining | Tree Harvester, Vein Miner, Leaf Decay | Bounded scanning and scheduled work; some original break-event, durability, replanting, chunk-persistence and tick semantics differ |
-| Items and inventory | Inventory Totem, Inventory Mending, What Durability, Hide Hands | Initial or partial hook coverage; arbitrary third-party items, death handling and exact XP behavior require testing |
-| Blocks and entities | Double Doors, Friendly Griefing, Superflat World No Slimes | Some AI/redstone cases differ; Superflat requires manual confirmation |
-| Trading and drops | Infinite Trading, Shulker Drops Two, Respawning Shulkers, Always a Wither Skull, Dragon Drops Elytra | Validate loot tables, lifecycles, respawns and authoritative multiplayer behavior |
-| Enchantments and anvils | Unlimited Enchantments, Affordable Anvil, Tax Free Levels, Enchantment Level Indicator, Enchantment Level LangPatch | Partial implementation; full gameplay parity has not been verified |
-| HUD and controls | GUI Clock, GUI Compass, Vanilla Zoom | Initial implementations; not exact reproductions of all original options |
-| Messages | First Join Message, Welcome Message | Fixed messages; customizable templates and full server controls are missing |
-| Missing | Full Brightness Toggle; [Grind Enchantments](https://code.mschae23.de/mschae23/grind-enchantments) | Brightness control lacks a suitable public WASM hook. Transferring enchantments from equipment to books and separating enchanted books with a grindstone are not ported. |
+### Additional quality-of-life features
 
-The detailed module-by-module audit is in [docs/PARITY.md](docs/PARITY.md) **in the source archive**; it will become browsable here after the source import. The catalog is preserved at `docs/original-catalog.json`. Individual Sounds / Sound Controller is intentionally excluded.
+- [x] Open or close paired doors, trapdoors, and fence gates together (initial support).
+- [x] Allow repeat villager and wandering-trader trades by resetting offer uses (initial support).
+- [x] Increase shulker shell drops to a configurable minimum (initial support).
+- [x] Repair damaged inventory items using earned experience (partial).
+- [x] Display an indicator when enchantments reach their normal maximum levels (partial).
+- [x] Control future durability loss for supported items with configurable filters (partial).
+- [x] Restrict selected mob griefing behaviors (partial).
+- [x] Show an in-game clock on the HUD (initial support).
+- [x] Show a direction compass on the HUD (initial support).
+- [x] Zoom the camera using an assigned control (initial support).
+- [x] Add an Elytra to dragon loot (initial support).
+- [x] Hide the first-person hand rendering when configured (initial support).
+- [x] Display first-join and repeat-join messages (initial support).
+- [x] Format high enchantment and potion levels in item tooltips (partial).
+- [x] Upgrade matching enchantments beyond their vanilla caps in valid anvil results, up to a configurable limit (partial).
+- [x] Limit experience costs for supported anvil results (partial).
+- [x] Accelerate leaf decay independently from tree harvesting, with configurable limits (partial).
 
-### Reference feature catalog
+### Additional features not yet available
 
-The following **44 gameplay behaviors** are taken from the scope of [Serilum's official QoL Bundle](https://www.curseforge.com/minecraft/mc-mods/serilums-qol-bundle). They describe the **target of the incomplete port**, not 44 features already implemented or tested. Individual upstream mod names are deliberately omitted.
-
-- Guaranteed skull drops when a wither skeleton dies.
-- Nearby doors open automatically and close after a delay.
-- Beacon bases can be placed by using mineral blocks on a beacon.
-- Conduits and their surrounding blocks become easier to place.
-- Mob spawners can be disabled with a torch arrangement.
-- Glass bottles can temporarily restore underwater air.
-- The help command gains clearer, paginated output.
-- Active conduit effects suppress nearby drowned spawning.
-- Placed paintings can be cycled without breaking them.
-- Passengers can be removed from mounted entities more conveniently.
-- Fireworks can launch Elytra flight directly from the ground.
-- Commands can apply enchantments above vanilla level limits.
-- Bone meal supports additional plants and faster growth.
-- Tamed companions follow their owners during command teleportation.
-- Metal equipment can be smelted back into materials.
-- Hoes gain faster farming actions and soil-tilling controls.
-- Undying totems can activate from inventory slots.
-- Farmland stays tilled after harvesting melon or pumpkin stems.
-- Kelp can be used as a fertilizer.
-- Boats can be moved without breaking them.
-- Minecarts can be repositioned without breaking them.
-- Animals can be tempted again without a waiting period.
-- Slow-falling effects prevent accidental farmland trampling.
-- Drinking milk restores configurable hunger and saturation.
-- Connected ore veins can be harvested together.
-- Paths can be created across a selected route.
-- Some utility blocks can be accessed without placing them.
-- Fishing lines can be recast automatically after a catch.
-- Harvested crops can be replanted using their drops.
-- Shulkers can return after a configurable respawn delay.
-- Connected scaffolding drops are collected near the broken block.
-- Allowed sleeping times can be adjusted.
-- Landing on hay bales can eliminate fall damage.
-- Used-up hand stacks refill from inventory automatically.
-- Lapis lazuli can stay in an enchanting table for reuse.
-- Slime spawning can be disabled in superflat worlds.
-- Mushrooms can be planted under bright surface conditions.
-- Leggings protect players from sweet berry bush damage.
-- Entire trees can be felled with accelerated leaf decay and replanting.
-- Enchanting tables can function underwater with surrounding bookshelves.
-- Village bells receive a crafting recipe.
-- Wool crafting, dyeing, and string conversion become more flexible.
-- Death drops can be protected inside a chest with equipment displayed.
-- Zombies can be prevented from breaking doors.
-
-Features can require different Sunrise hooks and may be missing, partial, or behaviorally different until separately validated. Individual sound-control functionality is intentionally outside this project's scope.
+- [ ] Extract enchantments from equipment onto books, or separate enchanted books using a grindstone.
+- [ ] Toggle full-bright world lighting without changing the game's normal gamma limits.
 
 ## Settings and controls
 
@@ -113,7 +115,6 @@ python3 -m unittest discover -s tests -p 'test*.py' -v
 ```
 
 **Passing Python tests does not establish successful WASM loading or gameplay parity.** An actual in-game test is still required.
-
 
 ## Credits and upstream projects
 
