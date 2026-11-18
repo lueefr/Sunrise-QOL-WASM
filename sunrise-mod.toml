@@ -1,11 +1,11 @@
 id = "horizon_qol_suite"
 name = "Sunrise QOL"
-version = "2.0.0"
+version = "1.0.1"
 description = "Modular quality-of-life features for Sunrise. Full parity with the original suite is still in development."
 api = "0.2"
 side = "both"
 capabilities = ["registries"]
 
 [wasm]
-sha512 = "53981b082e797023e8db7e6557441fdf93f7c359047d5fe89f7e1cbfa9073a09fc4d9c03c1e01af5576659ba69d19f4ee6694e5f77f20ef48df3fd20e0fe07ad"
+sha512 = "22c08dce5b002ac5bbc24fe9dc4e189804a1648926ce410d4504330aa83324a920cd19fc93df98edf45688b0d752ee554ab13905f93c0969c00606d964628ebc"
 toolchain = "1.99.1 58cf8f9c35b355199727627d07ae34a4e2846d67"
