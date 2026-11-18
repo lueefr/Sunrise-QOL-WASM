@@ -12,7 +12,7 @@ Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's 
 ### Bundle-inspired quality-of-life features
 
 - [x] Guaranteed skull drops when a wither skeleton dies *(initial support)*
-- [ ] Nearby doors open automatically and close after a delay
+- [x] Nearby doors open automatically and close after a delay *(initial support; in-game validation pending)*
 - [ ] Beacon bases can be placed by using mineral blocks on a beacon
 - [ ] Conduits and their surrounding blocks become easier to place
 - [ ] Mob spawners can be disabled with a torch arrangement
@@ -115,6 +115,6 @@ python3 -m unittest discover -s tests -p 'test*.py' -v
 
 ## Credits and upstream projects
 
-Sunrise QOL is an independent, incomplete port/reimplementation of Serilum's quality-of-life mod bundle for Sunrise, based on earlier Horizon QoL work. The original mod collection is by [Serilum](https://github.com/Serilum). Additional reference projects include [Unlimited Enchantments](https://github.com/SayNooty/Unlimited-Enchantments), [Tax Free Levels](https://github.com/Fourmisain/TaxFreeLevels), [Enchantment Level Language Patch](https://github.com/teddyxlandlee/enchlevel-langpatch), [Leaves Be Gone](https://github.com/Fuzss/leaves-be-gone), [Leaves Us In Peace](https://gitlab.com/supersaiyansubtlety/leaves_us_in_peace), and [Grind Enchantments](https://code.mschae23.de/mschae23/grind-enchantments).
+Sunrise QOL is an independent, incomplete port/reimplementation of Serilum's quality-of-life mod bundle for Sunrise, based on earlier Horizon QoL work. The original mod collection is by [Serilum](https://github.com/Serilum). Additional reference projects include [Unlimited Enchantments](https://github.com/SayNooty/Unlimited-Enchantments), [Tax Free Levels](https://github.com/Fourmisain/TaxFreeLevels), [Enchantment Level Language Patch](https://github.com/teddyxlandlee/enchlevel-langpatch), [Leaves Be Gone](https://github.com/Fuzss/leaves-be-gone), [Leaves Us In Peace](https://gitlab.com/supersaiyansubtlety/leaves_us_in_peace), and [Grind Enchantments](https://code.mschae23.de/mschae23/grind-enchantments). The automatic-door behavior references [Automatic Doors](https://github.com/Serilum/Automatic-Doors).
 
 Original projects retain their own licensing and attribution requirements. Do not assume that an implementation, test, or API hook proves 1:1 compatibility.

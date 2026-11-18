@@ -66,5 +66,10 @@
   "qol.module.leaf_decay": "Leaf Decay",
   "qol.module.double_doors": "Paired Doors",
   "qol.module.superflat_world_no_slimes": "Superflat Slime Spawns",
-  "qol.module.respawning_shulkers": "Shulker Respawning"
+  "qol.module.respawning_shulkers": "Shulker Respawning",
+  "qol.module.automatic_doors": "Automatic Doors",
+  "horizon_qol_suite.option.automatic_doors": "Automatic Doors: ON/OFF",
+  "qol.option.auto_door_open_time": "Open Duration (ms)",
+  "qol.option.auto_iron_doors": "Include Iron Doors",
+  "qol.option.auto_prevent_sneak": "Don't Open While Sneaking"
 }

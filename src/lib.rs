@@ -5,6 +5,7 @@ mod anvil;
 mod drops;
 mod decay;
 mod doors;
+mod automatic_doors;
 mod compass;
 mod clock;
 mod zoom;
@@ -43,6 +44,7 @@ pub struct SunriseQol {
     villagers: grief::Villagers,
     gui: gui::Gui,
     doors: doors::Doors,
+    automatic_doors: automatic_doors::AutomaticDoors,
     compass: compass::Compass,
     clock: clock::Clock,
     shulkers: shulkers::Shulkers,
@@ -129,6 +131,7 @@ impl Hooks for SunriseQol {
     fn server_tick(&self, host: &mut dyn ServerHost, event: &mut ServerTickEvent<'_>) {
         self.decay.tick(host, event);
         self.doors.tick(host, event);
+        self.automatic_doors.tick(host, event);
         self.shulkers.tick(host, event);
     }
 
@@ -178,6 +181,7 @@ impl Hooks for SunriseQol {
         self.villagers.reset();
         self.decay.reset();
         self.doors.reset();
+        self.automatic_doors.reset();
         self.shulkers.reset();
     }
 

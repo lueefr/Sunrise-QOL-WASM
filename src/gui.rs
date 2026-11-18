@@ -88,6 +88,12 @@ const DOORS: &[OptionSpec] = &[
     toggle("trapdoors", "Trapdoors", false),
 ];
 
+const AUTO_DOORS: &[OptionSpec] = &[
+    range("auto_door_open_time", "Open Duration (ms)", 2500., 0., 10000., 50.),
+    toggle("auto_iron_doors", "Include Iron Doors", true),
+    toggle("auto_prevent_sneak", "Don't Open While Sneaking", true),
+];
+
 const COMPASS: &[OptionSpec] = &[
     choice("guiCompassFormat", "Display", "FXYZ", &["FXYZ", "F", "XYZ"]),
     toggle("mustHaveCompassInInventory", "Require Compass in Inventory", true),
@@ -225,6 +231,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "tree_harvester", label: "Tree Harvesting", options: TREE, category: Category::Gathering },
     ModuleSpec { key: "leaf_decay", label: "Leaf Decay", options: LEAF_DECAY, category: Category::Gathering },
     ModuleSpec { key: "double_doors", label: "Paired Doors", options: DOORS, category: Category::World },
+    ModuleSpec { key: "automatic_doors", label: "Automatic Doors", options: AUTO_DOORS, category: Category::World },
     ModuleSpec { key: "friendly_griefing", label: "Mob Griefing", options: &[], category: Category::World },
     ModuleSpec { key: "superflat_world_no_slimes", label: "Superflat Slime Spawns", options: SUPERFLAT, category: Category::World },
     ModuleSpec { key: "shulker_drops_two", label: "Shulker Shell Drops", options: SHULKER, category: Category::Creatures },

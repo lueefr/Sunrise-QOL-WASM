@@ -65,12 +65,12 @@ class ProjectTests(unittest.TestCase):
         settings = (ROOT / 'src/settings.rs').read_text()
         modules = re.findall(r'ModuleSpec \{ key: "([^"]+)", label:', gui)
         options = re.findall(r'(?:toggle|range|choice)\("([^"]+)", "', gui)
-        self.assertEqual(len(modules), 25)
-        self.assertEqual(len(options), 71)
+        self.assertEqual(len(modules), 26)
+        self.assertEqual(len(options), 74)
         self.assertIn('let _ = save(host, key,', gui)
         self.assertIn('let _ = save(host, option.key,', gui)
         self.assertNotIn('host.set_setting(', gui)
-        self.assertEqual(len(set(modules) | set(options)), 96)
+        self.assertEqual(len(set(modules) | set(options)), 100)
         for hook in ('input_key', 'client_tick_pre', 'screen_render_post',
                      'screen_mouse_button_pressed_pre', 'screen_mouse_button_released_pre',
                      'screen_mouse_dragged_pre', 'screen_key_pressed_pre',
@@ -164,7 +164,7 @@ class ProjectTests(unittest.TestCase):
     def test_migration_preserves_legacy_settings(self):
         import tempfile
         from migrate_settings import keys, migrate
-        self.assertEqual(len(keys(ROOT)), 96)
+        self.assertEqual(len(keys(ROOT)), 100)
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)
             previous = game / 'sunrise-mods' / '.sunrise-mod-data' / 'horizon_qol_suite'
@@ -194,6 +194,7 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('fn right_click_block(', hooks)
         self.assertIn('self.doors.changed(level, event)', hooks)
         self.assertIn('self.doors.tick(host, event)', hooks)
+        self.assertIn('self.automatic_doors.tick(host, event)', hooks)
         self.assertIn('fn gui_render_post(', hooks)
         self.assertIn('self.compass.render(host, event)', hooks)
         self.assertIn('level.set_block(host,', doors)
@@ -222,7 +223,7 @@ class ProjectTests(unittest.TestCase):
         gui = (ROOT / 'src/gui.rs').read_text()
         src = (ROOT / 'src/lib.rs').read_text()
         matrix = (ROOT / 'docs/PARITY.md').read_text()
-        self.assertEqual(gui.count('ModuleSpec { key:'), 25)
+        self.assertEqual(gui.count('ModuleSpec { key:'), 26)
         self.assertNotIn('key: "full_brightness_toggle"', gui)
         self.assertIn('No public WASM API', matrix)
         self.assertIn('superflat::on_join(host, event)', src)

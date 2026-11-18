@@ -11,6 +11,7 @@ installer to stop before replacing the installed mod.
 
 | Module | Source status | Missing / constraints |
 |---|---|---|
+| Automatic Doors | Initial | Proximity opening and delayed closure of doors this module opened; authoritative server only, in-game parity not yet verified |
 | Inventory Totem | Initial | Vanilla totem only; death protection API must be tested |
 | Inventory Mending | Initial | Repairs inventory items on XP-gain hook; differs from Mending orb selection |
 | Double Doors | Initial | Exact-class block sync; redstone/AI timing is not 1:1 |
