@@ -15,6 +15,7 @@ on:
       - 'diagnosticar.fish'
       - 'tools/wasm_link_check.py'
       - 'tools/migrate_settings.py'
+      - 'tools/release.py'
 
 permissions:
   contents: write
