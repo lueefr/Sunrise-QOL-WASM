@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 PATTERN = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
 MOD_PATHS = (
+    ".github/workflows/release.yml", "tools/release.py",
     "src", "assets", "Cargo.toml", "sunrise-mod.toml", "instalar.fish",
     "preparar-rust.fish", "diagnosticar.fish", "tools/wasm_link_check.py",
     "tools/migrate_settings.py",
