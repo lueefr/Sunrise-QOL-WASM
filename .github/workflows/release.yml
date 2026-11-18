@@ -1,0 +1,109 @@
+name: Build and release Sunrise QOL
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'assets/**'
+      - 'Cargo.toml'
+      - 'sunrise-mod.toml'
+      - 'instalar.fish'
+      - 'preparar-rust.fish'
+      - 'diagnosticar.fish'
+      - 'tools/wasm_link_check.py'
+      - 'tools/migrate_settings.py'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sunrise-qol-release-main
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out sources and tags
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Determine release version
+        id: version
+        shell: bash
+        run: python3 tools/release.py plan --github-output "$GITHUB_OUTPUT"
+
+      - name: Install Python and validate source
+        if: steps.version.outputs.changed == 'true'
+        run: python3 -m unittest discover -s tests -p 'test*.py' -v
+
+      - name: Update manifests and release notes
+        if: steps.version.outputs.changed == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          python3 tools/release.py notes "$VERSION" --output release-notes.md
+          python3 tools/release.py stamp "$VERSION"
+          python3 -m unittest discover -s tests -p 'test*.py' -v
+
+      - name: Install Rust 1.99.1
+        if: steps.version.outputs.changed == 'true'
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.1'
+          components: rust-src
+          targets: wasm32-unknown-unknown
+
+      - name: Install Sunrise WASM build tool
+        if: steps.version.outputs.changed == 'true'
+        run: cargo install --git https://github.com/sunrise-org/sunrise --rev 7fb2aa4d cargo-sunrise-mod --locked
+
+      - name: Compile sandboxed mod (not the game)
+        if: steps.version.outputs.changed == 'true'
+        run: cargo sunrise-mod build --wasm
+
+      - name: Validate mod package
+        if: steps.version.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s target/sunrise-mod/horizon_qol_suite.smod
+          unzip -tq target/sunrise-mod/horizon_qol_suite.smod
+          unzip -Z1 target/sunrise-mod/horizon_qol_suite.smod | grep -Fxq 'mod.wasm'
+          mkdir -p dist
+          cp target/sunrise-mod/horizon_qol_suite.smod "dist/Sunrise-QOL-${{ steps.version.outputs.version }}.smod"
+          (cd dist && sha256sum *.smod > SHA256SUMS.txt)
+
+      - name: Commit version and tag only after a successful build
+        if: steps.version.outputs.changed == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Cargo.toml sunrise-mod.toml VERSION
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(release): ${TAG} [skip ci]"
+          fi
+          git tag -a "$TAG" -m "Sunrise QOL $TAG"
+          git push origin HEAD:main
+          git push origin "$TAG"
+
+      - name: Publish release and changelog
+        if: steps.version.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release create "$TAG" dist/*.smod dist/SHA256SUMS.txt \
+            --title "Sunrise QOL $TAG" \
+            --notes-file release-notes.md \
+            --verify-tag
