@@ -57,7 +57,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: '1.99.1'
-          components: rust-src
+          components: rust-src, rustfmt
           targets: wasm32-unknown-unknown
 
       - name: Validate Rust source syntax
@@ -160,12 +160,20 @@ jobs:
 
       - name: Commit version and tag only after a successful build
         if: steps.version.outputs.changed == 'true'
+        id: release-push
         env:
           VERSION: ${{ steps.version.outputs.version }}
           TAG: ${{ steps.version.outputs.tag }}
         shell: bash
         run: |
           set -euo pipefail
+          # Never release an outdated checkout if main advanced during the build.
+          git fetch --quiet origin main
+          if [ "$(git rev-parse refs/remotes/origin/main)" != "$GITHUB_SHA" ]; then
+            echo "New commits landed during this build; the newer queued run will publish instead."
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add Cargo.toml sunrise-mod.toml VERSION
@@ -173,11 +181,21 @@ jobs:
             git commit -m "chore(release): ${TAG} [skip ci]"
           fi
           git tag -a "$TAG" -m "Sunrise QOL $TAG"
-          git push origin HEAD:main
-          git push origin "$TAG"
+          # Push both refs together: never publish a tag without its matching branch.
+          if ! git push --atomic origin HEAD:refs/heads/main "refs/tags/$TAG"; then
+            git fetch --quiet origin main
+            if [ "$(git rev-parse refs/remotes/origin/main)" != "$GITHUB_SHA" ]; then
+              echo "Main advanced while publishing; skipping this obsolete release."
+              echo "pushed=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "Atomic push failed without a branch update; preserving the failure." >&2
+            exit 1
+          fi
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
 
       - name: Publish release and changelog
-        if: steps.version.outputs.changed == 'true'
+        if: steps.version.outputs.changed == 'true' && steps.release-push.outputs.pushed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.version.outputs.tag }}
