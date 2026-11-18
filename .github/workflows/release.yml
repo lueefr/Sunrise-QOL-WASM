@@ -5,6 +5,7 @@ on:
   push:
     branches: [main]
     paths:
+      - '.github/workflows/release.yml'
       - 'src/**'
       - 'assets/**'
       - 'Cargo.toml'
@@ -108,13 +109,10 @@ jobs:
       - name: Prepare pinned Sunrise SDK
         if: steps.version.outputs.changed == 'true'
         shell: bash
-        env:
-          SUNRISE_SDK: ${{ steps.sdk.outputs.revision }}
         run: |
           set -euo pipefail
-          if [ ! -f .sunrise/sdk/api/crates/sunrise-mod-api/Cargo.toml ]; then
-            cargo sunrise-mod update --sunrise "$SUNRISE_SDK"
-          fi
+          # Unlike 'update', 'hooks' fetches and validates the pinned SDK.
+          cargo sunrise-mod hooks "__sdk_cache_init__"
           test -f .sunrise/sdk/api/crates/sunrise-mod-api/Cargo.toml
 
       - name: Save pinned Sunrise SDK
