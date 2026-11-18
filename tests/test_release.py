@@ -14,13 +14,56 @@ spec.loader.exec_module(release)
 class ReleasePolicyTests(unittest.TestCase):
     def test_version_examples(self):
         self.assertEqual(release.next_version(None, [("Initial commit", "")]), (1, 0, 0))
-        self.assertEqual(release.next_version((1, 0, 0), [("fix: mend enchantment", "")]), (1, 1, 1))
-        self.assertEqual(release.next_version((1, 1, 1), [("fix: second bug", "")]), (1, 2, 2))
-        self.assertEqual(release.next_version((1, 1, 1), [("feat: new module", "")]), (2, 0, 0))
-        self.assertEqual(release.next_version((2, 0, 0), [("refactor: cleanup", "")]), (2, 0, 1))
-        self.assertEqual(release.next_version((2, 0, 1), [("fix: bug", "")]), (2, 1, 2))
-        self.assertEqual(release.next_version((1, 0, 0), [
-            ("fix: bug", ""), ("feat: another module", "")]), (2, 0, 0))
+        for before, after in (
+            ((1, 0, 0), (1, 0, 1)),
+            ((1, 0, 8), (1, 0, 9)),
+            ((1, 0, 9), (1, 1, 0)),
+            ((1, 1, 0), (1, 1, 1)),
+            ((1, 9, 8), (1, 9, 9)),
+            ((1, 9, 9), (2, 0, 0)),
+            ((2, 0, 0), (2, 0, 1)),
+            ((2, 9, 9), (3, 0, 0)),
+        ):
+            with self.subTest(before=before):
+                self.assertEqual(release.next_version(before, [("fix: repair", "")]), after)
+                self.assertEqual(release.next_version(before, [("feat: feature", "")]), after)
+                self.assertEqual(release.next_version(before, [("chore: update", "")]), after)
+        with self.assertRaises(ValueError):
+            release.next_version((1, 10, 0))
+        with self.assertRaises(ValueError):
+            release.next_version((2, 1, 10))
+
+    def test_legacy_tag_is_ignored_by_exact_object(self):
+        original_root = release.ROOT
+        original_object = release.LEGACY_TAG_OBJECT
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            release.ROOT = target
+
+            def git(*arguments):
+                return subprocess.run(["git", *arguments], cwd=target,
+                                      check=True, capture_output=True, text=True).stdout.strip()
+
+            try:
+                git("init", "-q")
+                git("config", "user.name", "Release Tests")
+                git("config", "user.email", "test@example.invalid")
+                (target / "src").mkdir()
+                (target / "src/lib.rs").write_text("fn original() {}\n")
+                git("add", "src/lib.rs")
+                git("commit", "-qm", "initial release")
+                git("tag", "v1.0.0")
+                (target / "src/lib.rs").write_text("fn modified() {}\n")
+                git("add", "src/lib.rs")
+                git("commit", "-qm", "feat: future release")
+                git("tag", "-a", "v2.0.0", "-m", "Incorrect old numbering")
+                release.LEGACY_TAG_OBJECT = git("rev-parse", "refs/tags/v2.0.0")
+                self.assertEqual(release.latest(), ("v1.0.0", (1, 0, 0)))
+                release.LEGACY_TAG_OBJECT = "0" * 40
+                self.assertEqual(release.latest(), ("v2.0.0", (2, 0, 0)))
+            finally:
+                release.LEGACY_TAG_OBJECT = original_object
+                release.ROOT = original_root
 
     def test_commit_classification(self):
         self.assertEqual(release.kind("feat(gui): scrolling"), "major")
@@ -56,7 +99,7 @@ class ReleasePolicyTests(unittest.TestCase):
                 git("commit", "-qm", "fix: issue 123")
                 self.assertEqual(release.changed_paths("v1.0.0"), ["src/lib.rs"])
                 self.assertEqual(release.next_version((1, 0, 0), release.messages("v1.0.0")),
-                                 (1, 1, 1))
+                                 (1, 0, 1))
             finally:
                 release.ROOT = root
 

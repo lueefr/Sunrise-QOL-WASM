@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan Sunrise QOL releases from mod changes and Conventional Commits."""
+"""Plan sequential Sunrise QOL releases using decimal version digits."""
 from __future__ import annotations
 
 import argparse
@@ -9,6 +9,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PATTERN = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
+# The first v2.0.0 was incorrectly numbered and must be replaced by v1.0.1.
+# Match its annotated-tag object so a future legitimate v2.0.0 is unaffected.
+LEGACY_TAG = "v2.0.0"
+LEGACY_TAG_OBJECT = "3f51c263fd5f4743e4a7c4798e28cf7cbae3eeb8"
 MOD_PATHS = (
     ".github/workflows/release.yml", "tools/release.py",
     "src", "assets", "Cargo.toml", "sunrise-mod.toml", "instalar.fish",
@@ -25,8 +29,13 @@ def latest() -> tuple[str | None, tuple[int, int, int] | None]:
     versions = []
     for tag in git("tag", "--list", "v*").splitlines():
         match = PATTERN.fullmatch(tag)
-        if match:
-            versions.append((tuple(int(part) for part in match.groups()), tag))
+        if not match:
+            continue
+        if tag == LEGACY_TAG and git("rev-parse", f"refs/tags/{tag}") == LEGACY_TAG_OBJECT:
+            continue
+        version = tuple(int(part) for part in match.groups())
+        if version[0] >= 1 and 0 <= version[1] <= 9 and 0 <= version[2] <= 9:
+            versions.append((version, tag))
     if not versions:
         return None, None
     version, tag = max(versions)
@@ -67,25 +76,26 @@ def kind(subject: str, body: str = "") -> str:
 
 
 def next_version(previous: tuple[int, int, int] | None,
-                 commits: list[tuple[str, str]]) -> tuple[int, int, int]:
+                 commits: list[tuple[str, str]] | None = None) -> tuple[int, int, int]:
+    """Increment once per release, regardless of how commits are classified."""
     if previous is None:
         return (1, 0, 0)
-    major, minor, count = previous
-    changes = {kind(subject, body) for subject, body in commits}
-    if "major" in changes:
-        return major + 1, 0, 0
-    if "minor" in changes:
-        return major, minor + 1, count + 1
-    # The third component counts updates inside a major version.
-    # With no Conventional Commit classification, this is a maintenance update.
-    return major, minor, count + 1
-
+    major, minor, patch = previous
+    if major < 1 or not (0 <= minor <= 9 and 0 <= patch <= 9):
+        raise ValueError("version must use one decimal digit for minor and patch")
+    patch += 1
+    if patch == 10:
+        patch = 0
+        minor += 1
+    if minor == 10:
+        minor = 0
+        major += 1
+    return (major, minor, patch)
 
 def plan(output: Path | None) -> None:
     previous_tag, previous = latest()
     paths = changed_paths(previous_tag)
-    commits = messages(previous_tag) if paths else []
-    current = next_version(previous, commits)
+    current = next_version(previous)
     version = ".".join(map(str, current))
     values = {
         "changed": "true" if paths else "false",
@@ -102,8 +112,8 @@ def plan(output: Path | None) -> None:
 
 
 def stamp(version: str) -> None:
-    if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", version):
-        raise ValueError("invalid version")
+    if not re.fullmatch(r"[0-9]+\.[0-9]\.[0-9]", version) or int(version.split(".")[0]) < 1:
+        raise ValueError("invalid sequential version")
     for name in ("Cargo.toml", "sunrise-mod.toml"):
         path = ROOT / name
         content = path.read_text(encoding="utf-8")

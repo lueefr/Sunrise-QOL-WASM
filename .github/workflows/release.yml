@@ -206,3 +206,21 @@ jobs:
             --title "Sunrise QOL $TAG" \
             --notes-file release-notes.md \
             --verify-tag
+
+      - name: Retire incorrectly numbered v2.0.0 after v1.0.1 is published
+        if: steps.version.outputs.tag == 'v1.0.1' && steps.release-push.outputs.pushed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Never remove the previous release unless the corrected package exists.
+          gh release view v1.0.1 --json assets --jq '.assets[].name' |
+            grep -Fxq 'Sunrise-QOL-1.0.1.smod'
+          old_tag="$(git ls-remote origin refs/tags/v2.0.0 | cut -f1)"
+          if [ "$old_tag" != "3f51c263fd5f4743e4a7c4798e28cf7cbae3eeb8" ]; then
+            echo "Refusing to delete an unexpected v2.0.0 tag: $old_tag" >&2
+            exit 1
+          fi
+          gh release delete v2.0.0 --yes
+          git push origin ':refs/tags/v2.0.0'
