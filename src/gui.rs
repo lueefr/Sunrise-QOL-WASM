@@ -102,6 +102,10 @@ const CONDUIT: &[OptionSpec] = &[
     toggle("conduit_break_frame", "Recover Frame When Conduit Breaks", true),
 ];
 
+const DROWNED: &[OptionSpec] = &[
+    range("drowned_radius", "Protection Radius", 400., 0., 400., 20.),
+];
+
 const COMPASS: &[OptionSpec] = &[
     choice("guiCompassFormat", "Display", "FXYZ", &["FXYZ", "F", "XYZ"]),
     toggle("mustHaveCompassInInventory", "Require Compass in Inventory", true),
@@ -254,6 +258,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "spawner_control", label: "Spawner Control", options: &[], category: Category::World },
     ModuleSpec { key: "friendly_griefing", label: "Mob Griefing", options: &[], category: Category::World },
     ModuleSpec { key: "superflat_world_no_slimes", label: "Superflat Slime Spawns", options: SUPERFLAT, category: Category::World },
+    ModuleSpec { key: "drowned_prevention", label: "Drowned Prevention", options: DROWNED, category: Category::Creatures },
     ModuleSpec { key: "shulker_drops_two", label: "Shulker Shell Drops", options: SHULKER, category: Category::Creatures },
     ModuleSpec { key: "respawning_shulkers", label: "Shulker Respawning", options: RESPAWN, category: Category::Creatures },
     ModuleSpec { key: "always_wither_skull", label: "Wither Skull Drops", options: &[], category: Category::Creatures },

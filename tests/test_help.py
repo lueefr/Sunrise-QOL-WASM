@@ -30,7 +30,7 @@ class CommandHelpTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text()
         self.assertLess(readme.index("Glass bottles can temporarily"), readme.index("The help command gains clearer"))
         self.assertIn("- [x] The help command gains clearer", readme)
-        self.assertIn("- [ ] Active conduit effects suppress nearby", readme)
+        self.assertIn("- [x] Active conduit effects suppress nearby", readme)
 
 
 if __name__ == "__main__":

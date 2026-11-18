@@ -85,5 +85,8 @@
   "qol.option.bottled_air_amount": "Oxygen Restored",
   "qol.module.compact_help": "Command Help",
   "horizon_qol_suite.option.compact_help": "Command Help: ON/OFF",
-  "qol.option.help_page_size": "Commands per Page"
+  "qol.option.help_page_size": "Commands per Page",
+  "qol.module.drowned_prevention": "Drowned Prevention",
+  "horizon_qol_suite.option.drowned_prevention": "Drowned Prevention: ON/OFF",
+  "qol.option.drowned_radius": "Protection Radius"
 }

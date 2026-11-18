@@ -11,6 +11,7 @@ mod conduit;
 mod spawner;
 mod bottled_air;
 mod help;
+mod conduit_drowned;
 mod compass;
 mod clock;
 mod zoom;
@@ -156,6 +157,7 @@ impl Hooks for SunriseQol {
 
     fn mob_spawn_position_check(&self, host: &dyn Host, event: &mut MobSpawnPositionCheckEvent<'_>) {
         spawner::check(host, event);
+        conduit_drowned::check(host, event);
     }
 
     fn server_tick(&self, host: &mut dyn ServerHost, event: &mut ServerTickEvent<'_>) {
