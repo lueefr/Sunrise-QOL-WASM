@@ -1,0 +1,7 @@
+id = "horizon_qol_suite"
+name = "Sunrise QOL"
+version = "1.0.0"
+description = "Modular quality-of-life features for Sunrise. Full parity with the original suite is still in development."
+api = "0.2"
+side = "both"
+capabilities = ["registries"]
