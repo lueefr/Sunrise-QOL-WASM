@@ -1,0 +1,792 @@
+{
+  "origin": "Horizon QoL 0.4.13-alpha",
+  "modules": [
+    {
+      "name": "Inventory Totem",
+      "order": 0,
+      "key": "inventory_totem",
+      "options": []
+    },
+    {
+      "name": "Inventory Mending",
+      "order": 1,
+      "key": "inventory_mending",
+      "options": [
+        {
+          "key": "mending_hotbar_only",
+          "type": "bool",
+          "default": false
+        }
+      ]
+    },
+    {
+      "name": "Double Doors",
+      "order": 2,
+      "key": "double_doors",
+      "options": [
+        {
+          "key": "recursive_doors",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "door_radius",
+          "type": "number",
+          "default": 10,
+          "min": 1,
+          "max": 64,
+          "step": 1
+        },
+        {
+          "key": "gates",
+          "type": "bool",
+          "default": false
+        },
+        {
+          "key": "trapdoors",
+          "type": "bool",
+          "default": false
+        }
+      ]
+    },
+    {
+      "name": "Infinite Trading",
+      "order": 3,
+      "key": "infinite_trading",
+      "options": [
+        {
+          "key": "wandering_trader",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "villagers",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "remove_demand",
+          "type": "bool",
+          "default": true
+        }
+      ]
+    },
+    {
+      "name": "Shulker Drops Two",
+      "order": 4,
+      "key": "shulker_drops_two",
+      "options": [
+        {
+          "key": "drop_count",
+          "type": "number",
+          "default": 2,
+          "min": 1,
+          "max": 64,
+          "step": 1
+        },
+        {
+          "key": "always_drop",
+          "type": "bool",
+          "default": false
+        }
+      ]
+    },
+    {
+      "name": "Respawning Shulkers",
+      "order": 5,
+      "key": "respawning_shulkers",
+      "options": [
+        {
+          "key": "respawn_ticks",
+          "type": "number",
+          "default": 1200,
+          "min": 1,
+          "max": 72000,
+          "step": 200
+        },
+        {
+          "key": "skip_spawner",
+          "type": "bool",
+          "default": true
+        }
+      ]
+    },
+    {
+      "name": "Enchantment Level Indicator",
+      "order": 6,
+      "key": "enchantment_level_indicator",
+      "options": [
+        {
+          "key": "cap_color",
+          "type": "number",
+          "default": 6,
+          "min": 0,
+          "max": 15,
+          "step": 1
+        }
+      ]
+    },
+    {
+      "name": "What Durability",
+      "order": 7,
+      "key": "what_durability",
+      "options": []
+    },
+    {
+      "name": "Always a Wither Skull",
+      "order": 8,
+      "key": "always_a_wither_skull",
+      "options": []
+    },
+    {
+      "name": "Friendly Griefing",
+      "order": 9,
+      "key": "friendly_griefing",
+      "options": []
+    },
+    {
+      "name": "GUI Clock",
+      "order": 10,
+      "key": "gui_clock",
+      "options": [
+        {
+          "key": "mustHaveClockInInventoryForGameTime",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "mustHaveClockInInventoryForRealTime",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "lowerClockWhenPlayerHasEffects",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "showOnlyMinecraftClockIcon",
+          "type": "bool",
+          "default": false
+        },
+        {
+          "key": "showBothTimes",
+          "type": "bool",
+          "default": false
+        },
+        {
+          "key": "showRealTime",
+          "type": "bool",
+          "default": false
+        },
+        {
+          "key": "showRealTimeSeconds",
+          "type": "bool",
+          "default": false
+        },
+        {
+          "key": "showDaysPlayedWorld",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "minuteStep",
+          "type": "number",
+          "default": 1,
+          "min": 1,
+          "max": 60,
+          "step": 1
+        },
+        {
+          "key": "clockPosition",
+          "type": "choice",
+          "default": "Right",
+          "options": [
+            "Right",
+            "Left"
+          ]
+        },
+        {
+          "key": "clockHeightOffset",
+          "type": "number",
+          "default": 5,
+          "min": 0,
+          "max": 3000,
+          "step": 5
+        },
+        {
+          "key": "RGB",
+          "type": "text",
+          "default": "255,255,255"
+        }
+      ]
+    },
+    {
+      "name": "GUI Compass",
+      "order": 11,
+      "key": "gui_compass",
+      "options": [
+        {
+          "key": "guiCompassFormat",
+          "type": "choice",
+          "default": "FXYZ",
+          "options": [
+            "FXYZ",
+            "F",
+            "XYZ"
+          ]
+        },
+        {
+          "key": "mustHaveCompassInInventory",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "compassPosition",
+          "type": "choice",
+          "default": "Left",
+          "options": [
+            "Left",
+            "Right"
+          ]
+        },
+        {
+          "key": "compassHeightOffset",
+          "type": "number",
+          "default": 5,
+          "min": 0,
+          "max": 3000,
+          "step": 5
+        },
+        {
+          "key": "drawTextShadow",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "compassRGB",
+          "type": "text",
+          "default": "255,255,255"
+        }
+      ]
+    },
+    {
+      "name": "Vanilla Zoom",
+      "order": 12,
+      "key": "vanilla_zoom",
+      "options": []
+    },
+    {
+      "name": "Dragon Drops Elytra",
+      "order": 13,
+      "key": "dragon_drops_elytra",
+      "options": []
+    },
+    {
+      "name": "Hide Hands",
+      "order": 14,
+      "key": "hide_hands",
+      "options": [
+        {
+          "key": "alwaysHideMainHand",
+          "type": "bool",
+          "default": false
+        },
+        {
+          "key": "alwaysHideEmptyMainHand",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "hideMainHandWithItems",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "key": "alwaysHideOffhand",
+          "type": "bool",
+          "default": false
+        },
+        {
+          "key": "hideOffhandWithItems",
+          "type": "text",
+          "default": "minecraft:totem_of_undying,minecraft:torch"
+        }
+      ]
+    },
+    {
+      "name": "Full Brightness Toggle",
+      "order": 15,
+      "key": "full_brightness_toggle",
+      "options": []
+    },
+    {
+      "name": "Superflat World No Slimes",
+      "order": 16,
+      "key": "superflat_world_no_slimes",
+      "options": []
+    },
+    {
+      "name": "First Join Message",
+      "order": 17,
+      "key": "first_join_message",
+      "options": [
+        {
+          "key": "firstJoinMessage",
+          "type": "text",
+          "default": "You wake up in an unfamiliar place."
+        },
+        {
+          "key": "firstJoinMessageTextFormattingColourIndex",
+          "type": "number",
+          "default": 2,
+          "min": 0,
+          "max": 15,
+          "step": 1
+        },
+        {
+          "key": "serverBroadcastMessage",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "key": "serverBroadcastMessageTextFormattingColourIndex",
+          "type": "number",
+          "default": 3,
+          "min": 0,
+          "max": 15,
+          "step": 1
+        }
+      ]
+    },
+    {
+      "name": "Welcome Message",
+      "order": 18,
+      "key": "welcome_message",
+      "options": [
+        {
+          "key": "onlyRunOnDedicatedServers",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "sendEmptyLineBeforeFirstMessage",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "messageOneText",
+          "type": "text",
+          "default": "Welcome to the server!"
+        },
+        {
+          "key": "messageOneColourIndex",
+          "type": "number",
+          "default": 2,
+          "min": 0,
+          "max": 15,
+          "step": 1
+        },
+        {
+          "key": "messageOneOptionalURL",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "key": "messageTwoText",
+          "type": "text",
+          "default": "Downloaded from CurseForge! This is a clickable link."
+        },
+        {
+          "key": "messageTwoColourIndex",
+          "type": "number",
+          "default": 14,
+          "min": 0,
+          "max": 15,
+          "step": 1
+        },
+        {
+          "key": "messageTwoOptionalURL",
+          "type": "text",
+          "default": "https://curseforge.com/members/serilum/projects"
+        },
+        {
+          "key": "messageThreeText",
+          "type": "text",
+          "default": "You should probably edit this in the config :)"
+        },
+        {
+          "key": "messageThreeColourIndex",
+          "type": "number",
+          "default": 15,
+          "min": 0,
+          "max": 15,
+          "step": 1
+        },
+        {
+          "key": "messageThreeOptionalURL",
+          "type": "text",
+          "default": ""
+        }
+      ]
+    },
+    {
+      "name": "Vein Miner",
+      "order": 19,
+      "key": "vein_miner",
+      "options": [
+        {
+          "key": "oreHarvestWithoutSneak",
+          "type": "bool",
+          "default": false
+        },
+        {
+          "key": "dropOresAtFirstBrokenBlock",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "enableFuzzyOreSearch",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "oreBlockWhitelist",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "key": "oreBlockBlacklist",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "key": "pickaxeWhitelist",
+          "type": "text",
+          "default": "easy_emerald:*_paxel,piercingpaxels:*_paxel,randomisfits:*_hammer,randomisfits:*_multitool,tetra:modular_double"
+        },
+        {
+          "key": "maxOresPerVein",
+          "type": "choice",
+          "default": "1000",
+          "options": [
+            "1",
+            "16",
+            "32",
+            "64",
+            "128",
+            "256",
+            "512",
+            "1000",
+            "2048",
+            "4096",
+            "10000"
+          ]
+        },
+        {
+          "key": "triggerBlockBreakEventPerHarvestedOre",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "loseDurabilityPerHarvestedOre",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "oreLoseDurabilityModifier",
+          "type": "choice",
+          "default": "1.0",
+          "options": [
+            "0.001",
+            "0.1",
+            "0.5",
+            "1.0"
+          ]
+        },
+        {
+          "key": "increaseExhaustionPerHarvestedOre",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "oreIncreaseExhaustionModifier",
+          "type": "choice",
+          "default": "1.0",
+          "options": [
+            "0.001",
+            "0.1",
+            "0.5",
+            "1.0"
+          ]
+        },
+        {
+          "key": "increaseHarvestingTimePerOre",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "increasedHarvestingTimePerOreModifier",
+          "type": "choice",
+          "default": "0.2",
+          "options": [
+            "0.01",
+            "0.1",
+            "0.2",
+            "0.5",
+            "1.0",
+            "2.0",
+            "5.0",
+            "10.0"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tree Harvester",
+      "order": 20,
+      "key": "tree_harvester",
+      "options": [
+        {
+          "key": "mustHoldAxeForTreeHarvest",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "axeWhitelist",
+          "type": "text",
+          "default": "easy_emerald:*_paxel,piercingpaxels:*_paxel,randomisfits:*_multitool,tetra:modular_double"
+        },
+        {
+          "key": "axeBlacklist",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "key": "treeHarvestWithoutCrouching",
+          "type": "bool",
+          "default": false
+        },
+        {
+          "key": "treeHarvestIgnoresCrouching",
+          "type": "bool",
+          "default": false
+        },
+        {
+          "key": "automaticallyFindBottomBlock",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "enableFastLeafDecay",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "enableNetherTrees",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "enableHugeMushrooms",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "ignorePlayerMadeTrees",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "logBlockBlacklist",
+          "type": "text",
+          "default": ""
+        },
+        {
+          "key": "replaceSaplingOnTreeHarvest",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "replaceMushroomOnMushroomHarvest",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "loseDurabilityPerHarvestedLog",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "loseDurabilityModifier",
+          "type": "choice",
+          "default": "1.0",
+          "options": [
+            "0.001",
+            "0.1",
+            "0.2",
+            "0.5",
+            "1.0"
+          ]
+        },
+        {
+          "key": "preventAxeBreakingOnTreeHarvest",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "increaseExhaustionPerHarvestedLog",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "increaseExhaustionModifier",
+          "type": "choice",
+          "default": "1.0",
+          "options": [
+            "0.001",
+            "0.1",
+            "0.2",
+            "0.5",
+            "1.0"
+          ]
+        },
+        {
+          "key": "increaseHarvestingTimePerLog",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "increasedHarvestingTimePerLogModifier",
+          "type": "choice",
+          "default": "0.2",
+          "options": [
+            "0.01",
+            "0.1",
+            "0.2",
+            "0.5",
+            "1.0",
+            "2.0",
+            "5.0",
+            "10.0"
+          ]
+        },
+        {
+          "key": "amountOfLeavesBrokenPerTick",
+          "type": "number",
+          "default": 5,
+          "min": 1,
+          "max": 16,
+          "step": 1
+        },
+        {
+          "key": "maxAmountOfLogsBrokenPerHarvest",
+          "type": "choice",
+          "default": "-1",
+          "options": [
+            "-1",
+            "64",
+            "128",
+            "256",
+            "512",
+            "1024",
+            "4096",
+            "10000",
+            "100000"
+          ]
+        },
+        {
+          "key": "triggerBlockBreakEventPerHarvestedLog",
+          "type": "bool",
+          "default": true
+        }
+      ]
+    },
+    {
+      "name": "Ench. Level LangPatch",
+      "order": 21,
+      "key": "ench_level_langpatch",
+      "options": []
+    },
+    {
+      "name": "Tax Free Levels",
+      "order": 22,
+      "key": "tax_free_levels",
+      "options": []
+    },
+    {
+      "name": "Unlimited Enchantments",
+      "order": 23,
+      "key": "unlimited_enchantments",
+      "options": [
+        {
+          "key": "unlimited_max_level",
+          "type": "choice",
+          "default": "255",
+          "options": [
+            "5",
+            "10",
+            "30",
+            "50",
+            "100",
+            "128",
+            "255"
+          ]
+        },
+        {
+          "key": "unlimited_max_anvil_cost",
+          "type": "choice",
+          "default": "39",
+          "options": [
+            "1",
+            "5",
+            "10",
+            "20",
+            "39",
+            "64",
+            "100",
+            "255",
+            "1000",
+            "10000"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Affordable Anvil",
+      "order": 24,
+      "key": "affordable_anvil",
+      "options": [
+        {
+          "key": "affordable_remove_too_expensive",
+          "type": "bool",
+          "default": true
+        },
+        {
+          "key": "affordable_cost_cap",
+          "type": "choice",
+          "default": "39",
+          "options": [
+            "1",
+            "5",
+            "10",
+            "20",
+            "30",
+            "39",
+            "50",
+            "64",
+            "100",
+            "255",
+            "1000",
+            "10000"
+          ]
+        },
+        {
+          "key": "affordable_cheap_rename",
+          "type": "bool",
+          "default": false
+        }
+      ]
+    }
+  ]
+}
