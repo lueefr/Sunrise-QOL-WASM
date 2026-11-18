@@ -2,7 +2,9 @@
 
 **An experimental, modular quality-of-life suite for [Sunrise](https://github.com/sunrise-org/sunrise), written in Rust for its sandboxed WebAssembly mod API.**
 
-[Releases](https://github.com/lueefr/Sunrise-QOL-WASM/releases) · [Actions](https://github.com/lueefr/Sunrise-QOL-WASM/actions) · [Versioning rules](docs/RELEASES.md) · [Port parity matrix](docs/PARITY.md)
+Sunrise QOL is essentially an **incomplete port/reimplementation of [Serilum's QoL Bundle](https://modrinth.com/mod/QC7wpUjM)**, adapted for the Sunrise runtime. It is a separate project, not an official Serilum release or a repack of the original Java mods. Features and configuration parity remain work in progress.
+
+[Releases](https://github.com/lueefr/Sunrise-QOL-WASM/releases) · [Source code](https://github.com/lueefr/Sunrise-QOL-WASM) · [Implementation status](docs/PARITY.md)
 
 > **Development status — not a stable release.** Version 1.0.0 is the initial version label, not a claim of feature parity. The source archive has passed structural Python checks, but successful Rust/WASM compilation, loading into Sunrise, multiplayer correctness, and gameplay parity are **not yet verified**. Do not assume a module works merely because it appears in the configuration interface.
 
@@ -22,27 +24,63 @@ The source archive contains implementations or initial hook handlers for 24 of t
 | Items and inventory | Inventory Totem, Inventory Mending, What Durability, Hide Hands | Initial or partial hook coverage; arbitrary third-party items, death handling and exact XP behavior require testing |
 | Blocks and entities | Double Doors, Friendly Griefing, Superflat World No Slimes | Some AI/redstone cases differ; Superflat requires manual confirmation |
 | Trading and drops | Infinite Trading, Shulker Drops Two, Respawning Shulkers, Always a Wither Skull, Dragon Drops Elytra | Validate loot tables, lifecycles, respawns and authoritative multiplayer behavior |
-| Enchantments and anvils | Unlimited Enchantments, Affordable Anvil, Tax Free Levels, Enchantment Level Indicator, Enchantment Level LangPatch | Partial implementations; see the detailed gaps below |
+| Enchantments and anvils | Unlimited Enchantments, Affordable Anvil, Tax Free Levels, Enchantment Level Indicator, Enchantment Level LangPatch | Partial implementation; full gameplay parity has not been verified |
 | HUD and controls | GUI Clock, GUI Compass, Vanilla Zoom | Initial implementations; not exact reproductions of all original options |
 | Messages | First Join Message, Welcome Message | Fixed messages; customizable templates and full server controls are missing |
-| Missing | Full Brightness Toggle | No equivalent gamma/lighting control exposed by the pinned public WASM API |
+| Missing | Full Brightness Toggle; [Grind Enchantments](https://code.mschae23.de/mschae23/grind-enchantments) | Brightness control lacks a suitable public WASM hook. Transferring enchantments from equipment to books and separating enchanted books with a grindstone are not ported. |
 
 The detailed module-by-module audit is in [docs/PARITY.md](docs/PARITY.md) **in the source archive**; it will become browsable here after the source import. The catalog is preserved at `docs/original-catalog.json`. Individual Sounds / Sound Controller is intentionally excluded.
 
-### Unlimited Enchantments: requested behavior vs. present code
+### Reference feature catalog
 
-The requested feature set is:
+The following **44 gameplay behaviors** are taken from the scope of [Serilum's official QoL Bundle](https://www.curseforge.com/minecraft/mc-mods/serilums-qol-bundle). They describe the **target of the incomplete port**, not 44 features already implemented or tested. Individual upstream mod names are deliberately omitted.
 
-- Combine equal-level enchantments beyond their vanilla cap (for example, Sharpness V + Sharpness V → Sharpness VI), up to a configurable limit of **255**.
-- Allow anvil operations beyond the vanilla **Too Expensive!** threshold, with a configurable maximum XP cost.
-- Permit `/enchant` to use levels above the enchantment's vanilla cap, up to the configured maximum.
-- Expose only **Max enchantment level** and **Max anvil cost**, plus the module's ON/OFF switch.
+- Guaranteed skull drops when a wither skeleton dies.
+- Nearby doors open automatically and close after a delay.
+- Beacon bases can be placed by using mineral blocks on a beacon.
+- Conduits and their surrounding blocks become easier to place.
+- Mob spawners can be disabled with a torch arrangement.
+- Glass bottles can temporarily restore underwater air.
+- The help command gains clearer, paginated output.
+- Active conduit effects suppress nearby drowned spawning.
+- Placed paintings can be cycled without breaking them.
+- Passengers can be removed from mounted entities more conveniently.
+- Fireworks can launch Elytra flight directly from the ground.
+- Commands can apply enchantments above vanilla level limits.
+- Bone meal supports additional plants and faster growth.
+- Tamed companions follow their owners during command teleportation.
+- Metal equipment can be smelted back into materials.
+- Hoes gain faster farming actions and soil-tilling controls.
+- Undying totems can activate from inventory slots.
+- Farmland stays tilled after harvesting melon or pumpkin stems.
+- Kelp can be used as a fertilizer.
+- Boats can be moved without breaking them.
+- Minecarts can be repositioned without breaking them.
+- Animals can be tempted again without a waiting period.
+- Slow-falling effects prevent accidental farmland trampling.
+- Drinking milk restores configurable hunger and saturation.
+- Connected ore veins can be harvested together.
+- Paths can be created across a selected route.
+- Some utility blocks can be accessed without placing them.
+- Fishing lines can be recast automatically after a catch.
+- Harvested crops can be replanted using their drops.
+- Shulkers can return after a configurable respawn delay.
+- Connected scaffolding drops are collected near the broken block.
+- Allowed sleeping times can be adjusted.
+- Landing on hay bales can eliminate fall damage.
+- Used-up hand stacks refill from inventory automatically.
+- Lapis lazuli can stay in an enchanting table for reuse.
+- Slime spawning can be disabled in superflat worlds.
+- Mushrooms can be planted under bright surface conditions.
+- Leggings protect players from sweet berry bush damage.
+- Entire trees can be felled with accelerated leaf decay and replanting.
+- Enchanting tables can function underwater with surrounding bookshelves.
+- Village bells receive a crafting recipe.
+- Wool crafting, dyeing, and string conversion become more flexible.
+- Death drops can be protected inside a chest with equipment displayed.
+- Zombies can be prevented from breaking doors.
 
-**Not complete yet:** the existing `src/unlimited.rs` only upgrades equal-level combinations when vanilla has already returned a valid anvil output. It cannot recover a result rejected before `anvil_update`, and it does not override `/enchant`'s own max-level validation. Its anvil cost cap only applies when it successfully upgrades an enchantment.
-
-### Leaf Decay
-
-Leaf Decay is independent from Tree Harvester. It offers accelerated decay, matching leaf and log types, configurable persistent-leaf behavior, optional wood support, a per-tick work cap, and optional effects. It is inspired by [Leaves Be Gone](https://github.com/Fuzss/leaves-be-gone) and [Leaves Us In Peace](https://gitlab.com/supersaiyansubtlety/leaves_us_in_peace), but currently uses bounded server-side work rather than a byte-for-byte port of their mixin and chunk-serialization behavior.
+Features can require different Sunrise hooks and may be missing, partial, or behaviorally different until separately validated. Individual sound-control functionality is intentionally outside this project's scope.
 
 ## Settings and controls
 
@@ -76,35 +114,9 @@ python3 -m unittest discover -s tests -p 'test*.py' -v
 
 **Passing Python tests does not establish successful WASM loading or gameplay parity.** An actual in-game test is still required.
 
-## Automated releases and changelog
-
-The [release workflow](.github/workflows/release.yml) is configured to build and publish a `.smod`, release notes and `SHA256SUMS.txt` when tracked **mod source or build inputs** change on `main`, and only after its checks pass. README-only and documentation-only changes should not trigger a new release.
-
-This project follows a **custom version scheme, not standard Semantic Versioning**:
-
-| Change | Example | Commit prefix |
-| --- | --- | --- |
-| Initial source release | `1.0.0` | — |
-| New feature | `1.1.1 → 2.0.0` | `feat:` |
-| Bug fix | `1.0.0 → 1.1.1` | `fix:` |
-| Maintenance change | `2.0.0 → 2.0.1` | Other prefixes |
-
-The final component counts update releases within the current major version. Feature additions take precedence over bug fixes when a batch contains both. Commit messages must accurately describe changes; the workflow does not understand the semantic meaning of arbitrary diffs. See [docs/RELEASES.md](docs/RELEASES.md).
-
-**No compiled release should be described as available until a successful GitHub Actions run and a corresponding GitHub Release exist.**
-
-## Porting roadmap
-
-1. Import the entire source archive to the default branch; keep version metadata and CI files in sync.
-2. Compile the WASM mod against the pinned SDK and verify that all imports resolve against the actual Sunrise game runtime.
-3. Complete Unlimited Enchantments, including rejected anvil output recovery and the authoritative `/enchant` path.
-4. Close the missing or partial API integrations for Full Brightness Toggle, Tax Free Levels, Superflat detection, arbitrary damageable items, and global enchantment-level translations.
-5. Verify leaf decay, tree mining, loot, totems, mending, trading, doors, and multiplayer parity against upstream behavior.
-6. Test the custom configuration interface in the main menu, in-game, with input devices, and after restart.
-7. Publish only validated binary artifacts, with a changelog identifying supported and incomplete functionality.
 
 ## Credits and upstream projects
 
-Sunrise QOL is an independent experimental port/reimplementation. Its feature catalog originates from earlier Horizon QoL work and Minecraft mods, especially projects by [Serilum](https://github.com/Serilum). Additional reference projects include [Unlimited Enchantments](https://github.com/SayNooty/Unlimited-Enchantments), [Tax Free Levels](https://github.com/Fourmisain/TaxFreeLevels), [Enchantment Level Language Patch](https://github.com/teddyxlandlee/enchlevel-langpatch), [Leaves Be Gone](https://github.com/Fuzss/leaves-be-gone), and [Leaves Us In Peace](https://gitlab.com/supersaiyansubtlety/leaves_us_in_peace).
+Sunrise QOL is an independent, incomplete port/reimplementation of Serilum's quality-of-life mod bundle for Sunrise, based on earlier Horizon QoL work. The original mod collection is by [Serilum](https://github.com/Serilum). Additional reference projects include [Unlimited Enchantments](https://github.com/SayNooty/Unlimited-Enchantments), [Tax Free Levels](https://github.com/Fourmisain/TaxFreeLevels), [Enchantment Level Language Patch](https://github.com/teddyxlandlee/enchlevel-langpatch), [Leaves Be Gone](https://github.com/Fuzss/leaves-be-gone), [Leaves Us In Peace](https://gitlab.com/supersaiyansubtlety/leaves_us_in_peace), and [Grind Enchantments](https://code.mschae23.de/mschae23/grind-enchantments).
 
 Original projects retain their own licensing and attribution requirements. Do not assume that an implementation, test, or API hook proves 1:1 compatibility.
