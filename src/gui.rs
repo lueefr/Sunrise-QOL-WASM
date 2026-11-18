@@ -3,7 +3,7 @@
 //! The Render.Pre hook hides the host page, and Render.Post draws the custom view.
 //! F8 keeps the ordinary mod-screen route while a world is open.
 use crate::settings::{amount, flag, on, save, saved_value, ID};
-sue mod_api::client::widgets::{Button, Outcome, TextField, WidgetId, Widgets};
+use mod_api::client::widgets::{Button, Outcome, TextField, WidgetId, Widgets};
 use mod_api::{
     ClientHost, ClientTickPreEvent, Flow, InputKeyEvent, KeyAction,
     ScreenCharTypedPreEvent, ScreenKeyPressedPreEvent, ScreenMouseButtonPressedPreEvent,
