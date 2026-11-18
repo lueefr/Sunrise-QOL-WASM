@@ -9,6 +9,7 @@ mod automatic_doors;
 mod beacon;
 mod conduit;
 mod spawner;
+mod bottled_air;
 mod compass;
 mod clock;
 mod zoom;
@@ -36,7 +37,7 @@ use mod_api::{
     ScreenMouseButtonPressedPreEvent, ScreenMouseButtonReleasedPreEvent,
     ScreenMouseDraggedPreEvent, ScreenKeyPressedPreEvent, ScreenCharTypedPreEvent,
     ScreenMouseScrolledPreEvent, ScreenRenderPreEvent, SettingChangedEvent,
-    RightClickBlockEvent, GuiRenderPostEvent, LivingDeathEvent, LivingDeathPostEvent,
+    RightClickBlockEvent, RightClickItemEvent, GuiRenderPostEvent, LivingDeathEvent, LivingDeathPostEvent,
     PlayerXpChangeEvent, ItemTooltipEvent, MobSpawnPositionCheckEvent,
 };
 
@@ -116,6 +117,10 @@ impl Hooks for SunriseQol {
     fn block_changed(&self, level: &dyn LevelHost, event: &mut BlockChangedEvent) {
         self.decay.changed(level, event);
         self.doors.changed(level, event);
+    }
+
+    fn right_click_item(&self, side: HostSide<'_>, event: &mut RightClickItemEvent<'_>) -> Flow {
+        bottled_air::use_bottle(side, event)
     }
 
     fn right_click_block(&self, side: HostSide<'_>, event: &mut RightClickBlockEvent<'_>) -> Flow {

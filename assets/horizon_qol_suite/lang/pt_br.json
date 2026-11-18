@@ -79,5 +79,8 @@
   "horizon_qol_suite.option.conduit_placement": "Conduit Placement: ON/OFF",
   "qol.option.conduit_break_frame": "Recover Frame When Conduit Breaks",
   "qol.module.spawner_control": "Spawner Control",
-  "horizon_qol_suite.option.spawner_control": "Spawner Control: ON/OFF"
+  "horizon_qol_suite.option.spawner_control": "Spawner Control: ON/OFF",
+  "qol.module.bottled_air": "Bottled Air",
+  "horizon_qol_suite.option.bottled_air": "Bottled Air: ON/OFF",
+  "qol.option.bottled_air_amount": "Oxygen Restored"
 }

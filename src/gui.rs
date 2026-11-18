@@ -131,6 +131,10 @@ const MENDING: &[OptionSpec] = &[
     toggle("mending_hotbar_only", "Repair Hotbar Only", false),
 ];
 
+const BOTTLED_AIR: &[OptionSpec] = &[
+    range("bottled_air_amount", "Oxygen Restored", 150., 0., 1000., 10.),
+];
+
 const RESPAWN: &[OptionSpec] = &[
     range("respawn_ticks", "Respawn Delay (Ticks)", 1200., 1., 72000., 20.),
     toggle("skip_spawner", "Ignore Spawner Shulkers", true),
@@ -230,6 +234,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "ench_level_langpatch", label: "Level Formatting", options: LANGPATCH, category: Category::Enchanting },
     ModuleSpec { key: "inventory_totem", label: "Inventory Totems", options: &[], category: Category::Inventory },
     ModuleSpec { key: "inventory_mending", label: "XP Item Repair", options: MENDING, category: Category::Inventory },
+    ModuleSpec { key: "bottled_air", label: "Bottled Air", options: BOTTLED_AIR, category: Category::Inventory },
     ModuleSpec { key: "what_durability", label: "Durability Control", options: &[], category: Category::Inventory },
     ModuleSpec { key: "gui_clock", label: "World Clock", options: CLOCK, category: Category::Hud },
     ModuleSpec { key: "gui_compass", label: "Navigation Compass", options: COMPASS, category: Category::Hud },

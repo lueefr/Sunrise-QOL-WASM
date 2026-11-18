@@ -35,7 +35,7 @@ class SpawnerTests(unittest.TestCase):
         readme=(ROOT/"README.md").read_text()
         self.assertLess(readme.index("Conduits and their surrounding blocks"),readme.index("Mob spawners can be disabled"))
         self.assertIn("- [x] Mob spawners can be disabled",readme)
-        self.assertIn("- [ ] Glass bottles can temporarily",readme)
+        self.assertIn("- [x] Glass bottles can temporarily",readme)
 
 
 if __name__=="__main__":
