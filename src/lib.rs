@@ -10,6 +10,7 @@ mod beacon;
 mod conduit;
 mod spawner;
 mod bottled_air;
+mod help;
 mod compass;
 mod clock;
 mod zoom;
@@ -39,6 +40,7 @@ use mod_api::{
     ScreenMouseScrolledPreEvent, ScreenRenderPreEvent, SettingChangedEvent,
     RightClickBlockEvent, RightClickItemEvent, GuiRenderPostEvent, LivingDeathEvent, LivingDeathPostEvent,
     PlayerXpChangeEvent, ItemTooltipEvent, MobSpawnPositionCheckEvent,
+    PlayerCommandEvent, PlayerCommandsSentEvent,
 };
 
 #[derive(Default)]
@@ -51,6 +53,7 @@ pub struct SunriseQol {
     automatic_doors: automatic_doors::AutomaticDoors,
     beacon: beacon::Beacon,
     conduit: conduit::Conduit,
+    help: help::Help,
     compass: compass::Compass,
     clock: clock::Clock,
     shulkers: shulkers::Shulkers,
@@ -143,6 +146,14 @@ impl Hooks for SunriseQol {
         zoom::current(host, event)
     }
 
+    fn player_command(&self, host: &dyn Host, event: &mut PlayerCommandEvent<'_>) -> Flow {
+        self.help.command(host, event)
+    }
+
+    fn player_commands_sent(&self, host: &mut dyn ServerHost, event: &mut PlayerCommandsSentEvent<'_>) {
+        self.help.sent(host, event);
+    }
+
     fn mob_spawn_position_check(&self, host: &dyn Host, event: &mut MobSpawnPositionCheckEvent<'_>) {
         spawner::check(host, event);
     }
@@ -201,6 +212,7 @@ impl Hooks for SunriseQol {
         self.decay.reset();
         self.doors.reset();
         self.automatic_doors.reset();
+        self.help.reset();
         self.shulkers.reset();
     }
 

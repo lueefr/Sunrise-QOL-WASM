@@ -14,9 +14,9 @@ def keys(root: Path) -> set[str]:
     alias = dict(re.findall(r'"([A-Za-z0-9]+)"\s*=>\s*"([a-z0-9]+)"', settings))
     modules = re.findall(r'ModuleSpec \{ key: "([^"]+)"', gui)
     options = re.findall(r'(?:toggle|range|choice)\("([^"]+)",', gui)
-    assert len(modules) == 30 and len(options) == 77, 'Unexpected settings catalog: migration stopped'
+    assert len(modules) == 31 and len(options) == 78, 'Unexpected settings catalog: migration stopped'
     all_keys = {alias.get(name, name) for name in modules + options}
-    assert len(all_keys) == 107 and all(re.fullmatch(r'[a-z0-9_.-]+', name) for name in all_keys)
+    assert len(all_keys) == 109 and all(re.fullmatch(r'[a-z0-9_.-]+', name) for name in all_keys)
     return all_keys
 
 

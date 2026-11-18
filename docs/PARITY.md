@@ -16,6 +16,7 @@ installer to stop before replacing the installed mod.
 | Conduit Placement | Initial | Right-click conduit with prismarine blocks builds a bounded 42-block frame in water or air; consumes held items; frame recovery configurable; no right-click-water placement or occupied-block replacement |
 | Spawner Control | Initial | A read-only spawn position veto for normal spawner blocks surrounded by 5 torches (N/E/S/W/top). Does not reset the spawner's internal delay; other spawn sources unaffected |
 | Bottled Air | Initial | Adds up to 150 configurable units of oxygen on vanilla glass bottle use while submerged; preserves vanilla item use. Water-potion restrictions and fire-offhand behaviors not implemented |
+| Command Help | Initial | Captures the commands a server sends each player and paginates the allowed list when /help is used. Falls back to vanilla if no snapshot. Syntax suggestions, styled colors and full original options not yet supported |
 | Inventory Totem | Initial | Vanilla totem only; death protection API must be tested |
 | Inventory Mending | Initial | Repairs inventory items on XP-gain hook; differs from Mending orb selection |
 | Double Doors | Initial | Exact-class block sync; redstone/AI timing is not 1:1 |

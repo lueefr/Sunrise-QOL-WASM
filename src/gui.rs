@@ -63,7 +63,7 @@ impl Category {
             Self::World => "World Interactions",
             Self::Creatures => "Mobs & Loot",
             Self::Trading => "Villager Trading",
-            Self::Messages => "Player Messages",
+            Self::Messages => "Chat & Commands",
         }
     }
 }
@@ -133,6 +133,10 @@ const MENDING: &[OptionSpec] = &[
 
 const BOTTLED_AIR: &[OptionSpec] = &[
     range("bottled_air_amount", "Oxygen Restored", 150., 0., 1000., 10.),
+];
+
+const HELP: &[OptionSpec] = &[
+    range("help_page_size", "Commands per Page", 8., 1., 50., 1.),
 ];
 
 const RESPAWN: &[OptionSpec] = &[
@@ -257,6 +261,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "infinite_trading", label: "Trade Restocking", options: TRADING, category: Category::Trading },
     ModuleSpec { key: "first_join_message", label: "First Join Message", options: &[], category: Category::Messages },
     ModuleSpec { key: "welcome_message", label: "Welcome Messages", options: &[], category: Category::Messages },
+    ModuleSpec { key: "compact_help", label: "Command Help", options: HELP, category: Category::Messages },
 ];
 #[derive(Clone, Copy)]
 enum Action {

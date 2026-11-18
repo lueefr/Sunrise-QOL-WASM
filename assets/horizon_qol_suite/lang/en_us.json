@@ -82,5 +82,8 @@
   "horizon_qol_suite.option.spawner_control": "Spawner Control: ON/OFF",
   "qol.module.bottled_air": "Bottled Air",
   "horizon_qol_suite.option.bottled_air": "Bottled Air: ON/OFF",
-  "qol.option.bottled_air_amount": "Oxygen Restored"
+  "qol.option.bottled_air_amount": "Oxygen Restored",
+  "qol.module.compact_help": "Command Help",
+  "horizon_qol_suite.option.compact_help": "Command Help: ON/OFF",
+  "qol.option.help_page_size": "Commands per Page"
 }

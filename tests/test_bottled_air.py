@@ -29,7 +29,7 @@ class BottledAirTests(unittest.TestCase):
         readme = (ROOT / "README.md").read_text()
         self.assertLess(readme.index("Mob spawners can be disabled"), readme.index("Glass bottles can temporarily"))
         self.assertIn("- [x] Glass bottles can temporarily", readme)
-        self.assertIn("- [ ] The help command gains clearer", readme)
+        self.assertIn("- [x] The help command gains clearer", readme)
 
 
 if __name__ == "__main__":
