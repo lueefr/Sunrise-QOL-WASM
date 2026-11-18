@@ -33,7 +33,7 @@ use mod_api::{
     ScreenMouseDraggedPreEvent, ScreenKeyPressedPreEvent, ScreenCharTypedPreEvent,
     ScreenMouseScrolledPreEvent, ScreenRenderPreEvent, SettingChangedEvent,
     RightClickBlockEvent, GuiRenderPostEvent, LivingDeathEvent, LivingDeathPostEvent,
-    PlayerXpChangeEvent, ItemStack, TooltipDisplay, Text,
+    PlayerXpChangeEvent, ItemTooltipEvent,
 };
 
 #[derive(Default)]
@@ -118,10 +118,8 @@ impl Hooks for SunriseQol {
         self.clock.render(host, event);
     }
 
-    fn item_tooltip(&self, host: &dyn ClientHost, _player: u128, _player_entity_id: i32,
-                    stack: &ItemStack, _display: &TooltipDisplay<'_>,
-                    _advanced: bool, _creative: bool, lines: &mut Vec<(Text, u32)>) {
-        enchant::tooltip(host, stack, lines);
+    fn item_tooltip(&self, host: &dyn ClientHost, event: &mut ItemTooltipEvent<'_>) {
+        enchant::tooltip(host, event.stack, event.lines);
     }
 
     fn zoom(&self, host: &dyn ClientHost, event: &mut mod_api::ZoomEvent) -> Option<mod_api::Zoom> {

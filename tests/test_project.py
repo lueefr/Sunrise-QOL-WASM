@@ -227,7 +227,7 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('No public WASM API', matrix)
         self.assertIn('superflat::on_join(host, event)', src)
         self.assertIn('durability::register(r)', src)
-        self.assertIn('enchant::tooltip(host, stack, lines)', src)
+        self.assertIn('enchant::tooltip(host, event.stack, event.lines)', src)
         self.assertIn('crate::unlimited::anvil(host, event)', (ROOT/'src/anvil.rs').read_text())
         self.assertIn('let active = on(host, module.key);', gui)
         self.assertIn('if !on(host, "leaf_decay")', (ROOT/'src/decay.rs').read_text())

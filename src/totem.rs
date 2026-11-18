@@ -11,12 +11,12 @@ pub fn on_death(host: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> 
     if event.kind != "minecraft:player" || !on(host, "inventory_totem")
         || bypasses(event.source.damage_type) { return Flow::Continue; }
     let Some(player) = host.players().server_players().into_iter().find(|p| {
-        i32::try_from(p.entity().id()).ok() == Some(event.entity)
+        p.entity().id() == event.entity
     }) else { return Flow::Continue; };
     let selected = player.selected_slot(host);
     let Some((slot, mut stack)) = player.inventory_slots(host)
         .and_then(|slots| slots.into_iter().find(|(slot, stack)| {
-            *slot != 40 && Some(*slot) != selected
+            *slot != 40 && usize::try_from(*slot).ok() != selected
                 && stack.item().id(host) == "minecraft:totem_of_undying"
         })) else { return Flow::Continue; };
     // The full effect bundle and the inventory write use server-authoritative APIs.

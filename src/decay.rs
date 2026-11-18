@@ -5,7 +5,7 @@ use mod_api::{BlockChangedEvent, LevelHost, LevelRef, ServerHost, ServerTickEven
 use std::collections::VecDeque;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
-use crate::settings::{amount, flag};
+use crate::settings::{amount, flag, on};
 
 const MAX_TASKS: usize = 8192;
 const MAX_VISITS: usize = 512;

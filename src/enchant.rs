@@ -1,7 +1,8 @@
 //! Client-side enchantment tooltip additions. Only genuine saved enchantments
 //! trigger cap markers; language entries are not replaced when already defined.
 use crate::settings::{amount, flag, on, saved_value};
-use mod_api::{ClientHost, ComponentId, ItemResource, ItemStack, Tag, Text, TextContent};
+use mod_api::{ClientHost, ComponentId, ItemResource, ItemStack, Tag, Text};
+use mod_api::text::TextContent;
 use std::collections::BTreeSet;
 
 const MAX_TEXT_NODES: usize = 512;

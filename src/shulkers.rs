@@ -44,10 +44,11 @@ impl Shulkers {
         }
         let (Some(level), Some(position)) = (entity.level(host), entity.position(host)) else { return; };
         let Ok(id) = u32::try_from(event.entity) else { return; };
+        let Some(dimension) = level.dimension().id(host) else { return; };
         let mut deaths = match self.deaths.lock() { Ok(guard) => guard, Err(_) => return };
         if deaths.len() >= MAX_PENDING { deaths.pop_front(); }
         deaths.push_back(Death {
-            id, dimension: level.dimension().id(host).to_owned(), position,
+            id, dimension, position,
             time: self.time.load(Ordering::Relaxed),
         });
     }
