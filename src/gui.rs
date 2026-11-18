@@ -3,7 +3,7 @@
 //! The Render.Pre hook hides the host page, and Render.Post draws the custom view.
 //! F8 keeps the ordinary mod-screen route while a world is open.
 use crate::settings::{amount, flag, on, save, saved_value, ID};
-use mod_api::client::widgets::{Button, Outcome, WidgetId, Widgets};
+sue mod_api::client::widgets::{Button, Outcome, TextField, WidgetId, Widgets};
 use mod_api::{
     ClientHost, ClientTickPreEvent, Flow, InputKeyEvent, KeyAction,
     ScreenCharTypedPreEvent, ScreenKeyPressedPreEvent, ScreenMouseButtonPressedPreEvent,
@@ -253,6 +253,7 @@ struct Screen {
     widgets: Widgets,
     footer: Widgets,
     actions: Vec<(WidgetId, Action)>,
+    numbers: Vec<(WidgetId, OptionSpec)>,
     labels: Vec<Label>,
     expanded: Option<usize>,
     size: [f32; 2],
@@ -293,6 +294,66 @@ impl Screen {
         button.active = enabled;
         let id = self.widgets.add_button(button);
         self.actions.push((id, action));
+    }
+
+    fn number(&mut self, rect: [f32; 4], option: OptionSpec, value: f64, active: bool) {
+        if !self.visible(rect[1], rect[3]) { return; }
+        let mut field = TextField::new(rect, 16);
+        field.set_value(&format!("{value:.0}"));
+        field.message = option.label.to_owned();
+        field.active = active;
+        let id = self.widgets.add_text_field(field);
+        self.numbers.push((id, option));
+    }
+
+    fn valid_number(value: &str, min: f64, max: f64) -> bool {
+        value.trim().parse::<f64>().ok()
+            .is_some_and(|number| number.is_finite() && number >= min && number <= max)
+    }
+
+    fn mark_number(&mut self, id: WidgetId) {
+        let Some((_, option)) = self.numbers.iter().find(|(key, _)| *key == id).copied() else {
+            return;
+        };
+        let OptionKind::Range { min, max, .. } = option.kind else { return; };
+        let Some(field) = self.widgets.text_field_mut(id) else { return; };
+        field.text_color = if Self::valid_number(field.value(), min, max) {
+            0xFFE0_E0E0
+        } else {
+            0xFFFF_7777
+        };
+    }
+
+    // Keep partial edits on screen, but store only a complete finite number.
+    fn commit_number(&mut self, host: &dyn ClientHost, id: WidgetId) {
+        let Some((_, option)) = self.numbers.iter().find(|(key, _)| *key == id).copied() else {
+            return;
+        };
+        let OptionKind::Range { default, min, max, .. } = option.kind else { return; };
+        let old = self.option_amount(host, option.key, default, min, max);
+        let draft = self.widgets.text_field(id).map(|field| field.value().trim().to_owned());
+        let value = draft.as_deref().and_then(|value| value.parse::<f64>().ok())
+            .filter(|value| value.is_finite());
+        let shown = if let Some(value) = value {
+            let bounded = value.round().clamp(min, max);
+            if bounded == old || save(host, option.key, &format!("{bounded:.0}")) {
+                bounded
+            } else {
+                old
+            }
+        } else {
+            old
+        };
+        if let Some(field) = self.widgets.text_field_mut(id) {
+            field.set_value(&format!("{shown:.0}"));
+            field.text_color = 0xFFE0_E0E0;
+        }
+    }
+
+    fn commit_focused(&mut self, host: &dyn ClientHost) {
+        if let Some(id) = self.widgets.focused() {
+            self.commit_number(host, id);
+        }
     }
 
     fn visible(&self, y: f32, height: f32) -> bool {
@@ -357,7 +418,11 @@ impl Screen {
                                         _ => "ALL".to_owned(),
                                     }
                                 } else { format!("{value:.0}") };
-                                self.label(printed, x + w - 84., next + 6., 0xFFFF_FFFF);
+                                if opt.key == "persistentLeavesBehavior" {
+                                    self.label(printed, x + w - 84., next + 6., 0xFFFF_FFFF);
+                                } else {
+                                    self.number([x + w - 88., next, 56., 20.], *opt, value, active);
+                                }
                                 self.button([x + w - 29., next, 23., 20.], "+", active && value < max,
                                     Action::Adjust(*opt, 1));
                             }
@@ -391,7 +456,8 @@ impl Screen {
         }).sum::<f32>();
         let scroll = scroll.clamp(0., (total - viewport[3]).max(0.));
         let mut screen = Self {
-            widgets: Widgets::new(), footer: Widgets::new(), actions: Vec::new(), labels: Vec::new(),
+            widgets: Widgets::new(), footer: Widgets::new(), actions: Vec::new(),
+            numbers: Vec::new(), labels: Vec::new(),
             expanded, size, viewport, scroll, total, drag_bar: false,
         };
         let mut y = top + PAD - scroll;
@@ -491,6 +557,9 @@ impl Gui {
         let mut lock = self.screen.lock().unwrap_or_else(|error| error.into_inner());
         if lock.as_ref().is_none_or(|screen| screen.size != size) {
             let (scroll, expanded) = lock.as_ref().map_or((0., None), |s| (s.scroll, s.expanded));
+            if let Some(screen) = lock.as_mut() {
+                screen.commit_focused(host);
+            }
             *lock = Some(Screen::new(host, size, scroll, expanded));
         }
         let Some(screen) = lock.as_mut() else { return; };
@@ -542,38 +611,53 @@ impl Gui {
         let Some(screen) = lock.as_mut() else {
             return if self.in_overlay(screen_id) { Flow::Cancel } else { Flow::Continue };
         };
+        let before = screen.widgets.focused();
         let outcome = input(&mut screen.widgets);
-        if let Outcome::Pressed(id) = outcome {
-            let action = screen.actions.iter().find(|(button, _)| *button == id).map(|(_, action)| *action);
-            if let Some(action) = action {
-                let mut expanded = screen.expanded;
-                let size = screen.size;
-                let scroll = screen.scroll;
-                match action {
-                    Action::Expand(index) => {
-                        expanded = if expanded == Some(index) { None } else { Some(index) };
-                    }
-                    Action::Switch(key, default) => {
-                        let current = flag(host, key, default);
-                        let _ = save(host, key, if current { "false" } else { "true" });
-                    }
-                    Action::Cycle(option) => {
-                        if let OptionKind::Choice { default, values } = option.kind {
-                            let current = saved_value(host, option.key).unwrap_or_else(|| default.to_owned());
-                            let index = values.iter().position(|value| *value == current).unwrap_or(0);
-                            let _ = save(host, option.key, values[(index + 1) % values.len()]);
-                        }
-                    }
-                    Action::Adjust(option, direction) => {
-                        if let OptionKind::Range { default, min, max, step } = option.kind {
-                            let current = screen.option_amount(host, option.key, default, min, max);
-                            let next = (current + f64::from(direction) * step).clamp(min, max);
-                            let _ = save(host, option.key, &format!("{next}"));
-                        }
-                    }
-                }
-                *screen = Screen::new(host, size, scroll, expanded);
+        if before != screen.widgets.focused() {
+            if let Some(id) = before {
+                screen.commit_number(host, id);
             }
+        }
+        match outcome {
+            Outcome::Changed(id) => screen.mark_number(id),
+            Outcome::Submitted(id) => {
+                screen.commit_number(host, id);
+                screen.widgets.set_focus(host, None);
+            }
+            Outcome::Pressed(id) => {
+                let action = screen.actions.iter().find(|(button, _)| *button == id)
+                    .map(|(_, action)| *action);
+                if let Some(action) = action {
+                    let mut expanded = screen.expanded;
+                    let size = screen.size;
+                    let scroll = screen.scroll;
+                    match action {
+                        Action::Expand(index) => {
+                            expanded = if expanded == Some(index) { None } else { Some(index) };
+                        }
+                        Action::Switch(key, default) => {
+                            let current = flag(host, key, default);
+                            let _ = save(host, key, if current { "false" } else { "true" });
+                        }
+                        Action::Cycle(option) => {
+                            if let OptionKind::Choice { default, values } = option.kind {
+                                let current = saved_value(host, option.key).unwrap_or_else(|| default.to_owned());
+                                let index = values.iter().position(|value| *value == current).unwrap_or(0);
+                                let _ = save(host, option.key, values[(index + 1) % values.len()]);
+                            }
+                        }
+                        Action::Adjust(option, direction) => {
+                            if let OptionKind::Range { default, min, max, step } = option.kind {
+                                let current = screen.option_amount(host, option.key, default, min, max);
+                                let next = (current + f64::from(direction) * step).clamp(min, max);
+                                let _ = save(host, option.key, &format!("{next}"));
+                            }
+                        }
+                    }
+                    *screen = Screen::new(host, size, scroll, expanded);
+                }
+            }
+            _ => {}
         }
         if outcome.handled() || self.in_overlay(screen_id) { Flow::Cancel } else { Flow::Continue }
     }
@@ -586,6 +670,7 @@ impl Gui {
             return if self.in_overlay(event.screen.id) { Flow::Cancel } else { Flow::Continue };
         }
         let next = screen.scroll - event.scroll[1] as f32 * SCROLL_STEP;
+        screen.commit_focused(host);
         let size = screen.size;
         let expanded = screen.expanded;
         *screen = Screen::new(host, size, next, expanded);
@@ -597,6 +682,7 @@ impl Gui {
         let mut lock = self.screen.lock().unwrap_or_else(|error| error.into_inner());
         if let Some(screen) = lock.as_mut() {
             if event.button == 0 && screen.at_bar(event.screen.mouse) {
+                screen.commit_focused(host);
                 *screen = Screen::new(host, screen.size, screen.move_bar(event.screen.mouse), screen.expanded);
                 screen.drag_bar = true;
                 return Flow::Cancel;
@@ -604,6 +690,7 @@ impl Gui {
         }
         if let Some(screen) = lock.as_mut() {
             if screen.footer.mouse_pressed(host, event.screen.mouse, event.button, event.modifiers).handled() {
+                screen.commit_focused(host);
                 if self.in_overlay(event.screen.id) {
                     self.overlay.store(false, Ordering::Relaxed);
                     *lock = None;
@@ -640,6 +727,7 @@ impl Gui {
         let mut lock = self.screen.lock().unwrap_or_else(|error| error.into_inner());
         if let Some(screen) = lock.as_mut() {
             if screen.drag_bar && event.button == 0 {
+                screen.commit_focused(host);
                 *screen = Screen::new(host, screen.size, screen.move_bar(event.screen.mouse), screen.expanded);
                 screen.drag_bar = true;
                 return Flow::Cancel;
@@ -650,10 +738,17 @@ impl Gui {
     }
 
     pub fn key_pressed(&self, host: &dyn ClientHost, event: &mut ScreenKeyPressedPreEvent<'_>) -> Flow {
-        if self.in_overlay(event.screen.id) && event.key == "key.keyboard.escape" {
-            self.overlay.store(false, Ordering::Relaxed);
-            *self.screen.lock().unwrap_or_else(|error| error.into_inner()) = None;
-            return Flow::Cancel;
+        if self.active(host, event.screen.id) && event.key == "key.keyboard.escape" {
+            let mut lock = self.screen.lock().unwrap_or_else(|error| error.into_inner());
+            if let Some(screen) = lock.as_mut() {
+                screen.commit_focused(host);
+            }
+            if self.in_overlay(event.screen.id) {
+                self.overlay.store(false, Ordering::Relaxed);
+                *lock = None;
+                return Flow::Cancel;
+            }
+            return Flow::Continue;
         }
         self.input(host, event.screen.id, |widgets| widgets.key_pressed(host, event.key, event.modifiers))
     }
