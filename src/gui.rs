@@ -15,6 +15,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 const SCREEN_ID: &str = "horizon_qol_suite";
 const ROW_H: f32 = 25.0;
+const CATEGORY_H: f32 = 32.0;
 const PAD: f32 = 6.0;
 const SCROLL_STEP: f32 = 26.0;
 
@@ -37,6 +38,34 @@ struct ModuleSpec {
     key: &'static str,
     label: &'static str,
     options: &'static [OptionSpec],
+    category: Category,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Category {
+    Enchanting,
+    Inventory,
+    Hud,
+    Gathering,
+    World,
+    Creatures,
+    Trading,
+    Messages,
+}
+
+impl Category {
+    const fn label(self) -> &'static str {
+        match self {
+            Self::Enchanting => "Enchanting & Anvils",
+            Self::Inventory => "Inventory & Equipment",
+            Self::Hud => "HUD & Camera",
+            Self::Gathering => "Mining & Nature",
+            Self::World => "World Interactions",
+            Self::Creatures => "Mobs & Loot",
+            Self::Trading => "Villager Trading",
+            Self::Messages => "Player Messages",
+        }
+    }
 }
 
 const fn toggle(key: &'static str, label: &'static str, default: bool) -> OptionSpec {
@@ -178,34 +207,34 @@ const HANDS: &[OptionSpec] = &[
 ];
 
 // Only modules with actual hook implementations are listed.
+// Enchantment extraction will join Enchanting when a working hook is available.
 const MODULES: &[ModuleSpec] = &[
-    ModuleSpec { key: "inventory_totem", label: "Totem Protection", options: &[] },
-    ModuleSpec { key: "inventory_mending", label: "Item Repair", options: MENDING },
-    ModuleSpec { key: "double_doors", label: "Linked Doors", options: DOORS },
-    ModuleSpec { key: "infinite_trading", label: "Trading", options: TRADING },
-    ModuleSpec { key: "shulker_drops_two", label: "Shulker Loot", options: SHULKER },
-    ModuleSpec { key: "respawning_shulkers", label: "Shulker Respawns", options: RESPAWN },
-    ModuleSpec { key: "enchantment_level_indicator", label: "Enchantment Caps", options: ENCHANT },
-    ModuleSpec { key: "what_durability", label: "Durability", options: &[] },
-    ModuleSpec { key: "always_wither_skull", label: "Wither Skull Drops", options: &[] },
-    ModuleSpec { key: "friendly_griefing", label: "Mob Griefing", options: &[] },
-    ModuleSpec { key: "gui_clock", label: "Clock", options: CLOCK },
-    ModuleSpec { key: "gui_compass", label: "Compass", options: COMPASS },
-    ModuleSpec { key: "vanilla_zoom", label: "Zoom", options: ZOOM },
-    ModuleSpec { key: "dragon_drops_elytra", label: "Dragon Loot", options: &[] },
-    ModuleSpec { key: "hide_hands", label: "Hand Visibility", options: HANDS },
-    ModuleSpec { key: "first_join_message", label: "First Join", options: &[] },
-    ModuleSpec { key: "welcome_message", label: "Join Messages", options: &[] },
-    ModuleSpec { key: "vein_miner", label: "Vein Mining", options: VEIN },
-    ModuleSpec { key: "tree_harvester", label: "Tree Cutting", options: TREE },
-    ModuleSpec { key: "leaf_decay", label: "Leaves", options: LEAF_DECAY },
-    ModuleSpec { key: "ench_level_langpatch", label: "Level Formatting", options: LANGPATCH },
-    ModuleSpec { key: "superflat_world_no_slimes", label: "Superflat Slimes", options: SUPERFLAT },
-    ModuleSpec { key: "tax_free_levels", label: "XP Costs", options: TAXFREE },
-    ModuleSpec { key: "unlimited_enchantments", label: "Enchantments", options: UNLIMITED },
-    ModuleSpec { key: "affordable_anvil", label: "Anvils", options: ANVIL },
+    ModuleSpec { key: "unlimited_enchantments", label: "Enchantment Levels", options: UNLIMITED, category: Category::Enchanting },
+    ModuleSpec { key: "affordable_anvil", label: "Anvil Costs", options: ANVIL, category: Category::Enchanting },
+    ModuleSpec { key: "tax_free_levels", label: "XP Cost Rules", options: TAXFREE, category: Category::Enchanting },
+    ModuleSpec { key: "enchantment_level_indicator", label: "Max-Level Indicators", options: ENCHANT, category: Category::Enchanting },
+    ModuleSpec { key: "ench_level_langpatch", label: "Level Formatting", options: LANGPATCH, category: Category::Enchanting },
+    ModuleSpec { key: "inventory_totem", label: "Inventory Totems", options: &[], category: Category::Inventory },
+    ModuleSpec { key: "inventory_mending", label: "XP Item Repair", options: MENDING, category: Category::Inventory },
+    ModuleSpec { key: "what_durability", label: "Durability Control", options: &[], category: Category::Inventory },
+    ModuleSpec { key: "gui_clock", label: "World Clock", options: CLOCK, category: Category::Hud },
+    ModuleSpec { key: "gui_compass", label: "Navigation Compass", options: COMPASS, category: Category::Hud },
+    ModuleSpec { key: "vanilla_zoom", label: "Camera Zoom", options: ZOOM, category: Category::Hud },
+    ModuleSpec { key: "hide_hands", label: "Hand Visibility", options: HANDS, category: Category::Hud },
+    ModuleSpec { key: "vein_miner", label: "Vein Mining", options: VEIN, category: Category::Gathering },
+    ModuleSpec { key: "tree_harvester", label: "Tree Harvesting", options: TREE, category: Category::Gathering },
+    ModuleSpec { key: "leaf_decay", label: "Leaf Decay", options: LEAF_DECAY, category: Category::Gathering },
+    ModuleSpec { key: "double_doors", label: "Paired Doors", options: DOORS, category: Category::World },
+    ModuleSpec { key: "friendly_griefing", label: "Mob Griefing", options: &[], category: Category::World },
+    ModuleSpec { key: "superflat_world_no_slimes", label: "Superflat Slime Spawns", options: SUPERFLAT, category: Category::World },
+    ModuleSpec { key: "shulker_drops_two", label: "Shulker Shell Drops", options: SHULKER, category: Category::Creatures },
+    ModuleSpec { key: "respawning_shulkers", label: "Shulker Respawning", options: RESPAWN, category: Category::Creatures },
+    ModuleSpec { key: "always_wither_skull", label: "Wither Skull Drops", options: &[], category: Category::Creatures },
+    ModuleSpec { key: "dragon_drops_elytra", label: "Dragon Drops", options: &[], category: Category::Creatures },
+    ModuleSpec { key: "infinite_trading", label: "Trade Restocking", options: TRADING, category: Category::Trading },
+    ModuleSpec { key: "first_join_message", label: "First Join Message", options: &[], category: Category::Messages },
+    ModuleSpec { key: "welcome_message", label: "Welcome Messages", options: &[], category: Category::Messages },
 ];
-
 #[derive(Clone, Copy)]
 enum Action {
     Expand(usize),
@@ -353,7 +382,10 @@ impl Screen {
         let bottom = (size[1] - 34.).max(top + 24.);
         let viewport = [x, top, w, bottom - top];
         let total = PAD * 2. + MODULES.iter().enumerate().map(|(index, module)| {
-            ROW_H + if expanded == Some(index) {
+            let header = if index == 0 || MODULES[index - 1].category != module.category {
+                CATEGORY_H
+            } else { 0. };
+            header + ROW_H + if expanded == Some(index) {
                 ROW_H * module.options.len().max(1) as f32
             } else { 0. }
         }).sum::<f32>();
@@ -364,7 +396,14 @@ impl Screen {
         };
         let mut y = top + PAD - scroll;
         for index in 0..MODULES.len() {
-            y = screen.row(host, index, x + 4., y, w - 15.);
+            let category = MODULES[index].category;
+            if index == 0 || MODULES[index - 1].category != category {
+                if screen.visible(y, 21.) {
+                    screen.label(category.label(), x + 9., y + 8., 0xFFFF_DDA0);
+                }
+                y += CATEGORY_H;
+            }
+            y = screen.row(host, index, x + 12., y, w - 23.);
         }
         screen.footer.add_button(Button::new(
             [size[0] / 2. - 60., size[1] - 27., 120., 20.], Text::literal("Done")
@@ -473,7 +512,7 @@ impl Gui {
         // Native-style list borders. The content is clipped to the central panel.
         event.draw.fill([0., 32., size[0], 1.], 0xFF55_5555);
         event.draw.fill([0., size[1] - 34., size[0], 1.], 0xFF55_5555);
-        let title = "Suite Modules";
+        let title = "Quality of Life Settings";
         let x = ((size[0] - event.draw.text_width(title)) / 2.).max(0.);
         event.draw.text(title, [x, 15.], 0xFFFF_FFFF, true);
         let _ = event.draw.push_clip(screen.viewport);

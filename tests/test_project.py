@@ -131,7 +131,7 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('host.mod_screen() == Some(SCREEN_ID)', gui)
         self.assertIn('fn screen_render_post(', hooks)
         self.assertIn('draw_menu_background(', gui)
-        self.assertIn('let title = "Suite Modules";', gui)
+        self.assertIn('let title = "Quality of Life Settings";', gui)
 
     def test_leaf_decay_is_independent_and_server_sided(self):
         src = (ROOT / 'src/decay.rs').read_text()
@@ -141,7 +141,7 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('fn block_changed(&self, level: &dyn LevelHost, event: &mut BlockChangedEvent)', hooks)
         self.assertIn('self.decay.changed(level, event);', hooks)
         self.assertIn('self.decay.tick(host, event);', hooks)
-        self.assertIn('ModuleSpec { key: "leaf_decay", label: "Leaves"', gui)
+        self.assertIn('ModuleSpec { key: "leaf_decay", label: "Leaf Decay"', gui)
         self.assertIn('block_random_tick(host, task.pos)', src)
         self.assertIn('fn leaf_match(', src)
         self.assertIn('fn log_match(', src)
@@ -189,8 +189,8 @@ class ProjectTests(unittest.TestCase):
         hooks = (ROOT / 'src/lib.rs').read_text()
         doors = (ROOT / 'src/doors.rs').read_text()
         compass = (ROOT / 'src/compass.rs').read_text()
-        self.assertIn('ModuleSpec { key: "double_doors", label: "Linked Doors", options: DOORS }', gui)
-        self.assertIn('ModuleSpec { key: "gui_compass", label: "Compass", options: COMPASS }', gui)
+        self.assertIn('ModuleSpec { key: "double_doors", label: "Paired Doors", options: DOORS, category: Category::World }', gui)
+        self.assertIn('ModuleSpec { key: "gui_compass", label: "Navigation Compass", options: COMPASS, category: Category::Hud }', gui)
         self.assertIn('fn right_click_block(', hooks)
         self.assertIn('self.doors.changed(level, event)', hooks)
         self.assertIn('self.doors.tick(host, event)', hooks)
@@ -242,7 +242,7 @@ class ProjectTests(unittest.TestCase):
 
     def test_english_only_ui(self):
         source = (ROOT / 'src/gui.rs').read_text()
-        self.assertIn('let title = "Suite Modules"', source)
+        self.assertIn('let title = "Quality of Life Settings"', source)
         self.assertIn('Text::literal("Done")', source)
         self.assertIn('No Additional Options', source)
         self.assertNotRegex(source, r'Configura(?:ções|coes)|Conclu[ií]do|Folhas|[ÁáÉéÍíÓóÚúÇçÃãÕõÂâÊêÔô]')

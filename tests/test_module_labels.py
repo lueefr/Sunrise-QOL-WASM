@@ -4,7 +4,9 @@ import re
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED = {'inventory_totem': 'Totem Protection', 'inventory_mending': 'Item Repair', 'double_doors': 'Linked Doors', 'infinite_trading': 'Trading', 'shulker_drops_two': 'Shulker Loot', 'respawning_shulkers': 'Shulker Respawns', 'enchantment_level_indicator': 'Enchantment Caps', 'what_durability': 'Durability', 'always_wither_skull': 'Wither Skull Drops', 'friendly_griefing': 'Mob Griefing', 'gui_clock': 'Clock', 'gui_compass': 'Compass', 'vanilla_zoom': 'Zoom', 'dragon_drops_elytra': 'Dragon Loot', 'hide_hands': 'Hand Visibility', 'first_join_message': 'First Join', 'welcome_message': 'Join Messages', 'vein_miner': 'Vein Mining', 'tree_harvester': 'Tree Cutting', 'leaf_decay': 'Leaves', 'ench_level_langpatch': 'Level Formatting', 'superflat_world_no_slimes': 'Superflat Slimes', 'tax_free_levels': 'XP Costs', 'unlimited_enchantments': 'Enchantments', 'affordable_anvil': 'Anvils'}
+EXPECTED = {'unlimited_enchantments': 'Enchantment Levels', 'affordable_anvil': 'Anvil Costs', 'tax_free_levels': 'XP Cost Rules', 'enchantment_level_indicator': 'Max-Level Indicators', 'ench_level_langpatch': 'Level Formatting', 'inventory_totem': 'Inventory Totems', 'inventory_mending': 'XP Item Repair', 'what_durability': 'Durability Control', 'gui_clock': 'World Clock', 'gui_compass': 'Navigation Compass', 'vanilla_zoom': 'Camera Zoom', 'hide_hands': 'Hand Visibility', 'vein_miner': 'Vein Mining', 'tree_harvester': 'Tree Harvesting', 'leaf_decay': 'Leaf Decay', 'double_doors': 'Paired Doors', 'friendly_griefing': 'Mob Griefing', 'superflat_world_no_slimes': 'Superflat Slime Spawns', 'shulker_drops_two': 'Shulker Shell Drops', 'respawning_shulkers': 'Shulker Respawning', 'always_wither_skull': 'Wither Skull Drops', 'dragon_drops_elytra': 'Dragon Drops', 'infinite_trading': 'Trade Restocking', 'first_join_message': 'First Join Message', 'welcome_message': 'Welcome Messages'}
+EXPECTED_GROUPS = {'Enchanting': ['unlimited_enchantments', 'affordable_anvil', 'tax_free_levels', 'enchantment_level_indicator', 'ench_level_langpatch'], 'Inventory': ['inventory_totem', 'inventory_mending', 'what_durability'], 'Hud': ['gui_clock', 'gui_compass', 'vanilla_zoom', 'hide_hands'], 'Gathering': ['vein_miner', 'tree_harvester', 'leaf_decay'], 'World': ['double_doors', 'friendly_griefing', 'superflat_world_no_slimes'], 'Creatures': ['shulker_drops_two', 'respawning_shulkers', 'always_wither_skull', 'dragon_drops_elytra'], 'Trading': ['infinite_trading'], 'Messages': ['first_join_message', 'welcome_message']}
+
 
 
 class ModuleLabelTests(unittest.TestCase):
@@ -13,6 +15,22 @@ class ModuleLabelTests(unittest.TestCase):
         actual = dict(re.findall(r'ModuleSpec \{ key: "([^"]+)", label: "([^"]+)"', gui))
         self.assertEqual(actual, EXPECTED)
         self.assertEqual(len(set(actual.values())), len(actual))
+
+    def test_groups_are_contiguous_and_complete(self):
+        gui = (ROOT / "src/gui.rs").read_text()
+        entries = re.findall(
+            r'ModuleSpec \{ key: "([^"]+)", label: "[^"]+", options: .*?, category: Category::(\w+) \}',
+            gui,
+        )
+        self.assertEqual(len(entries), len(EXPECTED))
+        actual = {}
+        for key, group in entries:
+            actual.setdefault(group, []).append(key)
+        self.assertEqual(actual, EXPECTED_GROUPS)
+        self.assertIn('CATEGORY_H', gui)
+        self.assertIn('category.label()', gui)
+        self.assertIn('if index == 0 || MODULES[index - 1].category != category', gui)
+        self.assertNotIn('Grind Enchantments', gui)
 
     def test_locales(self):
         for lang in ("en_us", "pt_br"):
