@@ -1,6 +1,7 @@
 name: Build and release Sunrise QOL
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -57,9 +58,81 @@ jobs:
           components: rust-src
           targets: wasm32-unknown-unknown
 
-      - name: Install Sunrise WASM build tool
+      - name: Read pinned Sunrise SDK revision
         if: steps.version.outputs.changed == 'true'
+        id: sdk
+        shell: bash
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          from pathlib import Path
+          import tomllib
+
+          with Path("Cargo.toml").open("rb") as file:
+              revision = tomllib.load(file)["package"]["metadata"]["sunrise"]["sdk"]
+          print(f"revision={revision}")
+          PY
+
+      # Save the compiled CLI before building the mod, even if that build fails.
+      - name: Restore Sunrise build tool
+        if: steps.version.outputs.changed == 'true'
+        id: builder-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.cargo/bin/cargo-sunrise-mod
+          key: ${{ runner.os }}-${{ runner.arch }}-sunrise-cli-7fb2aa4d-rust-1.99.1-v1
+
+      - name: Install Sunrise WASM build tool
+        if: steps.version.outputs.changed == 'true' && steps.builder-cache.outputs.cache-hit != 'true'
         run: cargo install --git https://github.com/sunrise-org/sunrise --rev 7fb2aa4d cargo-sunrise-mod --locked
+
+      - name: Verify Sunrise build tool
+        if: steps.version.outputs.changed == 'true'
+        run: test -x "$HOME/.cargo/bin/cargo-sunrise-mod"
+
+      - name: Save Sunrise build tool
+        if: steps.version.outputs.changed == 'true' && steps.builder-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ~/.cargo/bin/cargo-sunrise-mod
+          key: ${{ steps.builder-cache.outputs.cache-primary-key }}
+
+      # The cache key follows the SDK revision pinned in Cargo.toml.
+      - name: Restore pinned Sunrise SDK
+        if: steps.version.outputs.changed == 'true'
+        id: sdk-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .sunrise/sdk
+          key: ${{ runner.os }}-${{ runner.arch }}-sunrise-sdk-${{ steps.sdk.outputs.revision }}-v1
+
+      - name: Prepare pinned Sunrise SDK
+        if: steps.version.outputs.changed == 'true'
+        shell: bash
+        env:
+          SUNRISE_SDK: ${{ steps.sdk.outputs.revision }}
+        run: |
+          set -euo pipefail
+          if [ ! -f .sunrise/sdk/api/crates/sunrise-mod-api/Cargo.toml ]; then
+            cargo sunrise-mod update --sunrise "$SUNRISE_SDK"
+          fi
+          test -f .sunrise/sdk/api/crates/sunrise-mod-api/Cargo.toml
+
+      - name: Save pinned Sunrise SDK
+        if: steps.version.outputs.changed == 'true' && steps.sdk-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .sunrise/sdk
+          key: ${{ steps.sdk-cache.outputs.cache-primary-key }}
+
+      - name: Restore compiled Rust dependencies
+        if: steps.version.outputs.changed == 'true'
+        uses: Swatinem/rust-cache@v2
+        with:
+          prefix-key: sunrise-qol-wasm-v1
+          cache-bin: 'false'
+          cache-on-failure: 'true'
+          workspaces: |
+            . -> target
 
       - name: Compile sandboxed mod (not the game)
         if: steps.version.outputs.changed == 'true'
