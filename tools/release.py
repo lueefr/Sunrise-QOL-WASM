@@ -13,11 +13,14 @@ PATTERN = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
 # Match its annotated-tag object so a future legitimate v2.0.0 is unaffected.
 LEGACY_TAG = "v2.0.0"
 LEGACY_TAG_OBJECT = "3f51c263fd5f4743e4a7c4798e28cf7cbae3eeb8"
+# Treat changes to the real-runtime verification as releasable work: the
+# validated package and its release gate can change without touching src/.
 MOD_PATHS = (
-    ".github/workflows/release.yml", "tools/release.py",
-    "src", "assets", "Cargo.toml", "sunrise-mod.toml", "instalar.fish",
-    "preparar-rust.fish", "diagnosticar.fish", "tools/wasm_link_check.py",
-    "tools/migrate_settings.py",
+    ".github/workflows/release.yml", ".github/workflows/sandbox.yml",
+    "tools/release.py", "src", "assets", "Cargo.toml",
+    "sunrise-mod.toml", "instalar.fish", "preparar-rust.fish",
+    "diagnosticar.fish", "tools/wasm_link_check.py",
+    "tools/migrate_settings.py", "tools/sandbox", "tests",
 )
 
 
@@ -132,9 +135,9 @@ def notes(path: Path, version: str) -> None:
     for subject, body in commits:
         if subject and not subject.startswith("chore(release):"):
             sections[kind(subject, body)].append(subject)
-    lines = [f"# Sunrise QOL v{version}", "", "Compiled Sunrise WASM mod (\`.smod\`).", ""]
+    lines = [f"# Sunrise QOL v{version}", "", "Compiled Sunrise WASM mod (`.smod`).", ""]
     if previous:
-        lines.append(f"Changes since {previous} (mod files only):")
+        lines.append(f"Changes since {previous} (source and verification files):")
     else:
         lines.append("Initial release of the existing Sunrise QOL source tree.")
     lines.append("")
