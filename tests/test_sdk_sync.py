@@ -1,5 +1,6 @@
 """Regression checks for selecting the published Sunrise nightly SDK."""
 import importlib.util
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -94,6 +95,25 @@ class SdkSyncTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "incomplete"):
             sdk.run(self.cargo, None, missing)
         self.assertEqual(sdk.pinned(self.cargo), OLD)
+
+    def test_verified_sdk_builder_is_used_in_both_workflows(self):
+        root = SCRIPT.parents[1]
+        installer = root / "tools/install_sdk_tool.sh"
+        subprocess.run(["bash", "-n", str(installer)], check=True)
+        script = installer.read_text()
+        self.assertIn("openssl pkeyutl -verify -rawin", script)
+        self.assertIn("sha256sum --check expected", script)
+        self.assertIn('tar -xJf "$tool" cargo-sunrise-mod', script)
+        self.assertIn('release="sdk-$revision"', script)
+
+        for path in (".github/workflows/release.yml",
+                     ".github/workflows/sandbox.yml"):
+            with self.subTest(path=path):
+                workflow = (root / path).read_text()
+                self.assertIn('bash tools/install_sdk_tool.sh "$SDK_REVISION"', workflow)
+                self.assertIn("steps.sdk.outputs.revision", workflow)
+                self.assertNotIn("cargo install --git https://github.com/sunrise-org/sunrise",
+                                 workflow)
 
     def test_rejects_invalid_existing_pin(self):
         self.cargo.write_text(self.cargo.read_text().replace(OLD, "main"))
