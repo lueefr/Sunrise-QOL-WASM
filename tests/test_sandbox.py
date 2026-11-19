@@ -100,6 +100,17 @@ class SandboxTests(unittest.TestCase):
         self.assertIn('assert!(!offer.out_of_stock()', fixture)
         self.assertIn('anvil_update(world, 75, false, None)', fixture)
         self.assertIn('anvil_update(world, 75, true, Some("Renamed"))', fixture)
+        # Assert material item drop counts from actual guest dispatch, not toggles alone.
+        self.assertIn("check_wither_skull(&mut world);", fixture)
+        self.assertIn("check_dragon_elytra(&mut world);", fixture)
+        self.assertIn("check_shulker_shells(&mut world);", fixture)
+        self.assertIn("mod_api::dispatch_loot_drops(world, &context, drops)", fixture)
+        self.assertIn('count(&drops, "minecraft:wither_skeleton_skull"), 1', fixture)
+        self.assertIn('count(&drops, "minecraft:elytra"), 1', fixture)
+        self.assertIn('count(&drops, "minecraft:shulker_shell"), 4', fixture)
+        self.assertIn('count(&larger, "minecraft:shulker_shell"), 9', fixture)
+        self.assertIn('set_toggle(world, "always_drop", true)', fixture)
+
 
     def test_release_gates_on_real_loader(self):
         workflow = (ROOT / ".github/workflows/release.yml").read_text()
