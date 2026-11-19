@@ -280,6 +280,8 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "automatic_doors", label: "Automatic Doors", options: AUTO_DOORS, category: Category::World },
     ModuleSpec { key: "beacon_placement", label: "Beacon Placement", options: BEACON, category: Category::World },
     ModuleSpec { key: "conduit_placement", label: "Conduit Placement", options: CONDUIT, category: Category::World },
+    ModuleSpec { key: "keep_soil_tilled", label: "Keep Soil Tilled", options: &[], category: Category::World },
+    ModuleSpec { key: "softer_hay_bales", label: "Softer Hay Bales", options: &[], category: Category::World },
     ModuleSpec { key: "spawner_control", label: "Spawner Control", options: &[], category: Category::World },
     ModuleSpec { key: "cycle_paintings", label: "Painting Cycling", options: &[], category: Category::World },
     ModuleSpec { key: "dismount_entity", label: "Passenger Removal", options: DISMOUNT, category: Category::World },
