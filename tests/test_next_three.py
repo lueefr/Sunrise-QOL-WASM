@@ -25,7 +25,8 @@ class NextThreeTests(unittest.TestCase):
         self.assertTrue(all(items[i][0] == "x" for i in range(a, a + 3)))
         self.assertTrue(names[a + 1].startswith("Passengers can be removed"))
         self.assertTrue(names[a + 2].startswith("Fireworks can launch"))
-        self.assertEqual(items[a + 3][0], " ")
+        self.assertTrue(all(items[i][0] == "x" for i in range(a + 3, a + 6)))
+        self.assertEqual(items[a + 6][0], " ")
 
     def test_painting_same_size_and_retains_content(self):
         self.assertIn("variant_size(host, name) != Some(size)", self.painting)

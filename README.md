@@ -22,9 +22,9 @@ Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's 
 - [x] Placed paintings can be cycled without breaking them *(initial support: same-size placeable variants from the server data pack; painting entity is replaced without drops; gameplay validation pending)*
 - [x] Passengers can be removed from mounted entities more conveniently *(initial support: sneak + right-click, protects player passengers by default)*
 - [x] Fireworks can launch Elytra flight directly from the ground *(experimental client sequence: upward lift, vanilla glide request and rocket use; runtime validation pending)*
-- [ ] Commands can apply enchantments above vanilla level limits
-- [ ] Bone meal supports additional plants and faster growth
-- [ ] Tamed companions follow their owners during command teleportation
+- [x] Commands can apply enchantments above vanilla level limits *(partial: operators can run /enchant @s <enchantment> 6–255 on supported vanilla gear; standard lower levels and other selectors remain vanilla)*
+- [x] Bone meal supports additional plants and faster growth *(initial support: crouching matures common crops; nether wart, cactus, sugar cane, and vine growth; server-side only, in-game validation pending)*
+- [x] Tamed companions follow their owners during command teleportation *(partial: capped scan of nearby owned, non-sitting, unleaded vanilla pets during /tp; no damage immunity, allay, or mounted-player parity yet)*
 - [ ] Metal equipment can be smelted back into materials
 - [ ] Hoes gain faster farming actions and soil-tilling controls
 - [x] Undying totems can activate from inventory slots *(partial)*
@@ -81,7 +81,7 @@ Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's 
 - [ ] Extract enchantments from equipment onto books, or separate enchanted books using a grindstone.
 - [ ] Toggle full-bright world lighting without changing the game's normal gamma limits.
 
-Original upstream references for this batch: [Cycle Paintings](https://github.com/Serilum/Cycle-Paintings), [Dismount Entity](https://github.com/Serilum/Dismount-Entity) and [Easy Elytra Takeoff](https://github.com/Serilum/Easy-Elytra-Takeoff).
+Original upstream references for this batch: [Cycle Paintings](https://github.com/Serilum/Cycle-Paintings), [Dismount Entity](https://github.com/Serilum/Dismount-Entity) and [Easy Elytra Takeoff](https://github.com/Serilum/Easy-Elytra-Takeoff). The next three features reference [Extended Bone Meal](https://github.com/Serilum/Extended-Bone-Meal), [Followers Teleport Too](https://github.com/Serilum/Followers-Teleport-Too), and the existing Unlimited Enchantments implementation.
 
 ## Settings and controls
 

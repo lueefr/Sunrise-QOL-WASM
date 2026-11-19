@@ -31,6 +31,9 @@ mod hands;
 mod messages;
 mod mining;
 mod settings;
+mod enchant_command;
+mod extended_bonemeal;
+mod followers;
 mod trading;
 
 use mod_api::{
@@ -45,6 +48,7 @@ use mod_api::{
     RightClickBlockEvent, RightClickItemEvent, GuiRenderPostEvent, LivingDeathEvent, LivingDeathPostEvent,
     PlayerXpChangeEvent, ItemTooltipEvent, MobSpawnPositionCheckEvent,
     PlayerCommandEvent, PlayerCommandsSentEvent, EntityInteractEvent, InteractionResult,
+    BonemealEvent, TeleportCommandEvent, PlayerTeleportedEvent,
 };
 
 #[derive(Default)]
@@ -59,6 +63,8 @@ pub struct SunriseQol {
     conduit: conduit::Conduit,
     help: help::Help,
     elytra: elytra::Elytra,
+    enchant_command: enchant_command::EnchantCommands,
+    followers: followers::Followers,
     compass: compass::Compass,
     clock: clock::Clock,
     shulkers: shulkers::Shulkers,
@@ -162,7 +168,20 @@ impl Hooks for SunriseQol {
     }
 
     fn player_command(&self, host: &mut dyn ServerHost, event: &mut PlayerCommandEvent<'_>) -> Flow {
+        if self.enchant_command.command(host, event) == Flow::Cancel { return Flow::Cancel; }
         self.help.command(host, event)
+    }
+
+    fn bonemeal(&self, side: HostSide<'_>, event: &mut BonemealEvent<'_>) -> Flow {
+        extended_bonemeal::apply(side, event)
+    }
+
+    fn teleport_command(&self, host: &mut dyn ServerHost, event: &mut TeleportCommandEvent<'_>) -> Flow {
+        self.followers.before(host, event)
+    }
+
+    fn player_teleported(&self, host: &mut dyn ServerHost, event: &mut PlayerTeleportedEvent<'_>) {
+        self.followers.after(host, event);
     }
 
     fn player_commands_sent(&self, host: &mut dyn ServerHost, event: &mut PlayerCommandsSentEvent<'_>) {
@@ -179,6 +198,7 @@ impl Hooks for SunriseQol {
         self.doors.tick(host, event);
         self.automatic_doors.tick(host, event);
         self.shulkers.tick(host, event);
+        self.enchant_command.tick(host, event);
     }
 
     fn loot_drops(&self, host: &mut dyn ServerHost, event: &mut LootDropsEvent<'_>) {
@@ -229,6 +249,8 @@ impl Hooks for SunriseQol {
         self.doors.reset();
         self.automatic_doors.reset();
         self.help.reset();
+        self.enchant_command.reset();
+        self.followers.reset();
         self.elytra.reset();
         self.shulkers.reset();
     }

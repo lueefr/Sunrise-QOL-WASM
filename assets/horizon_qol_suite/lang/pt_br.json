@@ -98,5 +98,17 @@
   "qol.module.ground_elytra_fireworks": "Ground Elytra Fireworks",
   "horizon_qol_suite.option.ground_elytra_fireworks": "Ground Elytra Fireworks: ON/OFF",
   "qol.option.dismount_players": "Allow Removing Player Passengers",
-  "qol.option.elytra_launch_strength": "Ground Lift Strength (%)"
+  "qol.option.elytra_launch_strength": "Ground Lift Strength (%)",
+  "qol.module.enchant_command": "Extended Enchant Command",
+  "horizon_qol_suite.option.enchant_command": "Extended Enchant Command: ON/OFF",
+  "qol.module.extended_bonemeal": "Extended Bone Meal",
+  "horizon_qol_suite.option.extended_bonemeal": "Extended Bone Meal: ON/OFF",
+  "qol.module.followers_teleport": "Followers Teleport Too",
+  "horizon_qol_suite.option.followers_teleport": "Followers Teleport Too: ON/OFF",
+  "qol.option.bonemeal_instant": "Instant Growth While Sneaking",
+  "qol.option.bonemeal_nether_wart": "Nether Wart",
+  "qol.option.bonemeal_cactus": "Cactus",
+  "qol.option.bonemeal_sugar_cane": "Sugar Cane",
+  "qol.option.bonemeal_vines": "Vines",
+  "qol.option.followers_radius": "Follower Search Radius"
 }

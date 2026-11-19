@@ -177,6 +177,18 @@ const TAXFREE: &[OptionSpec] = &[
     toggle("taxfree_remove_anvil_limit", "Remove Too Expensive Limit", true),
 ];
 
+const BONEMEAL: &[OptionSpec] = &[
+    toggle("bonemeal_instant", "Instant Growth While Sneaking", true),
+    toggle("bonemeal_nether_wart", "Nether Wart", true),
+    toggle("bonemeal_cactus", "Cactus", true),
+    toggle("bonemeal_sugar_cane", "Sugar Cane", true),
+    toggle("bonemeal_vines", "Vines", true),
+];
+
+const FOLLOWERS: &[OptionSpec] = &[
+    range("followers_radius", "Follower Search Radius", 50., 1., 256., 1.),
+];
+
 const UNLIMITED: &[OptionSpec] = &[
     range("unlimited_max_level", "Maximum Enchantment Level", 255., 1., 255., 1.),
     range("unlimited_max_anvil_cost", "Maximum Anvil Cost", 39., 1., 10000., 1.),
@@ -246,6 +258,7 @@ const HANDS: &[OptionSpec] = &[
 // Enchantment extraction will join Enchanting when a working hook is available.
 const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "unlimited_enchantments", label: "Enchantment Levels", options: UNLIMITED, category: Category::Enchanting },
+    ModuleSpec { key: "enchant_command", label: "Extended Enchant Command", options: &[], category: Category::Enchanting },
     ModuleSpec { key: "affordable_anvil", label: "Anvil Costs", options: ANVIL, category: Category::Enchanting },
     ModuleSpec { key: "tax_free_levels", label: "XP Cost Rules", options: TAXFREE, category: Category::Enchanting },
     ModuleSpec { key: "enchantment_level_indicator", label: "Max-Level Indicators", options: ENCHANT, category: Category::Enchanting },
@@ -261,6 +274,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "vein_miner", label: "Vein Mining", options: VEIN, category: Category::Gathering },
     ModuleSpec { key: "tree_harvester", label: "Tree Harvesting", options: TREE, category: Category::Gathering },
     ModuleSpec { key: "leaf_decay", label: "Leaf Decay", options: LEAF_DECAY, category: Category::Gathering },
+    ModuleSpec { key: "extended_bonemeal", label: "Extended Bone Meal", options: BONEMEAL, category: Category::Gathering },
     ModuleSpec { key: "double_doors", label: "Paired Doors", options: DOORS, category: Category::World },
     ModuleSpec { key: "automatic_doors", label: "Automatic Doors", options: AUTO_DOORS, category: Category::World },
     ModuleSpec { key: "beacon_placement", label: "Beacon Placement", options: BEACON, category: Category::World },
@@ -269,6 +283,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "cycle_paintings", label: "Painting Cycling", options: &[], category: Category::World },
     ModuleSpec { key: "dismount_entity", label: "Passenger Removal", options: DISMOUNT, category: Category::World },
     ModuleSpec { key: "ground_elytra_fireworks", label: "Ground Elytra Fireworks", options: ELYTRA, category: Category::World },
+    ModuleSpec { key: "followers_teleport", label: "Followers Teleport Too", options: FOLLOWERS, category: Category::World },
     ModuleSpec { key: "friendly_griefing", label: "Mob Griefing", options: &[], category: Category::World },
     ModuleSpec { key: "superflat_world_no_slimes", label: "Superflat Slime Spawns", options: SUPERFLAT, category: Category::World },
     ModuleSpec { key: "drowned_prevention", label: "Drowned Prevention", options: DROWNED, category: Category::Creatures },
