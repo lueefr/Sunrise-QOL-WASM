@@ -92,7 +92,9 @@ class SandboxTests(unittest.TestCase):
         self.assertIn("check_villager_griefing(&mut world);", fixture)
         # Gameplay coverage must execute guest hooks and inspect their responses.
         self.assertIn("check_superflat_slimes(&mut world);", fixture)
-        self.assertIn("check_infinite_trading(&mut world);", fixture)
+        self.assertIn("check_infinite_trading(&mut trading_world);", fixture)
+        self.assertIn("struct TradingWorld", fixture)
+        self.assertIn("impl mod_api::prelude::EntitiesHost for TradingWorld", fixture)
         self.assertIn("check_affordable_anvil(&mut world);", fixture)
         self.assertIn("mod_api::dispatch_trade_with_villager(", fixture)
         self.assertIn("mod_api::dispatch_anvil_update(", fixture)
