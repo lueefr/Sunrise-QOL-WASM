@@ -73,19 +73,21 @@ answers**, and the test fails when an assertion does not hold:
 | Enchantment Level Cap Indicator | Sharpness 5 and 4 tooltips | Only enchantments at or above their known vanilla level cap gain a configurable colored marker |
 | Hide Hands | Render empty/held main hands and several offhand items | Cancellation changes only while enabled; per-hand settings and held totem/torch rules are respected |
 | Vanilla Zoom | Held/not-held binding, world playing/not-playing and saved strength | Zoom appears only for held input in-game and honors factor/smoothing; OFF resets behavior |
+| First Join Message | First login, reconnect, second player, and module OFF | Actual `PlayerLoggedIn` guest hook sends the greeting only once per player and saves a per-world marker |
+| Welcome Message | First/repeated joins, module OFF, welcome only and both messages enabled | Guest sends welcome on every connection, independently of first-join state |
 
-**Coverage:** 13 of 38 implemented modules have direct behavioral sandbox
+**Coverage:** 15 of 38 implemented modules have direct behavioral sandbox
 scenarios at this stage. They execute the actual packaged guest through Wasmtime
 and assert output/event mutations; they do **not** simulate a complete world.
-The remaining 25 modules are compiled and smoke-loaded, but their gameplay
+The remaining 23 modules are compiled and smoke-loaded, but their gameplay
 effects are **not yet automatically verified**. Source-pattern unit tests do
 not count toward gameplay coverage.
 
 The test host is `crates/sunrise-mod-wasm/tests/support/bulk_files.rs`
 from the pinned Sunrise source tree. It provides real in-memory config
 storage and dispatches command, entity lifecycle, merchant trade,
-anvil, loot-drop, client tooltip, first-person render and camera zoom hooks
-through Wasmtime;
+anvil, loot-drop, client tooltip, first-person render, camera zoom and
+player-login hooks through Wasmtime;
 it is **not** the full Sunrise `Game` or a populated level.
 
 ## What this *does not* prove
@@ -107,6 +109,8 @@ it is **not** the full Sunrise `Game` or a populated level.
   from a simulated client host, without rendering a real GUI or loading fonts.
   The render-hand test checks cancellation of the default geometry; the zoom
   test checks its output struct, not an actual rendered camera or FOV transition.
+  Login tests assert actual guest chat messages and writes to world-local in-memory
+  files. Player handles are simulated; they do not send network chat packets.
 - Future world-state tests should use Sunrise's existing headless `Game` test
   fixtures to create players, blocks and entities, then assert changes after
   dispatching QOL's hooks. Such tests must explicitly enable the relevant
