@@ -216,6 +216,42 @@ fn check_superflat_slimes(world: &mut bulk_files::World) {
     eprintln!("PASS superflat_world_no_slimes: off, explicit confirmation, slime-only veto");
 }
 
+// This test host deliberately has no loaded merchants. A threshold above
+// novice must refuse an unresolved villager, never panic on Host::entity.
+#[derive(Default)]
+struct TradingWorld {
+    files: bulk_files::World,
+}
+impl mod_api::Host for TradingWorld {
+    fn backend(&self) -> Option<mod_api::BackendRef<'_>> {
+        Some(mod_api::BackendRef::of(self))
+    }
+}
+mod_api::impl_host_areas!(TradingWorld, except(config, entities));
+impl mod_api::prelude::ConfigHost for TradingWorld {
+    fn config_files(&self) -> &'static dyn mod_api::ConfigFiles {
+        self.files.config_files()
+    }
+    fn data_files(&self) -> &'static dyn mod_api::ConfigFiles {
+        self.files.data_files()
+    }
+}
+impl mod_api::prelude::EntitiesHost for TradingWorld {
+    fn entity(&self, _: u32) -> Option<mod_api::EntityRef> { None }
+    fn level(&self, _: &str) -> Option<mod_api::LevelRef> { None }
+}
+impl mod_api::Backend for TradingWorld {}
+mod_api::impl_backend_areas!(TradingWorld);
+impl mod_api::BackendMut for TradingWorld {}
+mod_api::impl_backend_mut_areas!(TradingWorld);
+impl mod_api::ServerHost for TradingWorld {}
+mod_api::impl_server_host_areas!(TradingWorld, except(config));
+impl mod_api::prelude::ConfigServerHost for TradingWorld {
+    fn world_data_files(&self) -> &dyn mod_api::ConfigFiles {
+        self.files.world_data_files()
+    }
+}
+
 fn trade_offer() -> mod_api::item::merchant::MerchantOffer {
     use mod_api::item::merchant::{ItemCost, MerchantOffer};
     let emerald = mod_api::__private::item_key("minecraft:emerald").expect("emerald registered");
@@ -231,7 +267,7 @@ fn trade_offer() -> mod_api::item::merchant::MerchantOffer {
     offer
 }
 
-fn check_infinite_trading(world: &mut bulk_files::World) {
+fn check_infinite_trading(world: &mut TradingWorld) {
     let mut offer = trade_offer();
     assert!(offer.out_of_stock(), "the fixture starts with an exhausted trade");
     mod_api::dispatch_trade_with_villager(world, 17, "minecraft:villager", &mut offer);
@@ -1015,7 +1051,8 @@ fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
                 "minecraft:totem_of_undying", "minecraft:torch",
             ]).expect("resolve scenario item IDs");
             check_superflat_slimes(&mut world);
-            check_infinite_trading(&mut world);
+            let mut trading_world = TradingWorld::default();
+            check_infinite_trading(&mut trading_world);
             check_affordable_anvil(&mut world);
             let mut loot_world = LootWorld::default();
             check_wither_skull(&mut loot_world);
