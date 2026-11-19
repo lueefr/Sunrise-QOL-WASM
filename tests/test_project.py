@@ -65,12 +65,12 @@ class ProjectTests(unittest.TestCase):
         settings = (ROOT / 'src/settings.rs').read_text()
         modules = re.findall(r'ModuleSpec \{ key: "([^"]+)", label:', gui)
         options = re.findall(r'(?:toggle|range|choice)\("([^"]+)", "', gui)
-        self.assertEqual(len(modules), 41)
+        self.assertEqual(len(modules), 42)
         self.assertEqual(len(options), 92)
         self.assertIn('let _ = save(host, key,', gui)
         self.assertIn('let _ = save(host, option.key,', gui)
         self.assertNotIn('host.set_setting(', gui)
-        self.assertEqual(len(set(modules) | set(options)), 133)
+        self.assertEqual(len(set(modules) | set(options)), 134)
         for hook in ('input_key', 'client_tick_pre', 'screen_render_post',
                      'screen_mouse_button_pressed_pre', 'screen_mouse_button_released_pre',
                      'screen_mouse_dragged_pre', 'screen_key_pressed_pre',
@@ -173,7 +173,7 @@ class ProjectTests(unittest.TestCase):
     def test_migration_preserves_legacy_settings(self):
         import tempfile
         from migrate_settings import keys, migrate
-        self.assertEqual(len(keys(ROOT)), 133)
+        self.assertEqual(len(keys(ROOT)), 134)
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)
             previous = game / 'sunrise-mods' / '.sunrise-mod-data' / 'horizon_qol_suite'
@@ -249,7 +249,7 @@ class ProjectTests(unittest.TestCase):
         gui = (ROOT / 'src/gui.rs').read_text()
         src = (ROOT / 'src/lib.rs').read_text()
         matrix = (ROOT / 'docs/PARITY.md').read_text()
-        self.assertEqual(gui.count('ModuleSpec { key:'), 41)
+        self.assertEqual(gui.count('ModuleSpec { key:'), 42)
         self.assertNotIn('key: "full_brightness_toggle"', gui)
         self.assertIn('No public WASM API', matrix)
         self.assertIn('superflat::on_join(host, event)', src)
@@ -337,6 +337,15 @@ class DurabilityRegressionTests(unittest.TestCase):
         self.assertIn('key: "nutritious_milk"', gui)
         self.assertIn('hungerLevelIncrease', gui)
         self.assertIn('saturationLevelIncrease', gui)
+
+    def test_zombie_door_protection_uses_actual_goal_api(self):
+        hooks = (ROOT / 'src/lib.rs').read_text()
+        zombie = (ROOT / 'src/zombie.rs').read_text()
+        gui = (ROOT / 'src/gui.rs').read_text()
+        self.assertIn('zombie::joined(host, event);', hooks)
+        self.assertIn('mob.remove_goal(host, "BreakDoor")', zombie)
+        self.assertIn('mob.set_can_open_doors(host, false)', zombie)
+        self.assertIn('key: "zombie_proof_doors"', gui)
 
     def test_trading_original_level_guard(self):
         src = (ROOT / 'src/trading.rs').read_text()
