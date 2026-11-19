@@ -29,12 +29,17 @@ pub fn on_loot(host: &mut dyn ServerHost, event: &mut LootDropsEvent<'_>) {
         "minecraft:shulker" if on(host, "shulker_drops_two") => {
             let id = "minecraft:shulker_shell";
             let count = amount(host, "drop_count", 2., 1., 64.) as u32;
-            if let Some(stack) = event.drops.iter_mut().find(|stack| stack.item().id(host) == id) {
-                // Keep the existing loot when higher; never delete unrelated entries.
-                if stack.count() < count {
+            // The original changes every shell item entity to exactly the
+            // configured count (even when its existing stack was larger).
+            // The loot hook acts before item entities spawn in Sunrise.
+            let mut found = false;
+            for stack in event.drops.iter_mut() {
+                if stack.item().id(host) == id {
+                    found = true;
                     let _ = stack.set_count(count);
                 }
-            } else if flag(host, "always_drop", false) {
+            }
+            if !found && flag(host, "always_drop", false) {
                 add(host, event.drops, id, count);
             }
         }
