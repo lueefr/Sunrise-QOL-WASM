@@ -69,18 +69,20 @@ answers**, and the test fails when an assertion does not hold:
 | Guaranteed Wither Skeleton Skulls | Wither Skeleton death and existing loot | One skull is added only while enabled; existing skulls are not duplicated, and coal remains |
 | Dragon Drops Elytra | Ender Dragon death with other loot | Exactly one Elytra is added while enabled; existing Elytra and unrelated loot are preserved |
 | Shulker Drops Two | Shulker death with configurable minimum of four shells | Existing stack is raised to four, higher counts are preserved, and missing shells appear only with always-drop enabled |
+| Enchantment Level Language Patch | High enchantment levels and potion potency in client tooltip lines | Raw localization is preserved when disabled; enabled levels become decimal or Roman based on independent settings |
+| Enchantment Level Cap Indicator | Sharpness 5 and 4 tooltips | Only enchantments at or above their known vanilla level cap gain a configurable colored marker |
 
-**Coverage:** 9 of 38 implemented modules have direct behavioral sandbox
+**Coverage:** 11 of 38 implemented modules have direct behavioral sandbox
 scenarios at this stage. They execute the actual packaged guest through Wasmtime
 and assert output/event mutations; they do **not** simulate a complete world.
-The remaining 29 modules are compiled and smoke-loaded, but their gameplay
+The remaining 27 modules are compiled and smoke-loaded, but their gameplay
 effects are **not yet automatically verified**. Source-pattern unit tests do
 not count toward gameplay coverage.
 
 The test host is `crates/sunrise-mod-wasm/tests/support/bulk_files.rs`
 from the pinned Sunrise source tree. It provides real in-memory config
 storage and dispatches command, entity lifecycle, merchant trade, anvil and
-loot-drop events through Wasmtime;
+loot-drop and client tooltip events through Wasmtime;
 it is **not** the full Sunrise `Game` or a populated level.
 
 ## What this *does not* prove
@@ -98,6 +100,8 @@ it is **not** the full Sunrise `Game` or a populated level.
   The loot tests inspect mutable drop lists in a Wasmtime callback; they do
   not spawn item entities in chunks or persist them in a game world. These
   distinctions are deliberately not counted as full-world gameplay tests.
+  The tooltip tests assert the modified `Text` trees produced by the guest
+  from a simulated client host, without rendering a real GUI or loading fonts.
 - Future world-state tests should use Sunrise's existing headless `Game` test
   fixtures to create players, blocks and entities, then assert changes after
   dispatching QOL's hooks. Such tests must explicitly enable the relevant
