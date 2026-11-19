@@ -100,7 +100,7 @@ fn flip(host: &mut dyn ServerHost, level: LevelRef, pos: [i32; 3],
     if door_name(&text, iron) != Some(expected)
         || property(&text, "half") != Some("lower")
         || property(&text, "open") != Some(if open { "false" } else { "true" })
-        || property(&text, "powered") == Some("true") {
+        {
         return false;
     }
     let Some(next) = changed_open(&text, open).and_then(|text| host.block_state_id(&text)) else {
@@ -149,9 +149,10 @@ impl AutomaticDoors {
                 .take(MAX_CLOSES).cloned().collect::<Vec<_>>()
         }).unwrap_or_default();
         for entry in due {
+            let upper = [entry.pos[0], entry.pos[1].saturating_add(1), entry.pos[2]];
             if players.iter().any(|player| player.dimension == entry.dimension
                 && (!skip_sneak || !player.sneaking)
-                && close_enough(player.pos, entry.pos)) {
+                && close_enough(player.pos, upper)) {
                 continue;
             }
             let Some(level) = host.level(&entry.dimension) else { continue; };
@@ -163,14 +164,12 @@ impl AutomaticDoors {
                 // square, including doors not initially opened by this module.
                 for dx in -1..=1 {
                     for dz in -1..=1 {
-                        let pos = [entry.pos[0] + dx, entry.pos[1], entry.pos[2] + dz];
+                        let pos = [upper[0] + dx, upper[1], upper[2] + dz];
                         let Some(state) = level.block_state(host, pos) else { continue; };
                         let Some(text) = host.block_state_string(state) else { continue; };
                         let Some(name) = door_name(&text, iron) else { continue; };
-                        if property(&text, "half") == Some("lower")
-                            && property(&text, "open") == Some("true") {
-                            let _ = flip(host, level, pos, name, false, iron);
-                        }
+                        let Some(lower) = lower_pos(&text, pos) else { continue; };
+                        let _ = flip(host, level, lower, name, false, iron);
                     }
                 }
             }
@@ -188,17 +187,19 @@ impl AutomaticDoors {
         let Some(lower) = lower_pos(&text, pos) else { return; };
         let Some(state) = level.block_state(host, lower) else { return; };
         let Some(lower_text) = host.block_state_string(state) else { return; };
-        if property(&lower_text, "open") != Some("false")
-            || property(&lower_text, "powered") == Some("true") {
-            return;
-        }
+        let is_open = match property(&lower_text, "open") {
+            Some("true") => true,
+            Some("false") => false,
+            _ => return,
+        };
         if self.opened.lock().ok().is_none_or(|list| {
             list.len() >= MAX_TRACKED
                 || list.iter().any(|item| item.dimension == dimension && item.pos == lower)
         }) {
             return;
         }
-        if flip(host, level, lower, name, true, iron) {
+        // Upstream schedules closure even when the nearby door is already open.
+        if is_open || flip(host, level, lower, name, true, iron) {
             if let Ok(mut list) = self.opened.lock() {
                 list.push(Opened {
                     dimension: dimension.to_owned(), pos: lower,
@@ -235,8 +236,9 @@ impl AutomaticDoors {
             return;
         }
         let now = self.tick.fetch_add(1, Ordering::Relaxed).saturating_add(1);
-        let delay = delay_ticks(amount(host, "auto_door_open_time", 2500., 0., 10000.));
-        if !on(host, "automatic_doors") || delay == 0 {
+        let open_time = amount(host, "auto_door_open_time", 2500., 0., 10000.);
+        let delay = delay_ticks(open_time);
+        if !on(host, "automatic_doors") || open_time == 0. {
             if let Ok(mut list) = self.opened.lock() { list.clear(); }
             return;
         }
@@ -277,6 +279,7 @@ mod tests {
         assert_eq!(delay_ticks(1999.), 20);
         assert_eq!(delay_ticks(10000.), 200);
         assert_eq!(delay_ticks(0.), 0);
+        assert_eq!(delay_ticks(500.), 0);
         assert!(close_enough([1.5, 64., 1.5], [1, 64, 1]));
         assert!(!close_enough([10.5, 64., 10.5], [1, 64, 1]));
     }
