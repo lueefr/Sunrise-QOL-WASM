@@ -20,7 +20,7 @@ MOD_PATHS = (
     "tools/release.py", "src", "assets", "Cargo.toml",
     "sunrise-mod.toml", "instalar.fish", "preparar-rust.fish",
     "diagnosticar.fish", "tools/wasm_link_check.py",
-    "tools/migrate_settings.py", "tools/sandbox", "tests",
+    "tools/migrate_settings.py", "tools/sdk_sync.py", "tools/sandbox", "tests",
 )
 
 
@@ -47,8 +47,15 @@ def latest() -> tuple[str | None, tuple[int, int, int] | None]:
 
 def changed_paths(previous: str | None) -> list[str]:
     if previous is None:
-        return git("ls-files", "--", *MOD_PATHS).splitlines()
-    return git("diff", "--name-only", f"{previous}..HEAD", "--", *MOD_PATHS).splitlines()
+        committed = git("ls-files", "--", *MOD_PATHS).splitlines()
+    else:
+        committed = git("diff", "--name-only", f"{previous}..HEAD",
+                        "--", *MOD_PATHS).splitlines()
+    # CI moves the SDK pin in the working tree before the release is planned.
+    # The pin is committed only *after* the new SDK builds and passes the sandbox.
+    working = git("diff", "--name-only", "--", *MOD_PATHS).splitlines()
+    staged = git("diff", "--cached", "--name-only", "--", *MOD_PATHS).splitlines()
+    return sorted(set(committed + working + staged))
 
 
 def messages(previous: str | None) -> list[tuple[str, str]]:
