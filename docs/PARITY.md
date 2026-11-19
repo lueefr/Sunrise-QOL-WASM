@@ -24,10 +24,10 @@ installer to stop before replacing the installed mod.
 | Followers Teleport Too | Partial | Before /tp command, captures at most 32 nearby matching Owner UUID pets (not sitting or leashed); after a successful player teleport, attempts to move them to the target. No allays, mount remounting, temporary damage immunity or guaranteed interdimensional parity |
 | Command Help | Partial | Per-player permitted root commands, configurable colors, clickable command suggestions and page navigation; falls back to vanilla for detailed syntax because the API does not expose Brigadier's usage tree or subcommand formatting |
 | Drowned Prevention | Initial | Read-only drowned spawn veto near online players with Conduit Power in matching level; configurable horizontal radius 0–400. Gameplay validation pending |
-| Inventory Totem | Initial | Vanilla totem only; death protection API must be tested |
+| Inventory Totem | Partial | Honors the `minecraft:death_protection` item component, including modded/data-pack items with empty or supported clear/apply-effects payloads; increments the used-item stat and rolls back consumption on failed health write. Unsupported death effects, original vanilla advancement trigger, visual activation and bypass damage-tag matching remain unverified |
 | Inventory Mending | Initial | Repairs inventory items on XP-gain hook; differs from Mending orb selection |
 | Double Doors | Partial | Manual clicks synchronize paired blocks in the same server interaction (untested); redstone/AI still defer, and remote client prediction is missing. See [DOORS-SYNC.md](DOORS-SYNC.md) |
-| Infinite Trading | Partial | Only completed trade reset; original pre-trade offer, level, multiplier, modded traders and trade-loop semantics are missing |
+| Infinite Trading | Partial | Completed trade reset now also respects the original configurable minimum villager level (1–5) using Sunrise's merchant API. Still missing original pre-trade stock checks, multiplier, modded traders and recipe-aware trade-loop prevention |
 | Shulker Drops Two | Partial | Every shell loot stack is now set to exactly the configured count and optional missing shell is added; late-spawned item entities are not intercepted |
 | Respawning Shulkers | Partial | Captures and restores original entity NBT, health 30, new UUID and scheduled respawn; engine entity recreation, unloaded chunks and shutdown differ |
 | Enchantment Level Indicator | Partial | Tooltip max-level suffix, with saved NBT and registered max-level lookup; modded tooltip layouts unverified |
