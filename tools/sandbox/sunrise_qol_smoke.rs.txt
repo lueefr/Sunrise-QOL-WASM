@@ -8,8 +8,10 @@ mod test_stack;
 #[path = "support/bulk_files.rs"]
 mod bulk_files;
 
-use mod_api::{ConfigFiles, ConfigPath, Host, TextContent};
-use mod_api::text::TextClick;
+use mod_api::{ConfigFiles, ConfigPath, Host};
+use mod_api::prelude::ConfigHost;
+use mod_api::text::{TextClick, TextContent};
+
 use sunrise_mod_package::manifest::Package;
 use sunrise_mod_wasm::{WasmPackage, load};
 use std::path::Path;
@@ -47,7 +49,7 @@ fn check_help(world: &mut bulk_files::World) {
     mod_api::dispatch_player_commands_sent(world, player, "Tester", &mut names);
     let (mut canceled, mut replies) = (false, Vec::new());
     mod_api::dispatch_player_command(
-        world, player, "Tester", "help 2", &mut canceled, &mut replies
+        world, player, "Tester", "help 2", &mut replies, &mut canceled
     );
     assert!(!canceled, "disabled compact_help must keep vanilla /help");
     assert!(replies.is_empty(), "disabled module must not send replies");
@@ -59,7 +61,7 @@ fn check_help(world: &mut bulk_files::World) {
     mod_api::dispatch_player_commands_sent(world, player, "Tester", &mut names);
     (canceled, replies) = (false, Vec::new());
     mod_api::dispatch_player_command(
-        world, player, "Tester", "help 1", &mut canceled, &mut replies
+        world, player, "Tester", "help 1", &mut replies, &mut canceled
     );
     assert!(canceled, "the enabled help must override /help 1");
     assert_eq!(replies.len(), 5, "title, two commands, next navigation and hint");
@@ -76,7 +78,7 @@ fn check_help(world: &mut bulk_files::World) {
     }), "next page navigation must execute the correct /help page");
     (canceled, replies) = (false, Vec::new());
     mod_api::dispatch_player_command(
-        world, player, "Tester", "help 2", &mut canceled, &mut replies
+        world, player, "Tester", "help 2", &mut replies, &mut canceled
     );
     assert!(canceled);
     assert_eq!(replies.len(), 6, "middle page must have both navigation links");
@@ -90,14 +92,14 @@ fn check_help(world: &mut bulk_files::World) {
     // Detailed syntax continues to be answered by the game, not invented.
     (canceled, replies) = (false, Vec::new());
     mod_api::dispatch_player_command(
-        world, player, "Tester", "help give", &mut canceled, &mut replies
+        world, player, "Tester", "help give", &mut replies, &mut canceled
     );
     assert!(!canceled && replies.is_empty());
 
     set_toggle(world, "compact_help", false);
     (canceled, replies) = (false, Vec::new());
     mod_api::dispatch_player_command(
-        world, player, "Tester", "help 2", &mut canceled, &mut replies
+        world, player, "Tester", "help 2", &mut replies, &mut canceled
     );
     assert!(!canceled && replies.is_empty(), "disabled setting must take effect");
     clear_toggle(world, "compact_help");
@@ -110,7 +112,7 @@ fn check_extended_enchant(world: &mut bulk_files::World) {
     let (mut canceled, mut replies) = (false, Vec::new());
     mod_api::dispatch_player_command(
         world, player, "Tester", "enchant @s minecraft:sharpness 11",
-        &mut canceled, &mut replies
+        &mut replies, &mut canceled
     );
     assert!(!canceled && replies.is_empty(), "off must leave vanilla /enchant");
 
@@ -120,7 +122,7 @@ fn check_extended_enchant(world: &mut bulk_files::World) {
     (canceled, replies) = (false, Vec::new());
     mod_api::dispatch_player_command(
         world, player, "Tester", "enchant @s minecraft:sharpness 11",
-        &mut canceled, &mut replies
+        &mut replies, &mut canceled
     );
     assert!(canceled, "over configured max must be rejected");
     assert_eq!(replies.len(), 1, "must explain configured limit");
@@ -129,7 +131,7 @@ fn check_extended_enchant(world: &mut bulk_files::World) {
     (canceled, replies) = (false, Vec::new());
     mod_api::dispatch_player_command(
         world, player, "Tester", "enchant @a minecraft:sharpness 11",
-        &mut canceled, &mut replies
+        &mut replies, &mut canceled
     );
     assert!(!canceled && replies.is_empty(), "other selectors remain vanilla");
 
