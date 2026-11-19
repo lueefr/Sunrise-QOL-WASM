@@ -963,7 +963,7 @@ fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
         assert!(manifest.inject.is_empty(), "sandbox requires an unstaged, API-only mod");
         let info = mod_api::PackageInfo::new(
             manifest.id.clone(),
-            manifest.version.clone(),
+            manifest.version.to_string(),
             mod_api::PackageKind::Code,
             mod_api::Side::Both,
             vec![manifest.id.clone()],
