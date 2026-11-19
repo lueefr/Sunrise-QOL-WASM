@@ -496,12 +496,16 @@ fn check_shulker_shells(world: &mut LootWorld) {
     let cap = ConfigPath::new("horizon_qol_suite/drop_count").unwrap();
     world.config_files().write(&cap, b"4").unwrap();
     loot(world, "minecraft:shulker", &mut drops, true, false);
-    assert_eq!(count(&drops, "minecraft:shulker_shell"), 4, "enabled minimum must raise the stack count");
+    assert_eq!(count(&drops, "minecraft:shulker_shell"), 4, "enabled count must replace the shell stack");
     assert_eq!(count(&drops, "minecraft:diamond"), 3, "other mod or vanilla loot must remain");
 
     let mut larger = vec![stack("minecraft:shulker_shell", 9)];
     loot(world, "minecraft:shulker", &mut larger, true, false);
-    assert_eq!(count(&larger, "minecraft:shulker_shell"), 9, "minimum must never reduce a larger drop");
+    assert_eq!(count(&larger, "minecraft:shulker_shell"), 4, "upstream sets exact shell count, not a minimum");
+    let mut multiple = vec![stack("minecraft:shulker_shell", 1), stack("minecraft:shulker_shell", 9)];
+    loot(world, "minecraft:shulker", &mut multiple, true, false);
+    assert_eq!(count(&multiple, "minecraft:shulker_shell"), 8,
+        "each of the two vanilla shell stacks must become the configured count");
 
     let mut no_shell = vec![stack("minecraft:diamond", 1)];
     loot(world, "minecraft:shulker", &mut no_shell, true, false);
@@ -522,7 +526,7 @@ fn check_shulker_shells(world: &mut LootWorld) {
     clear_toggle(world, "shulker_drops_two");
     clear_toggle(world, "always_drop");
     let _ = world.config_files().remove(&cap);
-    eprintln!("PASS shulker_drops_two: OFF, configurable minimum, no loss, optional always_drop");
+    eprintln!("PASS shulker_drops_two: OFF, exact count for each shell stack, optional always_drop");
 }
 
 
