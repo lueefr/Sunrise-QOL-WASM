@@ -32,6 +32,9 @@ jobs:
       - name: Check out mod source
         uses: actions/checkout@v4
 
+      - name: Validate source and sandbox assertions
+        run: python3 -m unittest discover -s tests -v
+
       - name: Install pinned Rust
         uses: dtolnay/rust-toolchain@stable
         with:
