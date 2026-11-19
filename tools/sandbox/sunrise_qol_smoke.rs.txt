@@ -171,6 +171,168 @@ fn check_villager_griefing(world: &mut bulk_files::World) {
     eprintln!("PASS friendly_griefing: disabled, villager, other mob, entity lifecycle");
 }
 
+
+fn check_superflat_slimes(world: &mut bulk_files::World) {
+    let mut canceled = false;
+    mod_api::dispatch_entity_join_level(
+        world, "minecraft:overworld", 81, "minecraft:slime",
+        [0.0, 64.0, 0.0], false, &mut canceled
+    );
+    assert!(!canceled, "the disabled module must not veto slime spawns");
+
+    set_toggle(world, "superflat_world_no_slimes", true);
+    canceled = false;
+    mod_api::dispatch_entity_join_level(
+        world, "minecraft:overworld", 82, "minecraft:slime",
+        [0.0, 64.0, 0.0], false, &mut canceled
+    );
+    assert!(!canceled, "a world without explicit superflat confirmation must be untouched");
+
+    set_toggle(world, "confirm_superflat", true);
+    canceled = false;
+    mod_api::dispatch_entity_join_level(
+        world, "minecraft:overworld", 83, "minecraft:slime",
+        [0.0, 64.0, 0.0], false, &mut canceled
+    );
+    assert!(canceled, "confirmed superflat slime must be prevented from joining");
+
+    canceled = false;
+    mod_api::dispatch_entity_join_level(
+        world, "minecraft:overworld", 84, "minecraft:zombie",
+        [0.0, 64.0, 0.0], false, &mut canceled
+    );
+    assert!(!canceled, "other mobs must still be allowed in confirmed superflat worlds");
+
+    set_toggle(world, "superflat_world_no_slimes", false);
+    canceled = false;
+    mod_api::dispatch_entity_join_level(
+        world, "minecraft:overworld", 85, "minecraft:slime",
+        [0.0, 64.0, 0.0], false, &mut canceled
+    );
+    assert!(!canceled, "turning the module off must immediately restore slime spawns");
+    clear_toggle(world, "superflat_world_no_slimes");
+    clear_toggle(world, "confirm_superflat");
+    eprintln!("PASS superflat_world_no_slimes: off, explicit confirmation, slime-only veto");
+}
+
+fn trade_offer() -> mod_api::item::merchant::MerchantOffer {
+    use mod_api::item::merchant::{ItemCost, MerchantOffer};
+    let emerald = mod_api::__private::item_key("minecraft:emerald").expect("emerald registered");
+    let bread = mod_api::__private::item_key("minecraft:bread").expect("bread registered");
+    let mut offer = MerchantOffer::new(
+        ItemCost::new(mod_api::ItemStack::of(emerald)),
+        None,
+        mod_api::ItemStack::of(bread),
+        4, 2, 0.05,
+    );
+    offer.uses = 4;
+    offer.demand = 6;
+    offer
+}
+
+fn check_infinite_trading(world: &mut bulk_files::World) {
+    let mut offer = trade_offer();
+    assert!(offer.out_of_stock(), "the fixture starts with an exhausted trade");
+    mod_api::dispatch_trade_with_villager(world, 17, "minecraft:villager", &mut offer);
+    assert_eq!((offer.uses, offer.demand), (4, 6), "disabled module must preserve the trade");
+
+    set_toggle(world, "infinite_trading", true);
+    offer = trade_offer();
+    mod_api::dispatch_trade_with_villager(world, 17, "minecraft:villager", &mut offer);
+    assert_eq!((offer.uses, offer.demand), (0, 0), "villager stock and demand must reset");
+    assert!(!offer.out_of_stock(), "a reset offer must be available for another trade");
+
+    set_toggle(world, "villagers", false);
+    offer = trade_offer();
+    mod_api::dispatch_trade_with_villager(world, 17, "minecraft:villager", &mut offer);
+    assert_eq!((offer.uses, offer.demand), (4, 6), "villager-specific switch must work");
+
+    offer = trade_offer();
+    mod_api::dispatch_trade_with_villager(world, 18, "minecraft:wandering_trader", &mut offer);
+    assert_eq!((offer.uses, offer.demand), (0, 0), "wandering trader is enabled by default");
+
+    set_toggle(world, "wandering_trader", false);
+    offer = trade_offer();
+    mod_api::dispatch_trade_with_villager(world, 18, "minecraft:wandering_trader", &mut offer);
+    assert_eq!((offer.uses, offer.demand), (4, 6), "wandering trader switch must work");
+
+    offer = trade_offer();
+    mod_api::dispatch_trade_with_villager(world, 19, "minecraft:piglin", &mut offer);
+    assert_eq!((offer.uses, offer.demand), (4, 6), "unrelated traders must be untouched");
+
+    set_toggle(world, "villagers", true);
+    set_toggle(world, "remove_demand", false);
+    offer = trade_offer();
+    mod_api::dispatch_trade_with_villager(world, 17, "minecraft:villager", &mut offer);
+    assert_eq!((offer.uses, offer.demand), (0, 6), "demand reset is independently configurable");
+
+    for name in ["infinite_trading", "villagers", "wandering_trader", "remove_demand"] {
+        clear_toggle(world, name);
+    }
+    eprintln!("PASS infinite_trading: exhausted offers, villager variants, configurable demand");
+}
+
+fn anvil_update(
+    world: &mut bulk_files::World,
+    cost: i32,
+    output: bool,
+    name: Option<&str>,
+) -> (i32, bool, bool) {
+    use mod_api::item::menu::AnvilUpdate;
+    use mod_api::item::stations::AnvilResult;
+    let iron = mod_api::__private::item_key("minecraft:iron_sword").expect("sword registered");
+    let vanilla = AnvilResult {
+        result: output.then(|| mod_api::ItemStack::of(iron)),
+        cost,
+        repair_item_count_cost: 0,
+        only_renaming: false,
+    };
+    let mut update = AnvilUpdate::new(
+        mod_api::ItemStack::of(iron), None, name.map(str::to_owned), &vanilla,
+    );
+    let mut canceled = false;
+    mod_api::dispatch_anvil_update(
+        mod_api::HostSide::Server(world), 7, 1, [0, 64, 0], &mut update, &mut canceled,
+    );
+    (update.xp_cost, update.output.is_some(), canceled)
+}
+
+fn check_affordable_anvil(world: &mut bulk_files::World) {
+    assert_eq!(
+        anvil_update(world, 75, true, None), (75, true, false),
+        "disabled anvil cost module must preserve vanilla results"
+    );
+
+    set_toggle(world, "affordable_anvil", true);
+    let cap = ConfigPath::new("horizon_qol_suite/affordable_cost_cap").unwrap();
+    world.config_files().write(&cap, b"20").unwrap();
+    assert_eq!(
+        anvil_update(world, 75, true, None), (20, true, false),
+        "a produced anvil result must have its XP cost capped"
+    );
+    assert_eq!(
+        anvil_update(world, 75, false, None), (75, false, false),
+        "the mod cannot invent an output vanilla discarded"
+    );
+
+    set_toggle(world, "affordable_remove_too_expensive", false);
+    assert_eq!(
+        anvil_update(world, 75, true, None), (75, true, false),
+        "disabling Too Expensive removal must preserve the original cost"
+    );
+
+    set_toggle(world, "affordable_cheap_rename", true);
+    assert_eq!(
+        anvil_update(world, 75, true, Some("Renamed")), (1, true, false),
+        "renaming without a second item must cost one level when configured"
+    );
+    for name in ["affordable_anvil", "affordable_remove_too_expensive", "affordable_cheap_rename"] {
+        clear_toggle(world, name);
+    }
+    let _ = world.config_files().remove(&cap);
+    eprintln!("PASS affordable_anvil: off, configurable cost, absent output, cheap rename");
+}
+
 #[test]
 fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
     test_stack::on_guest_stack(|| {
@@ -208,6 +370,13 @@ fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
             check_help(&mut world);
             check_extended_enchant(&mut world);
             check_villager_griefing(&mut world);
+            // Resolve the minimal vanilla item registry needed for trade/anvil fixtures.
+            mod_api::__private::resolve_items([
+                "minecraft:emerald", "minecraft:bread", "minecraft:iron_sword",
+            ]).expect("resolve scenario item IDs");
+            check_superflat_slimes(&mut world);
+            check_infinite_trading(&mut world);
+            check_affordable_anvil(&mut world);
             // Test teardown also traverses the real guest hook.
             mod_api::dispatch_server_stopped(&mut world, false);
         });
