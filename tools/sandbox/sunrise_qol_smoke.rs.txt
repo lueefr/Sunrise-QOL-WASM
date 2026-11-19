@@ -9,7 +9,7 @@ mod test_stack;
 mod bulk_files;
 
 use mod_api::{ConfigFiles, ConfigPath, Host};
-use mod_api::prelude::ConfigHost;
+use mod_api::prelude::{ConfigHost, ConfigServerHost};
 use mod_api::text::{TextClick, TextContent};
 
 use sunrise_mod_package::manifest::Package;
