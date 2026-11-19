@@ -318,4 +318,9 @@ class DurabilityRegressionTests(unittest.TestCase):
     def test_totem_reverts_item_if_health_write_fails(self):
         src = (ROOT / 'src/totem.rs').read_text()
         self.assertIn('if !living.set_health(host, 1.) {', src)
-        self.assertIn('player.set_inventory_slot(host, slot, Some(stack))', src)
+        self.assertIn('player.set_inventory_slot(host, slot, Some(original))', src)
+        self.assertIn('ItemResource::of(&stack).value(host, &component)', src)
+        self.assertIn('minecraft:death_protection', src)
+        self.assertIn('DeathEffect::Clear', src)
+        self.assertIn('DeathEffect::Apply', src)
+        self.assertNotIn('stack.item().id(host) == "minecraft:totem_of_undying"', src)
