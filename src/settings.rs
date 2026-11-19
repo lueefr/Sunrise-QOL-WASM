@@ -12,6 +12,8 @@ pub fn storage_key(key: &str) -> &str {
         "clockTextShadow" => "clocktextshadow",
         "minuteStep" => "minutestep",
         "minimumVillagerLevel" => "minimumvillagerlevel",
+        "hungerLevelIncrease" => "hungerlevelincrease",
+        "saturationLevelIncrease" => "saturationlevelincrease",
         "showDaysPlayedWorld" => "showdaysplayedworld",
         "mustHaveClockInInventoryForGameTime" => "musthaveclockininventoryforgametime",
         "alwaysHideEmptyMainHand" => "alwayshideemptymainhand",
