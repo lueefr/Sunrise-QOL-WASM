@@ -20,7 +20,7 @@ class BottledAirTests(unittest.TestCase):
         self.assertIn("entity.max_air_supply(host)", self.src)
         self.assertIn("entity.set_air_supply(host, next)", self.src)
         self.assertIn("current.saturating_add(restored).min(max)", self.src)
-        self.assertIn("bottled_air::use_bottle(side, event)", self.hooks)
+        self.assertIn("bottled_air::use_bottle(HostSide::Server(host), event)", self.hooks)
         self.assertIn("Flow::Continue", self.src)
 
     def test_settings_and_readme_order(self):
