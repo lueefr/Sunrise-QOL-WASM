@@ -23,6 +23,7 @@ on:
       - 'tests/**'
       - 'tools/release.py'
       - 'tools/sdk_sync.py'
+      - 'tools/install_sdk_tool.sh'
 
 permissions:
   contents: write
@@ -85,20 +86,20 @@ jobs:
             rustfmt --edition 2024 --emit stdout "$file" > /dev/null
           done
 
-      # Save the compiled CLI before building the mod, even if that build fails.
+      # Cache the signature-verified prebuilt CLI matching this exact SDK.
       - name: Restore Sunrise build tool
         if: steps.version.outputs.changed == 'true'
         id: builder-cache
         uses: actions/cache/restore@v4
         with:
           path: ~/.cargo/bin/cargo-sunrise-mod
-          key: ${{ runner.os }}-${{ runner.arch }}-sunrise-cli-${{ steps.sdk.outputs.revision }}-rust-1.99.1-v1
+          key: ${{ runner.os }}-${{ runner.arch }}-sunrise-cli-${{ steps.sdk.outputs.revision }}-signed-prebuilt-v1
 
-      - name: Install Sunrise WASM build tool
+      - name: Install signed Sunrise WASM build tool
         if: steps.version.outputs.changed == 'true' && steps.builder-cache.outputs.cache-hit != 'true'
         env:
           SDK_REVISION: ${{ steps.sdk.outputs.revision }}
-        run: cargo install --git https://github.com/sunrise-org/sunrise --rev "$SDK_REVISION" cargo-sunrise-mod --locked
+        run: bash tools/install_sdk_tool.sh "$SDK_REVISION"
 
       - name: Verify Sunrise build tool
         if: steps.version.outputs.changed == 'true'
