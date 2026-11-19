@@ -236,7 +236,7 @@ class ProjectTests(unittest.TestCase):
         gui = (ROOT / 'src/gui.rs').read_text()
         src = (ROOT / 'src/lib.rs').read_text()
         matrix = (ROOT / 'docs/PARITY.md').read_text()
-        self.assertEqual(gui.count('ModuleSpec { key:'), 32)
+        self.assertEqual(gui.count('ModuleSpec { key:'), 35)
         self.assertNotIn('key: "full_brightness_toggle"', gui)
         self.assertIn('No public WASM API', matrix)
         self.assertIn('superflat::on_join(host, event)', src)
