@@ -2,7 +2,7 @@
 //! The rocket is consumed only by Minecraft's ordinary use action once gliding begins.
 use crate::settings::{amount, on};
 use mod_api::{
-    ClientHost, ClientTickPreEvent, Flow, HostSide, Identifier, RightClickItemEvent,
+    ClientHost, ClientTickPreEvent, Flow, Hand, HostSide, Identifier, RightClickItemEvent,
     ServerboundPlayPacket,
 };
 use std::sync::Mutex;
@@ -17,6 +17,7 @@ struct Launch {
     last: u64,
     attempts: u8,
     player: u32,
+    hand: Hand,
 }
 
 #[derive(Default)]
@@ -70,7 +71,7 @@ impl Elytra {
         if pending.is_some() { return Flow::Cancel; }
         let now = host.millis();
         let lift = amount(host, "elytra_launch_strength", 35., 20., 80.) as f32 / 100.;
-        *pending = Some(Launch { begun: now, last: now, attempts: 0, player: entity.id() });
+        *pending = Some(Launch { begun: now, last: now, attempts: 0, player: entity.id(), hand: event.click.hand });
         host.push_player([0., lift, 0.]);
         Flow::Cancel
     }
@@ -86,6 +87,18 @@ impl Elytra {
         let Some(player) = host.local_player() else { *guard = None; return; };
         let entity = player.entity();
         if entity.id() != pending.player { *guard = None; return; }
+        let slot = match pending.hand {
+            Hand::Main => player.selected_slot(host).and_then(|slot| u32::try_from(slot).ok()),
+            Hand::Off => Some(40),
+        };
+        let holding_rocket = slot.is_some_and(|slot| {
+            player.inventory_slots(host).is_some_and(|stacks| {
+                stacks.iter().any(|(index, stack)| {
+                    *index == slot && stack.item().id(host) == "minecraft:firework_rocket"
+                })
+            })
+        });
+        if !holding_rocket { *guard = None; return; }
         if host.living(entity).and_then(|living| living.is_gliding(host)) == Some(true) {
             *guard = None;
             // Let the normal rocket use handle the boost and inventory consumption.
