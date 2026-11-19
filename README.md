@@ -58,13 +58,13 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [ ] Metal equipment can be smelted back into materials
 - [ ] Hoes gain faster farming actions and soil-tilling controls
 - [x] Undying totems can activate from inventory slots *(partial)*
-- [ ] Farmland stays tilled after harvesting melon or pumpkin stems
+- [x] Farmland stays tilled after harvesting melons or pumpkins *(original 3×3 farmland check; gameplay validation pending)*
 - [ ] Kelp can be used as a fertilizer
 - [ ] Boats can be moved without breaking them
 - [ ] Minecarts can be repositioned without breaking them
 - [ ] Animals can be tempted again without a waiting period
 - [ ] Slow-falling effects prevent accidental farmland trampling
-- [ ] Drinking milk restores configurable hunger and saturation
+- [x] Drinking milk restores configurable hunger and saturation *(finished-consumption hook; gameplay validation pending)*
 - [x] Connected ore veins can be harvested together *(partial)*
 - [ ] Paths can be created across a selected route
 - [ ] Some utility blocks can be accessed without placing them
@@ -73,7 +73,7 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [x] Shulkers can return after a configurable respawn delay *(partial)*
 - [ ] Connected scaffolding drops are collected near the broken block
 - [ ] Allowed sleeping times can be adjusted
-- [ ] Landing on hay bales can eliminate fall damage
+- [x] Landing on hay bales can eliminate fall damage *(registered hay landing hook for players; gameplay validation pending)*
 - [ ] Used-up hand stacks refill from inventory automatically
 - [ ] Lapis lazuli can stay in an enchanting table for reuse
 - [x] Slime spawning can be disabled in superflat worlds *(partial; requires manual world confirmation)*
@@ -84,7 +84,7 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [ ] Village bells receive a crafting recipe
 - [ ] Wool crafting, dyeing, and string conversion become more flexible
 - [ ] Death drops can be protected inside a chest with equipment displayed
-- [ ] Zombies can be prevented from breaking doors
+- [x] Zombies can be prevented from breaking doors *(removes BreakDoor goal when zombies join; existing-mob and multiplayer tests pending)*
 
 ### Additional quality-of-life features
 
