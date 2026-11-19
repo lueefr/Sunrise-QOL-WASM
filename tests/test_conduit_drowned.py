@@ -29,7 +29,7 @@ class DrownedTests(unittest.TestCase):
         readme=(ROOT/"README.md").read_text()
         self.assertLess(readme.index("The help command gains clearer"),readme.index("Active conduit effects suppress nearby"))
         self.assertIn("- [x] Active conduit effects suppress nearby",readme)
-        self.assertIn("- [ ] Placed paintings can be cycled",readme)
+        self.assertIn("- [x] Placed paintings can be cycled",readme)
 
 
 if __name__=="__main__":
