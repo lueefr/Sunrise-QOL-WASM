@@ -24,8 +24,8 @@ class ProjectTests(unittest.TestCase):
         cargo = tomllib.loads((ROOT / 'Cargo.toml').read_text())
         manifest = tomllib.loads((ROOT / 'sunrise-mod.toml').read_text())
         self.assertEqual(manifest['id'], 'horizon_qol_suite')
-        self.assertEqual(cargo['package']['metadata']['sunrise']['sdk'],
-                         '2d8126336e579777eabf9b2fd8b3d476236a04f2')
+        self.assertRegex(cargo['package']['metadata']['sunrise']['sdk'],
+                         r'^[0-9a-f]{40}$')
         self.assertEqual(manifest['version'], cargo['package']['version'])
 
     def test_only_opener_is_native(self):

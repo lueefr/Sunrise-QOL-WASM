@@ -6,6 +6,23 @@ Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's 
 
 > **Development status — not a stable release.** Successful Rust/WASM builds do not certify in-game behavior or feature parity. The release pipeline now also checks WASM imports and loads the actual .smod with Sunrise's runtime, but multiplayer correctness, GUI behavior and complete-world gameplay still require game-level tests. Do not assume a module works merely because it appears in the configuration interface.
 
+## Automatic Sunrise SDK updates
+
+GitHub Actions checks the official Sunrise `nightly` release on every build and every
+six hours. It only selects a commit whose corresponding published `sdk-<sha>`
+release exists with the Linux API and integrity metadata. The build tool comes
+from the **same Sunrise revision**, rather than a separately pinned old commit.
+
+If the nightly SDK changed, the pipeline temporarily repins `Cargo.toml`,
+builds the mod against that SDK, checks guest imports and executes the real
+Wasmtime sandbox. **Only after all checks pass** does the release job commit the
+new SDK pin, advance the version and publish the matching `.smod`. A failed
+update leaves the existing release and repository pin intact. An upstream
+nightly with no published matching SDK is rejected rather than silently
+producing a mod built against the old SDK. This validates ABI compatibility
+with the official nightly, but cannot guarantee compatibility with a custom
+or older local Sunrise build.
+
 ## Runtime sandbox
 
 Before publishing a release, GitHub Actions builds the guest, checks its imports

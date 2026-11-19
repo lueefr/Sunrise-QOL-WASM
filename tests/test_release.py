@@ -109,6 +109,35 @@ class ReleasePolicyTests(unittest.TestCase):
         finally:
             release.ROOT = root
 
+    def test_uncommitted_sdk_pin_starts_release(self):
+        root = release.ROOT
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory)
+            release.ROOT = target
+
+            def git(*args):
+                return subprocess.run(["git", *args], cwd=target,
+                                      check=True, capture_output=True,
+                                      text=True).stdout.strip()
+            try:
+                git("init", "-q")
+                git("config", "user.name", "Release Tests")
+                git("config", "user.email", "test@example.invalid")
+                cargo = target / "Cargo.toml"
+                cargo.write_text('[package]\nversion = "1.1.2"\n'
+                                 '[package.metadata.sunrise]\nsdk = "old"\n')
+                git("add", "Cargo.toml")
+                git("commit", "-qm", "chore(release): v1.1.2")
+                git("tag", "v1.1.2")
+                self.assertEqual(release.changed_paths("v1.1.2"), [])
+                cargo.write_text(cargo.read_text().replace('"old"', '"new"'))
+                self.assertEqual(release.changed_paths("v1.1.2"), ["Cargo.toml"])
+                self.assertEqual(release.next_version((1, 1, 2)), (1, 1, 3))
+                git("add", "Cargo.toml")
+                self.assertEqual(release.changed_paths("v1.1.2"), ["Cargo.toml"])
+            finally:
+                release.ROOT = root
+
     def test_documentation_only_does_not_count(self):
         root = release.ROOT
         with tempfile.TemporaryDirectory() as directory:

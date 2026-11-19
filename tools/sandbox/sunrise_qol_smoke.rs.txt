@@ -813,8 +813,8 @@ mod_api::impl_host_areas!(JoinWorld, except(config, players));
 impl mod_api::Backend for JoinWorld {}
 mod_api::impl_backend_areas!(JoinWorld);
 impl mod_api::BackendMut for JoinWorld {}
-mod_api::impl_backend_mut_areas!(JoinWorld, except(players));
-impl mod_api::prelude::PlayersBackendMut for JoinWorld {
+mod_api::impl_backend_mut_areas!(JoinWorld, except(player_messages));
+impl mod_api::prelude::PlayerMessagesBackendMut for JoinWorld {
     fn player_tell(
         &mut self, player: mod_api::PlayerRef, line: mod_api::Text,
     ) -> Result<bool, mod_api::TextFormError> {
@@ -963,7 +963,7 @@ fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
         assert!(manifest.inject.is_empty(), "sandbox requires an unstaged, API-only mod");
         let info = mod_api::PackageInfo::new(
             manifest.id.clone(),
-            manifest.version.clone(),
+            manifest.version.to_string(),
             mod_api::PackageKind::Code,
             mod_api::Side::Both,
             vec![manifest.id.clone()],

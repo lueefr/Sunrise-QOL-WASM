@@ -2,6 +2,9 @@ name: Build and release Sunrise QOL
 
 on:
   workflow_dispatch:
+  # Rebuild when upstream publishes a new SDK even without a QOL source change.
+  schedule:
+    - cron: '17 */6 * * *'
   push:
     branches: [main]
     paths:
@@ -19,6 +22,8 @@ on:
       - 'tools/migrate_settings.py'
       - 'tests/**'
       - 'tools/release.py'
+      - 'tools/sdk_sync.py'
+      - 'tools/install_sdk_tool.sh'
 
 permissions:
   contents: write
@@ -37,6 +42,15 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      # The nightly tag and its signed sdk-<sha> release must both exist.
+      # Update only the runner checkout here. Persist the pin in main only
+      # after compilation, ABI validation and the real Wasmtime sandbox pass.
+      - name: Resolve and pin latest published Sunrise SDK
+        id: sdk
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/sdk_sync.py --github-output "$GITHUB_OUTPUT"
+
       - name: Determine release version
         id: version
         shell: bash
@@ -51,6 +65,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           python3 tools/release.py notes "$VERSION" --output release-notes.md
+          printf '\nSunrise nightly SDK: `%s`\n' "${{ steps.sdk.outputs.revision }}" >> release-notes.md
           python3 tools/release.py stamp "$VERSION"
           python3 -m unittest discover -s tests -p 'test*.py' -v
 
@@ -71,32 +86,20 @@ jobs:
             rustfmt --edition 2024 --emit stdout "$file" > /dev/null
           done
 
-      - name: Read pinned Sunrise SDK revision
-        if: steps.version.outputs.changed == 'true'
-        id: sdk
-        shell: bash
-        run: |
-          python3 - <<'PY' >> "$GITHUB_OUTPUT"
-          from pathlib import Path
-          import tomllib
-
-          with Path("Cargo.toml").open("rb") as file:
-              revision = tomllib.load(file)["package"]["metadata"]["sunrise"]["sdk"]
-          print(f"revision={revision}")
-          PY
-
-      # Save the compiled CLI before building the mod, even if that build fails.
+      # Cache the signature-verified prebuilt CLI matching this exact SDK.
       - name: Restore Sunrise build tool
         if: steps.version.outputs.changed == 'true'
         id: builder-cache
         uses: actions/cache/restore@v4
         with:
           path: ~/.cargo/bin/cargo-sunrise-mod
-          key: ${{ runner.os }}-${{ runner.arch }}-sunrise-cli-7fb2aa4d-rust-1.99.1-v1
+          key: ${{ runner.os }}-${{ runner.arch }}-sunrise-cli-${{ steps.sdk.outputs.revision }}-signed-prebuilt-v1
 
-      - name: Install Sunrise WASM build tool
+      - name: Install signed Sunrise WASM build tool
         if: steps.version.outputs.changed == 'true' && steps.builder-cache.outputs.cache-hit != 'true'
-        run: cargo install --git https://github.com/sunrise-org/sunrise --rev 7fb2aa4d cargo-sunrise-mod --locked
+        env:
+          SDK_REVISION: ${{ steps.sdk.outputs.revision }}
+        run: bash tools/install_sdk_tool.sh "$SDK_REVISION"
 
       - name: Verify Sunrise build tool
         if: steps.version.outputs.changed == 'true'
@@ -109,7 +112,7 @@ jobs:
           path: ~/.cargo/bin/cargo-sunrise-mod
           key: ${{ steps.builder-cache.outputs.cache-primary-key }}
 
-      # The cache key follows the SDK revision pinned in Cargo.toml.
+      # The SDK cache is keyed by the resolved official nightly revision.
       - name: Restore pinned Sunrise SDK
         if: steps.version.outputs.changed == 'true'
         id: sdk-cache
