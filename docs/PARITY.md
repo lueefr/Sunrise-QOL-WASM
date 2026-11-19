@@ -2,7 +2,7 @@
 
 There are 25 entries in the inherited suite catalog. 24 now have **source paths**,
 including deliberately scoped or incomplete ones, and one has no implementation.
-The separate Leaf Decay module is not counted among those 25. **Zero modules have
+The separate Leaf Decay module and the additional Sunrise modules are not counted among those 25. **Zero modules have
 been certified as 1:1 in-game.** The source has not been compiled in this environment.
 
 **A feature appearing in this matrix or the Suite Modules screen is NOT proof of runtime compatibility.** See [UPSTREAM-AUDIT.md](UPSTREAM-AUDIT.md) for direct comparisons against Serilum's 26.3.0 Java sources.
@@ -11,6 +11,10 @@ installer to stop before replacing the installed mod.
 
 | Module | Source status | Missing / constraints |
 |---|---|---|
+| Keep My Soil Tilled | Initial | Ported melon/pumpkin player-harvest hook and original 3×3 farmland check one layer below; converts #minecraft:dirt under the fruit back into farmland. Player-harvest timing, block permission and soil-state behavior require in-game validation |
+| Softer Hay Bales | Initial | Registered an actual `BlockPart::fall_on` for hay with zero damage multiplier only for players. Toggle read on server tick, so newly changed settings can take up to one tick to propagate; not tested in gameplay |
+| Nutritious Milk | Initial | On use-item finish, milk buckets (including IDs containing milk_bucket) restore configured hunger and saturation using the native food setters; real server item-consumption tests pending |
+| Zombie-Proof Doors | Partial | At zombie entity join, removes the Sunrise BreakDoor goal and disables door-opening navigation. Does not restore removed AI when switched OFF, and an already-loaded zombie is changed only after a new join |
 | Automatic Doors | Partial | Rewritten per-player-tick scan, integer-second timer, neighboring closure and sneaking checks from upstream 26.3.0; bounded player/tracked-door limits and gameplay timing still differ |
 | Beacon Placement | Initial | Right-click with supported vanilla mineral blocks fills empty pyramid positions and spends inventory; optional base recovery; no replacement of occupied blocks or parity for modded minerals |
 | Conduit Placement | Initial | Right-click conduit with prismarine blocks builds a bounded 42-block frame in water or air; consumes held items; frame recovery configurable; no right-click-water placement or occupied-block replacement |
