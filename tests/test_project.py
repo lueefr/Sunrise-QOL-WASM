@@ -200,7 +200,7 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('self.conduit.broken(host, event)', hooks)
         self.assertIn('self.conduit.click(host, event)', hooks)
         self.assertIn('spawner::check(host, event)', hooks)
-        self.assertIn('bottled_air::use_bottle(side, event)', hooks)
+        self.assertIn('bottled_air::use_bottle(HostSide::Server(host), event)', hooks)
         self.assertIn('self.help.sent(host, event)', hooks)
         self.assertIn('self.help.command(host, event)', hooks)
         self.assertIn('painting::interact(host, event)', hooks)
