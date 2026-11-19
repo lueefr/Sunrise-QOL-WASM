@@ -9,8 +9,8 @@ mod test_stack;
 mod bulk_files;
 
 use mod_api::{ConfigFiles, ConfigPath, Host};
-use mod_api::prelude::ConfigHost;
-use mod_api::__private::game::BackendRefOf;
+use mod_api::prelude::{ConfigHost, ConfigServerHost};
+use mod_api::__private::game::{BackendRefOf, BackendMutRefOf};
 use mod_api::text::{TextClick, TextContent};
 
 use sunrise_mod_package::manifest::Package;
@@ -795,6 +795,162 @@ fn check_vanilla_zoom(world: &mut TooltipWorld) {
     eprintln!("PASS vanilla_zoom: OFF, held input, custom strength, smooth switch, playing state");
 }
 
+
+// Join hooks write through the actual server-side world file service and player chat path.
+// The fake supplies real PlayerRef handles, but no network connection or populated world.
+#[derive(Default)]
+struct JoinWorld {
+    files: bulk_files::World,
+    players: mod_api::testing::FakePlayers,
+    told: Vec<(u128, mod_api::Text)>,
+}
+impl mod_api::Host for JoinWorld {
+    fn backend(&self) -> Option<mod_api::BackendRef<'_>> {
+        Some(mod_api::BackendRef::of(self))
+    }
+}
+mod_api::impl_host_areas!(JoinWorld, except(config, players));
+impl mod_api::Backend for JoinWorld {}
+mod_api::impl_backend_areas!(JoinWorld);
+impl mod_api::BackendMut for JoinWorld {}
+mod_api::impl_backend_mut_areas!(JoinWorld, except(players));
+impl mod_api::prelude::PlayersBackendMut for JoinWorld {
+    fn player_tell(
+        &mut self, player: mod_api::PlayerRef, line: mod_api::Text,
+    ) -> Result<bool, mod_api::TextFormError> {
+        self.told.push((player.uuid(), line));
+        Ok(true)
+    }
+}
+impl mod_api::prelude::ConfigHost for JoinWorld {
+    fn config_files(&self) -> &'static dyn mod_api::ConfigFiles {
+        self.files.config_files()
+    }
+    fn data_files(&self) -> &'static dyn mod_api::ConfigFiles {
+        self.files.data_files()
+    }
+}
+impl mod_api::prelude::PlayersHost for JoinWorld {
+    fn player(&self, uuid: u128) -> Option<mod_api::PlayerRef> {
+        mod_api::Players::server_players(&self.players)
+            .into_iter().find(|player| player.uuid() == uuid)
+    }
+}
+impl mod_api::ServerHost for JoinWorld {
+    fn backend_mut(&mut self) -> Option<mod_api::BackendMutRef<'_>> {
+        Some(mod_api::BackendMutRef::of(self))
+    }
+}
+mod_api::impl_server_host_areas!(JoinWorld, except(config));
+impl mod_api::prelude::ConfigServerHost for JoinWorld {
+    fn world_data_files(&self) -> &dyn mod_api::ConfigFiles {
+        self.files.world_data_files()
+    }
+}
+
+fn join_player(world: &mut JoinWorld, uuid: u128, entity: u32) {
+    let level = mod_api::testing::FakeHost::new().level.level();
+    world.players.join(uuid, entity, level);
+}
+
+fn logged_in(world: &mut JoinWorld, uuid: u128) {
+    assert!(mod_api::__private::listened(mod_api::HookId::PlayerLoggedIn),
+        "the packaged guest must subscribe to the player login hook");
+    mod_api::dispatch_player_logged_in(world, uuid, "Tester");
+}
+
+fn first_join_file(uuid: u128) -> ConfigPath {
+    ConfigPath::new(&format!("first_join/{uuid:032x}.seen")).unwrap()
+}
+
+fn check_first_join_message(world: &mut JoinWorld) {
+    const ALICE: u128 = 0x11110000000000000000000000000001;
+    const BOB: u128 = 0x11110000000000000000000000000002;
+    join_player(world, ALICE, 101);
+    join_player(world, BOB, 102);
+    let alice = first_join_file(ALICE);
+    let bob = first_join_file(BOB);
+
+    logged_in(world, ALICE);
+    assert!(world.told.is_empty(), "OFF must not announce any join");
+    assert!(matches!(world.world_data_files().read(&alice),
+        Err(mod_api::ConfigFileError::NotFound)), "OFF must not persist a first-join flag");
+
+    set_toggle(world, "first_join_message", true);
+    logged_in(world, ALICE);
+    assert_eq!(world.told.len(), 1, "new player must receive one first-join message");
+    assert_eq!(world.told[0].0, ALICE, "message is addressed to the joining player");
+    assert_eq!(literal(&world.told[0].1), "You wake up in an unfamiliar place.");
+    assert_eq!(world.world_data_files().read(&alice).unwrap(), b"1",
+        "first join must persist its world-local marker");
+
+    world.told.clear();
+    logged_in(world, ALICE);
+    assert!(world.told.is_empty(), "rejoining player must not be greeted as new");
+    logged_in(world, BOB);
+    assert_eq!(world.told.len(), 1, "another player's first join remains independent");
+    assert_eq!(world.told[0].0, BOB);
+    assert_eq!(world.world_data_files().read(&bob).unwrap(), b"1");
+
+    set_toggle(world, "first_join_message", false);
+    world.told.clear();
+    const CAROL: u128 = 0x11110000000000000000000000000003;
+    join_player(world, CAROL, 103);
+    logged_in(world, CAROL);
+    assert!(world.told.is_empty(), "disabled first-join module must not send");
+    assert!(matches!(world.world_data_files().read(&first_join_file(CAROL)),
+        Err(mod_api::ConfigFileError::NotFound)), "disabled module must not mark the new player");
+
+    clear_toggle(world, "first_join_message");
+    eprintln!("PASS first_join_message: OFF, first login, persisted marker, rejoin, player isolation");
+}
+
+fn check_welcome_message(world: &mut JoinWorld) {
+    const ALICE: u128 = 0x11110000000000000000000000000001;
+    const DAVE: u128 = 0x11110000000000000000000000000004;
+    const ERIN: u128 = 0x11110000000000000000000000000005;
+    join_player(world, DAVE, 104);
+    join_player(world, ERIN, 105);
+    world.told.clear();
+
+    // First-join messages have been disabled by the preceding scenario.
+    logged_in(world, ALICE);
+    assert!(world.told.is_empty(), "welcome module starts OFF");
+
+    set_toggle(world, "welcome_message", true);
+    logged_in(world, ALICE);
+    logged_in(world, ALICE);
+    assert_eq!(world.told.len(), 2, "welcome must be sent on every connection");
+    assert!(world.told.iter().all(|(uuid, line)| {
+        *uuid == ALICE && literal(line) == "Welcome to the server!"
+    }), "repeat joins must receive the correct message");
+
+    set_toggle(world, "first_join_message", true);
+    world.told.clear();
+    logged_in(world, DAVE);
+    assert_eq!(world.told.len(), 2, "new player receives first-join and welcome messages");
+    assert_eq!(world.told[0].0, DAVE);
+    assert_eq!(literal(&world.told[0].1), "You wake up in an unfamiliar place.");
+    assert_eq!(literal(&world.told[1].1), "Welcome to the server!");
+    assert_eq!(world.world_data_files().read(&first_join_file(DAVE)).unwrap(), b"1");
+
+    set_toggle(world, "first_join_message", false);
+    world.told.clear();
+    logged_in(world, ERIN);
+    assert_eq!(world.told.len(), 1, "welcome alone sends one line");
+    assert_eq!(literal(&world.told[0].1), "Welcome to the server!");
+    assert!(matches!(world.world_data_files().read(&first_join_file(ERIN)),
+        Err(mod_api::ConfigFileError::NotFound)), "welcome must not mark first-join status");
+
+    set_toggle(world, "welcome_message", false);
+    world.told.clear();
+    logged_in(world, ALICE);
+    assert!(world.told.is_empty(), "OFF restores ordinary join without chat");
+    clear_toggle(world, "welcome_message");
+    clear_toggle(world, "first_join_message");
+    eprintln!("PASS welcome_message: OFF, repeated logins, simultaneous modules, proper recipient");
+}
+
 #[test]
 fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
     test_stack::on_guest_stack(|| {
@@ -852,6 +1008,9 @@ fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
             check_cap_indicator(&mut tooltip_world);
             check_hide_hands(&mut tooltip_world);
             check_vanilla_zoom(&mut tooltip_world);
+            let mut join_world = JoinWorld::default();
+            check_first_join_message(&mut join_world);
+            check_welcome_message(&mut join_world);
             // Test teardown also traverses the real guest hook.
             mod_api::dispatch_server_stopped(&mut world, false);
         });

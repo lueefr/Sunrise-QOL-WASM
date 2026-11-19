@@ -12,7 +12,7 @@ Before publishing a release, GitHub Actions builds the guest, checks its imports
 against the pinned shared WASM standard, then runs it through the **real Sunrise
 Wasmtime loader** at the exact SDK commit. The runtime test also executes in-memory command and entity-event scenarios:
 command pagination, enchantment limits, villager griefing, superflat slime veto,
-merchant offer resets, anvil XP-cost changes, concrete item-drop modifications for Wither Skeletons, Ender Dragons and Shulkers, client tooltip localization and enchantment cap indicators, first-person hand cancellation, and zoom input/strength. These are
+merchant offer resets, anvil XP-cost changes, concrete item-drop modifications for Wither Skeletons, Ender Dragons and Shulkers, client tooltip localization and enchantment cap indicators, first-person hand cancellation, zoom input/strength, welcome chat and first-join world-local markers. These are
 real guest-side behavior checks, but **not** a complete Minecraft world,
 multiplayer session or graphical test.
 
