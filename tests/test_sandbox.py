@@ -128,6 +128,16 @@ class SandboxTests(unittest.TestCase):
         self.assertIn('hand_hidden(world, Off, Some(&totem))', fixture)
         self.assertIn("factor: 18.5, smooth: false", fixture)
         self.assertIn("world.playing = false;", fixture)
+        # The guest must send login chat and persist first-join state in a world-local store.
+        self.assertIn("check_first_join_message(&mut join_world);", fixture)
+        self.assertIn("check_welcome_message(&mut join_world);", fixture)
+        self.assertIn('mod_api::dispatch_player_logged_in(world, uuid, "Tester")', fixture)
+        self.assertIn("impl mod_api::prelude::PlayersServerHost for JoinWorld", fixture)
+        self.assertIn("self.told.push((player.uuid(), line))", fixture)
+        self.assertIn('world.world_data_files().read(&alice).unwrap(), b"1"', fixture)
+        self.assertIn('"rejoining player must not be greeted as new"', fixture)
+        self.assertIn('"welcome must be sent on every connection"', fixture)
+        self.assertIn('"welcome must not mark first-join status"', fixture)
 
 
 
