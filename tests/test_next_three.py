@@ -41,7 +41,7 @@ class NextThreeTests(unittest.TestCase):
         self.assertIn('if !on(host, "dismount_entity")', self.dismount)
         self.assertIn("player.is_secondary_use_active(host) != Some(true)", self.dismount)
         self.assertIn('flag(host, "dismount_players", false)', self.dismount)
-        self.assertIn('passenger.kind().id(host) == "minecraft:player"', self.dismount)
+        self.assertIn('passenger.kind(host).is_some_and(|kind| kind.id(host) == "minecraft:player")', self.dismount)
         self.assertIn("passenger.stop_riding(host)", self.dismount)
         self.assertIn("passengers.into_iter().take(8)", self.dismount)
 

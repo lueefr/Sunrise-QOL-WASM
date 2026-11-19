@@ -10,7 +10,7 @@ const MAX_VARIANTS: usize = 128;
 
 fn painting_id(nbt: &Compound) -> Option<String> {
     match nbt.get(&"variant".into()) {
-        Some(Tag::String(name)) => Some(name.to_string()),
+        Some(Tag::String(name)) => name.to_string().ok(),
         _ => None,
     }
 }
@@ -48,7 +48,7 @@ fn variants(host: &dyn ServerHost, current: &str) -> Vec<String> {
     options
 }
 
-fn next_variant(options: &[String], current: &str, reverse: bool) -> Option<&str> {
+fn next_variant<'a>(options: &'a [String], current: &str, reverse: bool) -> Option<&'a str> {
     if options.len() < 2 { return None; }
     let at = options.iter().position(|name| name == current)?;
     let next = if reverse {
@@ -68,7 +68,7 @@ pub fn interact(host: &mut dyn ServerHost, event: &mut EntityInteractEvent<'_>) 
     let player = host.players().acting_player()?;
     let dimension = player.level(host)?.dimension().id(host)?;
     let reverse = player.is_secondary_use_active(host) == Some(true);
-    let painting = host.entity(event.entity)?;
+    let painting = host.entity(u32::try_from(event.entity).ok()?)?;
     let mut nbt = painting.nbt(host)?;
     let current = painting_id(&nbt)?;
     let options = variants(host, &current);
