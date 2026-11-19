@@ -135,7 +135,7 @@ impl Doors {
         if self.writing.swap(true, Ordering::AcqRel) { return Flow::Continue; }
         {
             let _guard = WriteGuard(&self.writing);
-            self.process(host, task);
+            self.process(host, task, true);
         }
         self.bypass_click(&dim, pos);
         Flow::Continue
@@ -195,7 +195,7 @@ impl Doors {
         }
     }
 
-    fn process(&self, host: &mut dyn ServerHost, task: Change) {
+    fn process(&self, host: &mut dyn ServerHost, task: Change, before_click: bool) {
         if !on(host, "double_doors") { return; }
         let Some(class) = kind(&task.name) else { return; };
         if class == Kind::Gate && !flag(host, "gates", false) { return; }
@@ -204,7 +204,10 @@ impl Doors {
         if !level.in_place(host) { return; }
         let Some(state) = level.block_state(host, task.pos) else { return; };
         let Some(text) = host.block_state_string(state) else { return; };
-        if !text.starts_with(&task.name) || prop(&text, "open") != Some(if task.open { "true" } else { "false" }) {
+        // Before vanilla uses the clicked block its state is still the inverse
+        // of the requested target. Deferred block_changed jobs see the final state.
+        let expected = if task.open != before_click { "true" } else { "false" };
+        if !text.starts_with(&task.name) || prop(&text, "open") != Some(expected) {
             return;
         }
         let recursive = flag(host, "recursive_doors", true);
@@ -255,7 +258,7 @@ impl Doors {
             let Some(task) = self.pending.lock().ok().and_then(|mut q| q.pop_front()) else { break; };
             if self.writing.swap(true, Ordering::AcqRel) { break; }
             let _guard = WriteGuard(&self.writing);
-            self.process(host, task);
+            self.process(host, task, false);
         }
     }
 
