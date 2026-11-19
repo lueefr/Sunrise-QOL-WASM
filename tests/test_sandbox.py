@@ -101,9 +101,9 @@ class SandboxTests(unittest.TestCase):
         self.assertIn('anvil_update(world, 75, false, None)', fixture)
         self.assertIn('anvil_update(world, 75, true, Some("Renamed"))', fixture)
         # Assert material item drop counts from actual guest dispatch, not toggles alone.
-        self.assertIn("check_wither_skull(&mut world);", fixture)
-        self.assertIn("check_dragon_elytra(&mut world);", fixture)
-        self.assertIn("check_shulker_shells(&mut world);", fixture)
+        self.assertIn("check_wither_skull(&mut loot_world);", fixture)
+        self.assertIn("check_dragon_elytra(&mut loot_world);", fixture)
+        self.assertIn("check_shulker_shells(&mut loot_world);", fixture)
         self.assertIn("mod_api::dispatch_loot_drops(world, &context, drops, &mut |candidate|", fixture)
         self.assertIn("impl mod_api::prelude::ItemsHost for LootWorld", fixture)
         self.assertIn('assert_eq!(&applied, drops, "the committed loot', fixture)
