@@ -365,6 +365,7 @@ impl mod_api::ConfigFiles for TraceConfig {
     }
 }
 
+#[derive(Default)]
 struct LootWorld {
     files: bulk_files::World,
     item_lookups: std::sync::atomic::AtomicUsize,
