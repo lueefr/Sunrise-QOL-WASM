@@ -4,14 +4,15 @@
 
 Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's quality-of-life bundle**, adapted to the Sunrise runtime. It also includes several independent convenience features. This is not an official Serilum release; feature and configuration parity remain in development.
 
-> **Development status — not a stable release.** Successful Rust/WASM builds do not certify in-game behavior or feature parity. The release pipeline now also checks WASM imports and loads the actual .smod with Sunrise's runtime, but multiplayer correctness, GUI behavior and gameplay still require game-level tests. Do not assume a module works merely because it appears in the configuration interface.
+> **Development status — not a stable release.** Successful Rust/WASM builds do not certify in-game behavior or feature parity. The release pipeline now also checks WASM imports and loads the actual .smod with Sunrise's runtime, but multiplayer correctness, GUI behavior and complete-world gameplay still require game-level tests. Do not assume a module works merely because it appears in the configuration interface.
 
 ## Runtime sandbox
 
 Before publishing a release, GitHub Actions builds the guest, checks its imports
 against the pinned shared WASM standard, then runs it through the **real Sunrise
 Wasmtime loader** at the exact SDK commit. The runtime test also executes in-memory command and entity-event scenarios:
-command pagination, enchantment limits and villager griefing. These are
+command pagination, enchantment limits, villager griefing, superflat slime veto,
+merchant offer resets, and anvil XP-cost changes. These are
 real guest-side behavior checks, but **not** a complete Minecraft world,
 multiplayer session or graphical test.
 

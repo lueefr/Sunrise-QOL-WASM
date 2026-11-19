@@ -22,6 +22,10 @@ It does not replace a full in-game acceptance test.
 Any failure in steps 2–4 prevents `release.yml` from tagging or publishing
 a build. The report is attached as an Actions artifact.
 
+For pull requests touching the source, sandbox or tests, the independent
+workflow also runs as a required CI candidate (subject to repository branch
+protection settings); it never publishes releases.
+
 The independent [sandbox workflow](../.github/workflows/sandbox.yml) runs
 automatically when its own implementation changes and can also be dispatched
 manually. It does not publish a release.
@@ -58,15 +62,22 @@ answers**, and the test fails when an assertion does not hold:
 | Friendly Griefing | Villager join; module OFF | Existing `mobGriefing=false` preserved |
 | Friendly Griefing | Villager join; module ON | Only the tracked villager receives `can_grief=true`, not a zombie |
 | Friendly Griefing | Villager leaves level | The previous entity ID loses its special permission |
+| Superflat World No Slimes | Slime spawn with module OFF, confirmation OFF, then both ON | Only confirmed superflat slime joins are vetoed; other mobs continue spawning |
+| Infinite Trading | Exhausted villager and wandering-trader offers | Enabled merchants regain available uses; demand resets only when configured |
+| Affordable Anvil | Vanilla anvil result costs 75 levels with configured cap 20 | Cost becomes 20 only for an existing result; optional cheap rename costs 1 |
+| Affordable Anvil | Vanilla provides no result | No output is created and its cost is not rewritten |
 
-**Coverage:** 3 of 38 implemented modules have direct behavioral sandbox
-scenarios at this stage. Other modules are still compiled and smoke-loaded,
-but their gameplay effects are **not yet automatically verified**. This figure
-does not count source-pattern unit tests as gameplay coverage.
+**Coverage:** 6 of 38 implemented modules have direct behavioral sandbox
+scenarios at this stage. They execute the actual packaged guest through Wasmtime
+and assert output/event mutations; they do **not** simulate a complete world.
+The remaining 32 modules are compiled and smoke-loaded, but their gameplay
+effects are **not yet automatically verified**. Source-pattern unit tests do
+not count toward gameplay coverage.
 
 The test host is `crates/sunrise-mod-wasm/tests/support/bulk_files.rs`
 from the pinned Sunrise source tree. It provides real in-memory config
-storage and dispatches entity lifecycle/command events through Wasmtime;
+storage and dispatches command, entity lifecycle, merchant trade and anvil
+events through Wasmtime;
 it is **not** the full Sunrise `Game` or a populated level.
 
 ## What this *does not* prove
@@ -77,7 +88,10 @@ it is **not** the full Sunrise `Game` or a populated level.
 - The behavioral test host is in-memory, **not a populated Minecraft world**.
   It verifies the actual command responses and selected entity-rule decisions.
   It cannot yet certify combat, block mutation, inventory changes, GUI rendering,
-  mob spawning, dimension transitions or multiplayer gameplay.
+  fully simulated mob spawning, dimension transitions or multiplayer gameplay.
+  The slime test checks the join veto decision, not an actual populated level;
+  trading and anvil tests check the mutable authoritative event snapshots,
+  not a real player's inventory or client screen.
 - Future world-state tests should use Sunrise's existing headless `Game` test
   fixtures to create players, blocks and entities, then assert changes after
   dispatching QOL's hooks. Such tests must explicitly enable the relevant
