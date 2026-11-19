@@ -66,11 +66,11 @@ class ProjectTests(unittest.TestCase):
         modules = re.findall(r'ModuleSpec \{ key: "([^"]+)", label:', gui)
         options = re.findall(r'(?:toggle|range|choice)\("([^"]+)", "', gui)
         self.assertEqual(len(modules), 38)
-        self.assertEqual(len(options), 91)
+        self.assertEqual(len(options), 89)
         self.assertIn('let _ = save(host, key,', gui)
         self.assertIn('let _ = save(host, option.key,', gui)
         self.assertNotIn('host.set_setting(', gui)
-        self.assertEqual(len(set(modules) | set(options)), 129)
+        self.assertEqual(len(set(modules) | set(options)), 127)
         for hook in ('input_key', 'client_tick_pre', 'screen_render_post',
                      'screen_mouse_button_pressed_pre', 'screen_mouse_button_released_pre',
                      'screen_mouse_dragged_pre', 'screen_key_pressed_pre',
@@ -146,9 +146,15 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('fn leaf_match(', src)
         self.assertIn('fn log_match(', src)
         self.assertIn('fn supported(', src)
-        self.assertIn('let tree_fast = on(host, "tree_harvester")', src)
-        self.assertIn('flag(host, "enableFastLeafDecay", true)', src)
-        self.assertIn('amount(host, "treeLeavesPerTick", 5., 1., 16.)', src)
+        self.assertIn('if !on(host, "leaf_decay") || !flag(host, "accelerateLeafDecay", true)', src)
+        self.assertIn('amount(host, "minimumDecayTicks", 5., 0., 1200.)', src)
+        self.assertIn('amount(host, "maximumDecayTicks", 20., 0., 1200.)', src)
+        self.assertIn('amount(host, "amountOfLeavesBrokenPerTick", 5., 1., 64.)', src)
+        self.assertNotIn('treeLeavesPerTick', src)
+        self.assertNotIn('enableFastLeafDecay', src)
+        self.assertNotIn('treeLeavesPerTick', gui)
+        self.assertNotIn('toggle("enableFastLeafDecay"', gui)
+        self.assertIn('player.destroy_block(host, p, false)', mining)
         self.assertIn('MAX_TASKS', src)
         self.assertIn('"persistent"', src)
         self.assertIn('"distance"', src)
@@ -167,7 +173,7 @@ class ProjectTests(unittest.TestCase):
     def test_migration_preserves_legacy_settings(self):
         import tempfile
         from migrate_settings import keys, migrate
-        self.assertEqual(len(keys(ROOT)), 129)
+        self.assertEqual(len(keys(ROOT)), 127)
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)
             previous = game / 'sunrise-mods' / '.sunrise-mod-data' / 'horizon_qol_suite'
@@ -177,7 +183,7 @@ class ProjectTests(unittest.TestCase):
             (previous / 'enablefastleafdecay').write_text('false')
             (previous / 'open_ui').write_text('0')
             (previous / 'junk').write_text('unsafe')
-            self.assertEqual(migrate(game, ROOT), 4)
+            self.assertEqual(migrate(game, ROOT), 3)
             target = game / 'config' / 'horizon_qol_suite'
             self.assertEqual((target / 'vein_miner').read_text(), 'true')
             self.assertEqual((target / 'amountofleavesbrokenpertick').read_text(), '7')
@@ -251,7 +257,7 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('enchant::tooltip(host, event.stack, event.lines)', src)
         self.assertIn('crate::unlimited::anvil(host, event)', (ROOT/'src/anvil.rs').read_text())
         self.assertIn('let active = on(host, module.key);', gui)
-        self.assertIn('let standalone = on(host, "leaf_decay")', (ROOT/'src/decay.rs').read_text())
+        self.assertIn('if !on(host, "leaf_decay")', (ROOT/'src/decay.rs').read_text())
 
     def test_outstanding_modules_documented(self):
         docs = (ROOT / 'docs/PARITY.md').read_text()
