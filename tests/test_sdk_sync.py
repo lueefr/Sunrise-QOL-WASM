@@ -103,7 +103,8 @@ class SdkSyncTests(unittest.TestCase):
         script = installer.read_text()
         self.assertIn("openssl pkeyutl -verify -rawin", script)
         self.assertIn("sha256sum --check expected", script)
-        self.assertIn('tar -xJf "$tool" cargo-sunrise-mod', script)
+        self.assertIn('tar -xJf "$tool"', script)
+        self.assertIn('find "$tmp" -type f -name cargo-sunrise-mod', script)
         self.assertIn('release="sdk-$revision"', script)
 
         for path in (".github/workflows/release.yml",
