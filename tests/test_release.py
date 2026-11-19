@@ -71,6 +71,44 @@ class ReleasePolicyTests(unittest.TestCase):
         self.assertEqual(release.kind("refactor: split module"), "patch")
         self.assertEqual(release.kind("chore: cleanup", "BREAKING CHANGE: ABI"), "major")
 
+    def test_sandbox_and_tests_trigger_release(self):
+        root = release.ROOT
+        try:
+            for changed in (
+                "tests/test_sandbox.py",
+                "tools/sandbox/sunrise_qol_smoke.rs.txt",
+                ".github/workflows/sandbox.yml",
+            ):
+                with self.subTest(changed=changed), tempfile.TemporaryDirectory() as directory:
+                    target = Path(directory)
+                    release.ROOT = target
+
+                    def git(*arguments):
+                        return subprocess.run(["git", *arguments], cwd=target,
+                                              check=True, capture_output=True,
+                                              text=True).stdout.strip()
+
+                    git("init", "-q")
+                    git("config", "user.name", "Release Tests")
+                    git("config", "user.email", "test@example.invalid")
+                    (target / "src").mkdir()
+                    (target / "src/lib.rs").write_text("fn original() {}\\n")
+                    git("add", "src/lib.rs")
+                    git("commit", "-qm", "initial: import mod")
+                    git("tag", "v1.1.1")
+
+                    path = target / changed
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text("updated verification\\n")
+                    git("add", changed)
+                    git("commit", "-qm", "test(sandbox): add behavioral assertion")
+
+                    self.assertEqual(release.changed_paths("v1.1.1"), [changed])
+                    self.assertEqual(release.latest(), ("v1.1.1", (1, 1, 1)))
+                    self.assertEqual(release.next_version((1, 1, 1)), (1, 1, 2))
+        finally:
+            release.ROOT = root
+
     def test_documentation_only_does_not_count(self):
         root = release.ROOT
         with tempfile.TemporaryDirectory() as directory:
