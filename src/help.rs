@@ -45,11 +45,10 @@ fn color(host: &dyn Host, key: &str, default: f64) -> &'static str {
 }
 
 fn styled(text: impl Into<String>, color: &str, click: Option<TextClick>) -> Text {
-    Text::literal(text).with_style(TextStyle {
-        color: Some(color.to_owned()),
-        click,
-        ..TextStyle::default()
-    })
+    let mut style = TextStyle::default();
+    style.color = Some(color.to_owned());
+    style.click = click;
+    Text::literal(text).with_style(style)
 }
 
 impl Help {
