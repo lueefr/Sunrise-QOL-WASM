@@ -9,7 +9,7 @@ mod test_stack;
 mod bulk_files;
 
 use mod_api::{ConfigFiles, ConfigPath, Host};
-use mod_api::prelude::{ConfigHost, ConfigServerHost};
+use mod_api::prelude::ConfigHost;
 use mod_api::text::{TextClick, TextContent};
 
 use sunrise_mod_package::manifest::Package;
@@ -337,46 +337,26 @@ fn check_affordable_anvil(world: &mut bulk_files::World) {
 // This host shares the in-memory config fixture but makes a minimal real item
 // registry visible to guest code, as Sunrise's game host normally does.
 #[derive(Default)]
-// Trace the actual config bytes crossing the Wasmtime host boundary.
-struct TraceConfig;
-static TRACE_CONFIG: TraceConfig = TraceConfig;
-fn base_config() -> &'static dyn mod_api::ConfigFiles {
-    bulk_files::World::default().config_files()
-}
-impl mod_api::ConfigFiles for TraceConfig {
-    fn read(&self, file: &mod_api::ConfigPath) -> Result<Vec<u8>, mod_api::ConfigFileError> {
-        let result = base_config().read(file);
-        eprintln!("TRACE config read {} -> {:?}", file.as_str(), result);
-        result
-    }
-    fn write(&self, file: &mod_api::ConfigPath, bytes: &[u8]) -> Result<(), mod_api::ConfigFileError> {
-        base_config().write(file, bytes)
-    }
-    fn list(&self, folder: &mod_api::ConfigPath, after: Option<&str>, limit: u32)
-        -> Result<Vec<mod_api::ConfigEntry>, mod_api::ConfigFileError> {
-        base_config().list(folder, after, limit)
-    }
-    fn stat(&self, path: &mod_api::ConfigPath)
-        -> Result<Option<mod_api::ConfigStat>, mod_api::ConfigFileError> {
-        base_config().stat(path)
-    }
-    fn remove(&self, path: &mod_api::ConfigPath) -> Result<bool, mod_api::ConfigFileError> {
-        base_config().remove(path)
-    }
-}
-
 #[derive(Default)]
 struct LootWorld {
     files: bulk_files::World,
-    item_lookups: std::sync::atomic::AtomicUsize,
-    config_calls: std::sync::atomic::AtomicUsize,
 }
-impl mod_api::Host for LootWorld {}
+impl mod_api::Host for LootWorld {
+    fn backend(&self) -> Option<mod_api::BackendRef<'_>> {
+        Some(mod_api::BackendRef::of(self))
+    }
+}
 mod_api::impl_host_areas!(LootWorld, except(config, items));
+impl mod_api::Backend for LootWorld {}
+mod_api::impl_backend_areas!(LootWorld, except(keys));
+impl mod_api::prelude::KeysBackend for LootWorld {
+    fn item_key_id(&self, key: mod_api::ItemKey) -> String {
+        mod_api::__private::item_key_id(key).expect("registered item key").to_owned()
+    }
+}
 impl mod_api::prelude::ConfigHost for LootWorld {
     fn config_files(&self) -> &'static dyn mod_api::ConfigFiles {
-        self.config_calls.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        &TRACE_CONFIG
+        self.files.config_files()
     }
     fn data_files(&self) -> &'static dyn mod_api::ConfigFiles {
         self.files.data_files()
@@ -384,7 +364,6 @@ impl mod_api::prelude::ConfigHost for LootWorld {
 }
 impl mod_api::prelude::ItemsHost for LootWorld {
     fn item_key(&self, id: &mod_api::Identifier) -> Option<mod_api::ItemKey> {
-        self.item_lookups.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         mod_api::__private::item_key(&id.to_string())
     }
 }
@@ -432,19 +411,10 @@ fn loot(
     let mut committed: Option<Vec<mod_api::ItemStack>> = None;
     assert!(mod_api::__private::listened(mod_api::HookId::LootDrops),
         "the real guest must be registered for loot events");
-    let lookups = world.item_lookups.load(std::sync::atomic::Ordering::Relaxed);
-    let config_calls = world.config_calls.load(std::sync::atomic::Ordering::Relaxed);
-    let before = drops.len();
     mod_api::dispatch_loot_drops(world, &context, drops, &mut |candidate| {
         committed = Some(candidate.clone());
         Ok(())
     });
-    eprintln!(
-        "TRACE loot kind={kind}, damage={}, entity={:?}, used={used}, stacks={before}->{}, validated={}, item_key_calls={}, config_calls={}",
-        context.damage_source.is_some(), context.entity, drops.len(), committed.is_some(),
-        world.item_lookups.load(std::sync::atomic::Ordering::Relaxed) - lookups,
-        world.config_calls.load(std::sync::atomic::Ordering::Relaxed) - config_calls,
-    );
     if let Some(applied) = committed {
         assert_eq!(&applied, drops, "the committed loot must match the hook's result");
     }
@@ -471,7 +441,7 @@ fn check_wither_skull(world: &mut LootWorld) {
     ).is_some(), "the runtime host must resolve the skull item");
     let mut empty_drops = Vec::new();
     loot(world, "minecraft:wither_skeleton", &mut empty_drops, true, false);
-    eprintln!("TRACE wither empty input -> skull_count={}", count(&empty_drops, "minecraft:wither_skeleton_skull"));
+    assert_eq!(count(&empty_drops, "minecraft:wither_skeleton_skull"), 1, "empty loot must gain the guaranteed skull");
     loot(world, "minecraft:wither_skeleton", &mut drops, true, false);
     assert_eq!(count(&drops, "minecraft:wither_skeleton_skull"), 1, "a killed Wither Skeleton must drop a skull");
     assert_eq!(count(&drops, "minecraft:coal"), 2, "unrelated loot must remain");
