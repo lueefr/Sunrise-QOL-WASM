@@ -532,8 +532,19 @@ struct TooltipWorld {
     playing: bool,
     down: bool,
 }
-impl mod_api::Host for TooltipWorld {}
+impl mod_api::Host for TooltipWorld {
+    fn backend(&self) -> Option<mod_api::BackendRef<'_>> {
+        Some(mod_api::BackendRef::of(self))
+    }
+}
 mod_api::impl_host_areas!(TooltipWorld, except(config, items));
+impl mod_api::Backend for TooltipWorld {}
+mod_api::impl_backend_areas!(TooltipWorld, except(keys));
+impl mod_api::prelude::KeysBackend for TooltipWorld {
+    fn item_key_id(&self, key: mod_api::ItemKey) -> String {
+        mod_api::__private::item_key_id(key).expect("registered item key").to_owned()
+    }
+}
 impl mod_api::prelude::ItemsHost for TooltipWorld {
     fn item_default_component(&self, _: mod_api::ItemKey, _: &str) -> Option<mod_api::Tag> {
         None
