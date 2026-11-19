@@ -20,7 +20,8 @@ MOD_PATHS = (
     "tools/release.py", "src", "assets", "Cargo.toml",
     "sunrise-mod.toml", "instalar.fish", "preparar-rust.fish",
     "diagnosticar.fish", "tools/wasm_link_check.py",
-    "tools/migrate_settings.py", "tools/sdk_sync.py", "tools/sandbox", "tests",
+    "tools/migrate_settings.py", "tools/sdk_sync.py",
+    "tools/install_sdk_tool.sh", "tools/sandbox", "tests",
 )
 
 
