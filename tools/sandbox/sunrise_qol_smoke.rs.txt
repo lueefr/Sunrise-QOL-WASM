@@ -262,11 +262,25 @@ fn check_infinite_trading(world: &mut bulk_files::World) {
     assert_eq!((offer.uses, offer.demand), (4, 6), "unrelated traders must be untouched");
 
     set_toggle(world, "villagers", true);
+    // A test host without a real merchant can never satisfy a configured
+    // advanced career-level threshold; missing data must not be guessed.
+    let minimum = ConfigPath::new("horizon_qol_suite/minimumvillagerlevel").unwrap();
+    world.config_files().write(&minimum, b"5").unwrap();
+    offer = trade_offer();
+    mod_api::dispatch_trade_with_villager(world, 17, "minecraft:villager", &mut offer);
+    assert_eq!((offer.uses, offer.demand), (4, 6),
+        "unknown villager level must not be treated as master level");
+    offer = trade_offer();
+    mod_api::dispatch_trade_with_villager(world, 18, "minecraft:wandering_trader", &mut offer);
+    assert_eq!((offer.uses, offer.demand), (4, 6),
+        "the wandering-trader toggle is independent of the villager level");
+    world.config_files().write(&minimum, b"1").unwrap();
     set_toggle(world, "remove_demand", false);
     offer = trade_offer();
     mod_api::dispatch_trade_with_villager(world, 17, "minecraft:villager", &mut offer);
     assert_eq!((offer.uses, offer.demand), (0, 6), "demand reset is independently configurable");
 
+    let _ = world.config_files().remove(&minimum);
     for name in ["infinite_trading", "villagers", "wandering_trader", "remove_demand"] {
         clear_toggle(world, name);
     }
