@@ -7,6 +7,15 @@ on:
     paths:
       - '.github/workflows/sandbox.yml'
       - 'tools/sandbox/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/sandbox.yml'
+      - 'tools/sandbox/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'Cargo.toml'
+      - 'sunrise-mod.toml'
 
 permissions:
   contents: read
@@ -107,7 +116,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-sunrise-runtime-${{ steps.sdk.outputs.revision }}-
 
-      - name: Smoke test with actual Sunrise runtime
+      - name: Gameplay scenarios with actual Sunrise runtime
         timeout-minutes: 30
         shell: bash
         run: bash tools/sandbox/run.sh
