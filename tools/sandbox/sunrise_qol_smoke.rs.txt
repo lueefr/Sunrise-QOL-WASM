@@ -340,11 +340,13 @@ fn check_affordable_anvil(world: &mut bulk_files::World) {
 struct LootWorld {
     files: bulk_files::World,
     item_lookups: std::sync::atomic::AtomicUsize,
+    config_calls: std::sync::atomic::AtomicUsize,
 }
 impl mod_api::Host for LootWorld {}
 mod_api::impl_host_areas!(LootWorld, except(config, items));
 impl mod_api::prelude::ConfigHost for LootWorld {
     fn config_files(&self) -> &'static dyn mod_api::ConfigFiles {
+        self.config_calls.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         self.files.config_files()
     }
     fn data_files(&self) -> &'static dyn mod_api::ConfigFiles {
@@ -402,15 +404,17 @@ fn loot(
     assert!(mod_api::__private::listened(mod_api::HookId::LootDrops),
         "the real guest must be registered for loot events");
     let lookups = world.item_lookups.load(std::sync::atomic::Ordering::Relaxed);
+    let config_calls = world.config_calls.load(std::sync::atomic::Ordering::Relaxed);
     let before = drops.len();
     mod_api::dispatch_loot_drops(world, &context, drops, &mut |candidate| {
         committed = Some(candidate.clone());
         Ok(())
     });
     eprintln!(
-        "TRACE loot kind={kind}, damage={}, used={used}, stacks={before}->{}, validated={}, item_key_calls={}",
-        context.damage_source.is_some(), drops.len(), committed.is_some(),
+        "TRACE loot kind={kind}, damage={}, entity={:?}, used={used}, stacks={before}->{}, validated={}, item_key_calls={}, config_calls={}",
+        context.damage_source.is_some(), context.entity, drops.len(), committed.is_some(),
         world.item_lookups.load(std::sync::atomic::Ordering::Relaxed) - lookups,
+        world.config_calls.load(std::sync::atomic::Ordering::Relaxed) - config_calls,
     );
     if let Some(applied) = committed {
         assert_eq!(&applied, drops, "the committed loot must match the hook's result");
