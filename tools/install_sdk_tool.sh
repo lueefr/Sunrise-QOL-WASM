@@ -53,8 +53,14 @@ if [[ "$(wc -l < expected)" -ne 1 ]]; then
 fi
 sha256sum --check expected
 
-# The official archive contains cargo-sunrise-mod at its root.
-tar -xJf "$tool" cargo-sunrise-mod
-install -Dm755 cargo-sunrise-mod "$HOME/.cargo/bin/cargo-sunrise-mod"
+# SDK tool archives may prefix the executable path with a directory.
+# Extract the signed archive and locate the one expected binary by name.
+tar -xJf "$tool"
+binary="$(find "$tmp" -type f -name cargo-sunrise-mod -print -quit)"
+if [[ -z "$binary" ]]; then
+  echo "Signed SDK tool archive has no cargo-sunrise-mod executable" >&2
+  exit 1
+fi
+install -Dm755 "$binary" "$HOME/.cargo/bin/cargo-sunrise-mod"
 test -x "$HOME/.cargo/bin/cargo-sunrise-mod"
 echo "Installed signed Sunrise build tool for $revision"
