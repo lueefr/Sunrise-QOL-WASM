@@ -131,6 +131,11 @@ const CLOCK: &[OptionSpec] = &[
     range("clock_blue", "Text Color: Blue", 255., 0., 255., 5.),
 ];
 
+const NUTRITIOUS_MILK: &[OptionSpec] = &[
+    range("hungerLevelIncrease", "Hunger Restored", 10., 0., 20., 1.),
+    range("saturationLevelIncrease", "Saturation Restored", 10., 0., 20., 1.),
+];
+
 const MENDING: &[OptionSpec] = &[
     toggle("mending_hotbar_only", "Repair Hotbar Only", false),
 ];
@@ -267,6 +272,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "inventory_totem", label: "Inventory Totems", options: &[], category: Category::Inventory },
     ModuleSpec { key: "inventory_mending", label: "XP Item Repair", options: MENDING, category: Category::Inventory },
     ModuleSpec { key: "bottled_air", label: "Bottled Air", options: BOTTLED_AIR, category: Category::Inventory },
+    ModuleSpec { key: "nutritious_milk", label: "Nutritious Milk", options: NUTRITIOUS_MILK, category: Category::Inventory },
     ModuleSpec { key: "what_durability", label: "Durability Control", options: &[], category: Category::Inventory },
     ModuleSpec { key: "gui_clock", label: "World Clock", options: CLOCK, category: Category::Hud },
     ModuleSpec { key: "gui_compass", label: "Navigation Compass", options: COMPASS, category: Category::Hud },
