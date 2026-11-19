@@ -531,7 +531,12 @@ struct TooltipWorld {
     files: bulk_files::World,
 }
 impl mod_api::Host for TooltipWorld {}
-mod_api::impl_host_areas!(TooltipWorld, except(config));
+mod_api::impl_host_areas!(TooltipWorld, except(config, items));
+impl mod_api::prelude::ItemsHost for TooltipWorld {
+    fn item_default_component(&self, _: mod_api::ItemKey, _: &str) -> Option<mod_api::Tag> {
+        None
+    }
+}
 impl mod_api::prelude::ConfigHost for TooltipWorld {
     fn config_files(&self) -> &'static dyn mod_api::ConfigFiles {
         self.files.config_files()
