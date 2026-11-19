@@ -110,7 +110,8 @@ class SandboxTests(unittest.TestCase):
         self.assertIn('count(&drops, "minecraft:wither_skeleton_skull"), 1', fixture)
         self.assertIn('count(&drops, "minecraft:elytra"), 1', fixture)
         self.assertIn('count(&drops, "minecraft:shulker_shell"), 4', fixture)
-        self.assertIn('count(&larger, "minecraft:shulker_shell"), 9', fixture)
+        self.assertIn('count(&larger, "minecraft:shulker_shell"), 4', fixture)
+        self.assertIn('count(&multiple, "minecraft:shulker_shell"), 8', fixture)
         self.assertIn('set_toggle(world, "always_drop", true)', fixture)
         # Tooltips are rendered by the real guest's client hook.
         self.assertIn("check_langpatch(&mut tooltip_world);", fixture)
