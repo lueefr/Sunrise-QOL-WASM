@@ -339,6 +339,7 @@ fn check_affordable_anvil(world: &mut bulk_files::World) {
 #[derive(Default)]
 struct LootWorld {
     files: bulk_files::World,
+    item_lookups: std::sync::atomic::AtomicUsize,
 }
 impl mod_api::Host for LootWorld {}
 mod_api::impl_host_areas!(LootWorld, except(config, items));
@@ -352,6 +353,7 @@ impl mod_api::prelude::ConfigHost for LootWorld {
 }
 impl mod_api::prelude::ItemsHost for LootWorld {
     fn item_key(&self, id: &mod_api::Identifier) -> Option<mod_api::ItemKey> {
+        self.item_lookups.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         mod_api::__private::item_key(&id.to_string())
     }
 }
@@ -397,10 +399,19 @@ fn loot(
     // The dispatcher validates and commits each candidate through this writer.
     // Keep the applied copy separate so the test exercises the write boundary.
     let mut committed: Option<Vec<mod_api::ItemStack>> = None;
+    assert!(mod_api::__private::listened(mod_api::HookId::LootDrops),
+        "the real guest must be registered for loot events");
+    let lookups = world.item_lookups.load(std::sync::atomic::Ordering::Relaxed);
+    let before = drops.len();
     mod_api::dispatch_loot_drops(world, &context, drops, &mut |candidate| {
         committed = Some(candidate.clone());
         Ok(())
     });
+    eprintln!(
+        "TRACE loot kind={kind}, damage={}, used={used}, stacks={before}->{}, validated={}, item_key_calls={}",
+        context.damage_source.is_some(), drops.len(), committed.is_some(),
+        world.item_lookups.load(std::sync::atomic::Ordering::Relaxed) - lookups,
+    );
     if let Some(applied) = committed {
         assert_eq!(&applied, drops, "the committed loot must match the hook's result");
     }
@@ -418,6 +429,13 @@ fn check_wither_skull(world: &mut LootWorld) {
     assert_eq!(count(&drops, "minecraft:coal"), 2, "vanilla coal must survive");
 
     set_toggle(world, "always_wither_skull", true);
+    assert_eq!(
+        world.config_files().read(&ConfigPath::new("horizon_qol_suite/always_wither_skull").unwrap()).unwrap(),
+        b"true", "the real guest setting must be present in the simulated host"
+    );
+    assert!(mod_api::prelude::ItemsHost::item_key(
+        world, &mod_api::Identifier::parse("minecraft:wither_skeleton_skull").unwrap()
+    ).is_some(), "the runtime host must resolve the skull item");
     loot(world, "minecraft:wither_skeleton", &mut drops, true, false);
     assert_eq!(count(&drops, "minecraft:wither_skeleton_skull"), 1, "a killed Wither Skeleton must drop a skull");
     assert_eq!(count(&drops, "minecraft:coal"), 2, "unrelated loot must remain");
