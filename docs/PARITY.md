@@ -44,7 +44,7 @@ installer to stop before replacing the installed mod.
 | First Join Message | Initial | Fixed text only, no editable multilingual/broadcast templates |
 | Welcome Message | Initial | Fixed text only, limited server controls |
 | Vein Miner | Initial | Bounded connected search; tool costs and player block events not fully ported |
-| Tree Harvester | Initial | Bounded tree removal, original replant/durability timing not 1:1 |
+| Tree Harvester | Partial | Bounded tree removal. Harvested logs trigger the shared Leaf Decay event/queue; fast decay requires the Leaf Decay module enabled and uses its own speed, per-tick cap and matching settings. Original replant/durability timing is not 1:1 |
 | Ench. Level LangPatch | Partial | Formats missing enchantment/potion tooltip translation levels; does not modify global language storage |
 | Tax Free Levels | Partial (anvil only) | One-level rename and existing-result limit; original flattened XP cost is NOT implemented |
 | Unlimited Enchantments | Partial | Combines equal-level enchantments at anvil when vanilla made output, up to 255; not a registry or enchantment-table patch |
