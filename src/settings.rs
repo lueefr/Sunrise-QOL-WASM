@@ -34,6 +34,7 @@ pub fn storage_key(key: &str) -> &str {
         "amountOfLeavesBrokenPerTick" => "amountofleavesbrokenpertick",
         "automaticallyFindBottomBlock" => "automaticallyfindbottomblock",
         "enableFastLeafDecay" => "enablefastleafdecay",
+        "treeLeavesPerTick" => "treeleavespertick",
         "enableFuzzyOreSearch" => "enablefuzzyoresearch",
         "enableHugeMushrooms" => "enablehugemushrooms",
         "enableNetherTrees" => "enablenethertrees",
