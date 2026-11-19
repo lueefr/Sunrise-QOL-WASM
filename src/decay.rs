@@ -183,15 +183,33 @@ impl Decay {
     pub fn tick(&self, host: &mut dyn ServerHost, event: &mut ServerTickEvent<'_>) {
         if !matches!(event.phase, ServerTickPhase::ServerTickEnd { world_running: true, .. }) { return; }
         let now = self.ticks.fetch_add(1, Ordering::Relaxed) + 1;
-        if !on(host, "leaf_decay") || !flag(host, "accelerateLeafDecay", true) {
+        let standalone = on(host, "leaf_decay") && flag(host, "accelerateLeafDecay", true);
+        let tree_fast = on(host, "tree_harvester") && flag(host, "enableFastLeafDecay", true);
+        if !standalone && !tree_fast {
             self.reset_queue();
             return;
         }
-        let minimum = amount(host, "minimumDecayTicks", 5., 0., 1200.) as i32;
-        let maximum = amount(host, "maximumDecayTicks", 20., 0., 1200.) as i32;
+        // Tree Harvester queues fast decay during log removal independently
+        // of the standalone Leaf Decay switch, as in its original module.
+        let minimum = if tree_fast { 1 } else {
+            amount(host, "minimumDecayTicks", 5., 0., 1200.) as i32
+        };
+        let maximum = if tree_fast { 1 } else {
+            amount(host, "maximumDecayTicks", 20., 0., 1200.) as i32
+        };
         let (minimum, maximum) = (minimum.min(maximum), maximum.max(minimum));
-        let rate = amount(host, "amountOfLeavesBrokenPerTick", 5., 1., 64.) as usize;
-        let checks = self.tasks.lock().map_or(0, |queue| queue.len()).min(MAX_CHECKS * 3);
+        let backlog = self.tasks.lock().map_or(0, |queue| queue.len());
+        let standalone_rate = if standalone {
+            amount(host, "amountOfLeavesBrokenPerTick", 5., 1., 64.) as usize
+        } else { 0 };
+        let tree_rate = if tree_fast {
+            let base = amount(host, "treeLeavesPerTick", 5., 1., 16.) as usize;
+            // Upstream multiplies its per-tick budget for large queues.
+            let multiplier = if backlog > 2000 { 4 } else if backlog > 1000 { 3 } else { 1 };
+            base * multiplier
+        } else { 0 };
+        let rate = standalone_rate.max(tree_rate);
+        let checks = backlog.min(MAX_CHECKS * 3);
         let mut processed = 0_usize;
         for _ in 0..checks {
             if processed >= rate { break; }
