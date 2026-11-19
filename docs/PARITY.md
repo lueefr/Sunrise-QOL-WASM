@@ -5,13 +5,13 @@ including deliberately scoped or incomplete ones, and one has no implementation.
 The separate Leaf Decay module is not counted among those 25. **Zero modules have
 been certified as 1:1 in-game.** The source has not been compiled in this environment.
 
-**A feature appearing in this matrix or the Suite Modules screen is NOT proof of runtime compatibility.**
+**A feature appearing in this matrix or the Suite Modules screen is NOT proof of runtime compatibility.** See [UPSTREAM-AUDIT.md](UPSTREAM-AUDIT.md) for direct comparisons against Serilum's 26.3.0 Java sources.
 Missing ABI exports in the bundled Sunrise `sunrise-wasm-std.wasm` will cause the
 installer to stop before replacing the installed mod.
 
 | Module | Source status | Missing / constraints |
 |---|---|---|
-| Automatic Doors | Initial | Proximity opening and delayed closure of doors this module opened; authoritative server only, in-game parity not yet verified |
+| Automatic Doors | Partial | Rewritten per-player-tick scan, integer-second timer, neighboring closure and sneaking checks from upstream 26.3.0; bounded player/tracked-door limits and gameplay timing still differ |
 | Beacon Placement | Initial | Right-click with supported vanilla mineral blocks fills empty pyramid positions and spends inventory; optional base recovery; no replacement of occupied blocks or parity for modded minerals |
 | Conduit Placement | Initial | Right-click conduit with prismarine blocks builds a bounded 42-block frame in water or air; consumes held items; frame recovery configurable; no right-click-water placement or occupied-block replacement |
 | Spawner Control | Initial | A read-only spawn position veto for normal spawner blocks surrounded by 5 torches (N/E/S/W/top). Does not reset the spawner's internal delay; other spawn sources unaffected |
@@ -27,9 +27,9 @@ installer to stop before replacing the installed mod.
 | Inventory Totem | Initial | Vanilla totem only; death protection API must be tested |
 | Inventory Mending | Initial | Repairs inventory items on XP-gain hook; differs from Mending orb selection |
 | Double Doors | Partial | Manual clicks synchronize paired blocks in the same server interaction (untested); redstone/AI still defer, and remote client prediction is missing. See [DOORS-SYNC.md](DOORS-SYNC.md) |
-| Infinite Trading | Initial | Trade and demand updates; validate in multiplayer |
-| Shulker Drops Two | Initial | Loot-table interception; validate loot interactions |
-| Respawning Shulkers | Initial | Reschedule after confirmed death; retry after loaded chunks only |
+| Infinite Trading | Partial | Only completed trade reset; original pre-trade offer, level, multiplier, modded traders and trade-loop semantics are missing |
+| Shulker Drops Two | Partial | Every shell loot stack is now set to exactly the configured count and optional missing shell is added; late-spawned item entities are not intercepted |
+| Respawning Shulkers | Partial | Captures and restores original entity NBT, health 30, new UUID and scheduled respawn; engine entity recreation, unloaded chunks and shutdown differ |
 | Enchantment Level Indicator | Partial | Tooltip max-level suffix, with saved NBT and registered max-level lookup; modded tooltip layouts unverified |
 | What Durability | Partial | damage_item parts for 67 common vanilla IDs plus tagged items; prevents future wear by default and preserves normal wear for IDs or #tags in itemsWithDurability; cannot rewrite already present damage or intercept arbitrary untagged third-party items |
 | Always a Wither Skull | Initial | Drops hook only; alternate death routes unverified |
