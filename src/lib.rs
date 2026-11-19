@@ -37,6 +37,7 @@ mod followers;
 mod trading;
 mod soil;
 mod soft_hay;
+mod milk;
 
 use mod_api::{
     AnvilUpdateEvent, BlockChangedEvent, LevelHost, ClientHost, EntityJoinLevelEvent, EntityLeaveLevelEvent,
@@ -51,6 +52,7 @@ use mod_api::{
     PlayerXpChangeEvent, ItemTooltipEvent, MobSpawnPositionCheckEvent,
     PlayerCommandEvent, PlayerCommandsSentEvent, EntityInteractEvent, InteractionResult,
     BonemealEvent, TeleportCommandEvent, PlayerTeleportedEvent,
+    LivingEntityUseItemFinishEvent,
 };
 
 #[derive(Default)]
@@ -212,6 +214,10 @@ impl Hooks for SunriseQol {
 
     fn anvil_update(&self, side: HostSide<'_>, event: &mut AnvilUpdateEvent<'_>) -> Flow {
         anvil::on_update(side, event)
+    }
+
+    fn living_entity_use_item_finish(&self, side: HostSide<'_>, event: &mut LivingEntityUseItemFinishEvent<'_>) {
+        milk::finished(side, event);
     }
 
     fn player_xp_change(&self, host: &mut dyn ServerHost, event: &mut PlayerXpChangeEvent<'_>) -> Flow {
