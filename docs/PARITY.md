@@ -26,7 +26,7 @@ installer to stop before replacing the installed mod.
 | Drowned Prevention | Initial | Read-only drowned spawn veto near online players with Conduit Power in matching level; configurable horizontal radius 0–400. Gameplay validation pending |
 | Inventory Totem | Initial | Vanilla totem only; death protection API must be tested |
 | Inventory Mending | Initial | Repairs inventory items on XP-gain hook; differs from Mending orb selection |
-| Double Doors | Initial | Exact-class block sync; redstone/AI timing is not 1:1 |
+| Double Doors | Partial | Manual clicks synchronize paired blocks in the same server interaction (untested); redstone/AI still defer, and remote client prediction is missing. See [DOORS-SYNC.md](DOORS-SYNC.md) |
 | Infinite Trading | Initial | Trade and demand updates; validate in multiplayer |
 | Shulker Drops Two | Initial | Loot-table interception; validate loot interactions |
 | Respawning Shulkers | Initial | Reschedule after confirmed death; retry after loaded chunks only |
