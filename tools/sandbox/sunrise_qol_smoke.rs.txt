@@ -334,6 +334,35 @@ fn check_affordable_anvil(world: &mut bulk_files::World) {
 }
 
 
+// This host shares the in-memory config fixture but makes a minimal real item
+// registry visible to guest code, as Sunrise's game host normally does.
+#[derive(Default)]
+struct LootWorld {
+    files: bulk_files::World,
+}
+impl mod_api::Host for LootWorld {}
+mod_api::impl_host_areas!(LootWorld, except(config, items));
+impl mod_api::prelude::ConfigHost for LootWorld {
+    fn config_files(&self) -> &'static dyn mod_api::ConfigFiles {
+        self.files.config_files()
+    }
+    fn data_files(&self) -> &'static dyn mod_api::ConfigFiles {
+        self.files.data_files()
+    }
+}
+impl mod_api::prelude::ItemsHost for LootWorld {
+    fn item_key(&self, id: &mod_api::Identifier) -> Option<mod_api::ItemKey> {
+        mod_api::__private::item_key(&id.to_string())
+    }
+}
+impl mod_api::ServerHost for LootWorld {}
+mod_api::impl_server_host_areas!(LootWorld, except(config));
+impl mod_api::prelude::ConfigServerHost for LootWorld {
+    fn world_data_files(&self) -> &dyn mod_api::ConfigFiles {
+        self.files.world_data_files()
+    }
+}
+
 fn stack(id: &str, count: u32) -> mod_api::ItemStack {
     let key = mod_api::__private::item_key(id)
         .unwrap_or_else(|| panic!("scenario item is not registered: {id}"));
@@ -341,7 +370,7 @@ fn stack(id: &str, count: u32) -> mod_api::ItemStack {
 }
 
 fn loot(
-    world: &mut bulk_files::World,
+    world: &mut LootWorld,
     kind: &str,
     drops: &mut Vec<mod_api::ItemStack>,
     death: bool,
@@ -365,7 +394,16 @@ fn loot(
         explosion: None,
         used,
     }.into();
-    mod_api::dispatch_loot_drops(world, &context, drops);
+    // The dispatcher validates and commits each candidate through this writer.
+    // Keep the applied copy separate so the test exercises the write boundary.
+    let mut committed: Option<Vec<mod_api::ItemStack>> = None;
+    mod_api::dispatch_loot_drops(world, &context, drops, &mut |candidate| {
+        committed = Some(candidate.clone());
+        Ok(())
+    });
+    if let Some(applied) = committed {
+        assert_eq!(&applied, drops, "the committed loot must match the hook's result");
+    }
 }
 
 fn count(drops: &[mod_api::ItemStack], id: &str) -> u32 {
@@ -373,7 +411,7 @@ fn count(drops: &[mod_api::ItemStack], id: &str) -> u32 {
     drops.iter().filter(|drop| drop.item() == key).map(|drop| drop.count()).sum()
 }
 
-fn check_wither_skull(world: &mut bulk_files::World) {
+fn check_wither_skull(world: &mut LootWorld) {
     let mut drops = vec![stack("minecraft:coal", 2)];
     loot(world, "minecraft:wither_skeleton", &mut drops, true, false);
     assert_eq!(count(&drops, "minecraft:wither_skeleton_skull"), 0, "OFF must not add skulls");
@@ -402,7 +440,7 @@ fn check_wither_skull(world: &mut bulk_files::World) {
     eprintln!("PASS always_wither_skull: OFF, guarantee, no duplicates, preserved vanilla loot");
 }
 
-fn check_dragon_elytra(world: &mut bulk_files::World) {
+fn check_dragon_elytra(world: &mut LootWorld) {
     let mut drops = vec![stack("minecraft:dragon_egg", 1)];
     loot(world, "minecraft:ender_dragon", &mut drops, true, false);
     assert_eq!(count(&drops, "minecraft:elytra"), 0, "OFF must not add Elytra");
@@ -425,7 +463,7 @@ fn check_dragon_elytra(world: &mut bulk_files::World) {
     eprintln!("PASS dragon_drops_elytra: OFF, addition, uniqueness, unrelated entity");
 }
 
-fn check_shulker_shells(world: &mut bulk_files::World) {
+fn check_shulker_shells(world: &mut LootWorld) {
     let mut drops = vec![stack("minecraft:shulker_shell", 1), stack("minecraft:diamond", 3)];
     loot(world, "minecraft:shulker", &mut drops, true, false);
     assert_eq!(count(&drops, "minecraft:shulker_shell"), 1, "OFF must preserve vanilla shell count");
@@ -510,9 +548,10 @@ fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
             check_superflat_slimes(&mut world);
             check_infinite_trading(&mut world);
             check_affordable_anvil(&mut world);
-            check_wither_skull(&mut world);
-            check_dragon_elytra(&mut world);
-            check_shulker_shells(&mut world);
+            let mut loot_world = LootWorld::default();
+            check_wither_skull(&mut loot_world);
+            check_dragon_elytra(&mut loot_world);
+            check_shulker_shells(&mut loot_world);
             // Test teardown also traverses the real guest hook.
             mod_api::dispatch_server_stopped(&mut world, false);
         });
