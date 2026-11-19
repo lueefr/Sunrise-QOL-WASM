@@ -74,6 +74,23 @@ class SandboxTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             verify(self.package, self.std)
 
+    def test_gameplay_scenarios_are_executable(self):
+        fixture = (ROOT / "tools/sandbox/sunrise_qol_smoke.rs.txt").read_text()
+        self.assertIn("mod_api::dispatch_player_commands_sent(world, player", fixture)
+        self.assertIn("mod_api::dispatch_player_command(", fixture)
+        self.assertIn("mod_api::dispatch_entity_join_level(", fixture)
+        self.assertIn("mod_api::dispatch_entity_mob_griefing(", fixture)
+        self.assertIn("mod_api::dispatch_entity_leave_level(", fixture)
+        self.assertIn("set_toggle(world, \"compact_help\", true)", fixture)
+        self.assertIn("set_toggle(world, \"friendly_griefing\", true)", fixture)
+        self.assertIn("assert!(canceled", fixture)
+        self.assertIn('assert!(!allowed, "non-villager', fixture)
+        self.assertIn('set_toggle(world, "enchant_command", true)', fixture)
+        self.assertIn("check_extended_enchant(&mut world);", fixture)
+        self.assertIn("maximum enchantment level is 10", fixture)
+        self.assertIn("check_help(&mut world);", fixture)
+        self.assertIn("check_villager_griefing(&mut world);", fixture)
+
     def test_release_gates_on_real_loader(self):
         workflow = (ROOT / ".github/workflows/release.yml").read_text()
         a = workflow.index("name: Validate mod package")

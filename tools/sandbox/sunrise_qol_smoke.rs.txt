@@ -5,16 +5,169 @@ mod no_hooks;
 #[path = "../src/test_stack.rs"]
 mod test_stack;
 
-use mod_api::{Host, ServerHost};
+#[path = "support/bulk_files.rs"]
+mod bulk_files;
+
+use mod_api::{ConfigFiles, ConfigPath, Host, TextContent};
+use mod_api::text::TextClick;
 use sunrise_mod_package::manifest::Package;
 use sunrise_mod_wasm::{WasmPackage, load};
 use std::path::Path;
 
-struct Sandbox;
-impl Host for Sandbox {}
-mod_api::impl_host_areas!(Sandbox);
-impl ServerHost for Sandbox {}
-mod_api::impl_server_host_areas!(Sandbox);
+fn set_toggle(host: &dyn Host, name: &str, value: bool) {
+    let path = ConfigPath::new(&format!("horizon_qol_suite/{name}"))
+        .expect("valid QOL setting");
+    host.config_files().write(&path, if value { b"true" } else { b"false" })
+        .expect("write QOL config");
+}
+
+fn clear_toggle(host: &dyn Host, name: &str) {
+    let path = ConfigPath::new(&format!("horizon_qol_suite/{name}"))
+        .expect("valid QOL setting");
+    let _ = host.config_files().remove(&path);
+}
+
+fn literal(text: &mod_api::Text) -> &str {
+    match &text.content {
+        TextContent::Literal(value) => value,
+        other => panic!("expected literal text, got {other:?}"),
+    }
+}
+
+fn check_help(world: &mut bulk_files::World) {
+    let player = 0x112233445566778899aabbccddeeff00_u128;
+    let mut names = vec![
+        "list".to_owned(),
+        "help".to_owned(),
+        "say".to_owned(),
+        "give".to_owned(),
+        "time".to_owned(),
+    ];
+    // Before enable, the real guest must not intercept /help.
+    mod_api::dispatch_player_commands_sent(world, player, "Tester", &mut names);
+    let (mut canceled, mut replies) = (false, Vec::new());
+    mod_api::dispatch_player_command(
+        world, player, "Tester", "help 2", &mut canceled, &mut replies
+    );
+    assert!(!canceled, "disabled compact_help must keep vanilla /help");
+    assert!(replies.is_empty(), "disabled module must not send replies");
+
+    set_toggle(world, "compact_help", true);
+    let path = ConfigPath::new("horizon_qol_suite/help_page_size").unwrap();
+    world.config_files().write(&path, b"2").unwrap();
+    // The per-player command snapshot is a real hook, not a fabricated cache.
+    mod_api::dispatch_player_commands_sent(world, player, "Tester", &mut names);
+    (canceled, replies) = (false, Vec::new());
+    mod_api::dispatch_player_command(
+        world, player, "Tester", "help 1", &mut canceled, &mut replies
+    );
+    assert!(canceled, "the enabled help must override /help 1");
+    assert_eq!(replies.len(), 5, "title, two commands, next navigation and hint");
+    assert_eq!(literal(&replies[0]), "Commands — page 1/3");
+    assert_eq!(literal(&replies[1]), "/give");
+    assert_eq!(literal(&replies[2]), "/help");
+    assert_eq!(
+        replies[1].style.click,
+        Some(TextClick::SuggestCommand("/give ".to_owned())),
+        "clicking /give must suggest the real command"
+    );
+    assert!(replies.iter().any(|line| {
+        line.style.click == Some(TextClick::RunCommand("/help 2".into()))
+    }), "next page navigation must execute the correct /help page");
+    (canceled, replies) = (false, Vec::new());
+    mod_api::dispatch_player_command(
+        world, player, "Tester", "help 2", &mut canceled, &mut replies
+    );
+    assert!(canceled);
+    assert_eq!(replies.len(), 6, "middle page must have both navigation links");
+    assert_eq!(literal(&replies[0]), "Commands — page 2/3");
+    assert_eq!(literal(&replies[1]), "/list");
+    assert_eq!(literal(&replies[2]), "/say");
+    assert!(replies.iter().any(|line| {
+        line.style.click == Some(TextClick::RunCommand("/help 1".into()))
+    }), "previous page link missing");
+
+    // Detailed syntax continues to be answered by the game, not invented.
+    (canceled, replies) = (false, Vec::new());
+    mod_api::dispatch_player_command(
+        world, player, "Tester", "help give", &mut canceled, &mut replies
+    );
+    assert!(!canceled && replies.is_empty());
+
+    set_toggle(world, "compact_help", false);
+    (canceled, replies) = (false, Vec::new());
+    mod_api::dispatch_player_command(
+        world, player, "Tester", "help 2", &mut canceled, &mut replies
+    );
+    assert!(!canceled && replies.is_empty(), "disabled setting must take effect");
+    clear_toggle(world, "compact_help");
+    let _ = world.config_files().remove(&path);
+    eprintln!("PASS compact_help: disabled, pagination, clickable reply, vanilla fallback");
+}
+
+fn check_extended_enchant(world: &mut bulk_files::World) {
+    let player = 0x112233445566778899aabbccddeeff00_u128;
+    let (mut canceled, mut replies) = (false, Vec::new());
+    mod_api::dispatch_player_command(
+        world, player, "Tester", "enchant @s minecraft:sharpness 11",
+        &mut canceled, &mut replies
+    );
+    assert!(!canceled && replies.is_empty(), "off must leave vanilla /enchant");
+
+    set_toggle(world, "enchant_command", true);
+    let ceiling = ConfigPath::new("horizon_qol_suite/unlimited_max_level").unwrap();
+    world.config_files().write(&ceiling, b"10").unwrap();
+    (canceled, replies) = (false, Vec::new());
+    mod_api::dispatch_player_command(
+        world, player, "Tester", "enchant @s minecraft:sharpness 11",
+        &mut canceled, &mut replies
+    );
+    assert!(canceled, "over configured max must be rejected");
+    assert_eq!(replies.len(), 1, "must explain configured limit");
+    assert_eq!(literal(&replies[0]), "Sunrise QOL: maximum enchantment level is 10.");
+
+    (canceled, replies) = (false, Vec::new());
+    mod_api::dispatch_player_command(
+        world, player, "Tester", "enchant @a minecraft:sharpness 11",
+        &mut canceled, &mut replies
+    );
+    assert!(!canceled && replies.is_empty(), "other selectors remain vanilla");
+
+    clear_toggle(world, "enchant_command");
+    let _ = world.config_files().remove(&ceiling);
+    eprintln!("PASS enchant_command: off, configured cap, selectors");
+}
+
+fn check_villager_griefing(world: &mut bulk_files::World) {
+    // No entity needed: the API delivers join/leave identity and grief decision.
+    let mut canceled = false;
+    mod_api::dispatch_entity_join_level(
+        world, "minecraft:overworld", 41, "minecraft:villager",
+        [10.0, 64.0, 10.0], false, &mut canceled
+    );
+    assert!(!canceled, "QOL must not cancel villager joining");
+    let entity = mod_api::EntityRef::new(mod_api::WorldEpoch::new(1), 41);
+    let zombie = mod_api::EntityRef::new(mod_api::WorldEpoch::new(1), 42);
+
+    let mut allowed = false;
+    mod_api::dispatch_entity_mob_griefing(world, entity, &mut allowed);
+    assert!(!allowed, "disabled friendly_griefing must preserve gamerule");
+
+    set_toggle(world, "friendly_griefing", true);
+    allowed = false;
+    mod_api::dispatch_entity_mob_griefing(world, entity, &mut allowed);
+    assert!(allowed, "tracked villager should be allowed to interact with crops");
+    allowed = false;
+    mod_api::dispatch_entity_mob_griefing(world, zombie, &mut allowed);
+    assert!(!allowed, "non-villager must keep mobGriefing=false");
+
+    mod_api::dispatch_entity_leave_level(world, "minecraft:overworld", 41, "minecraft:villager");
+    allowed = false;
+    mod_api::dispatch_entity_mob_griefing(world, entity, &mut allowed);
+    assert!(!allowed, "removed villager must no longer be tracked");
+    clear_toggle(world, "friendly_griefing");
+    eprintln!("PASS friendly_griefing: disabled, villager, other mob, entity lifecycle");
+}
 
 #[test]
 fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
@@ -49,10 +202,12 @@ fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
         mod_api::testing::with_mods(loaded.mods.into(), || {
             mod_api::__private::mark_game_thread();
             let _phase = mod_api::__private::PhaseOwner::scope(mod_api::__private::ModPhase::World);
-            let mut sandbox = Sandbox;
-            // This calls the real guest's server_stopped hook and checks that the
-            // result returns through Sunrise's generated Wire transport.
-            mod_api::dispatch_server_stopped(&mut sandbox, false);
+            let mut world = bulk_files::World::default();
+            check_help(&mut world);
+            check_extended_enchant(&mut world);
+            check_villager_griefing(&mut world);
+            // Test teardown also traverses the real guest hook.
+            mod_api::dispatch_server_stopped(&mut world, false);
         });
     });
 }

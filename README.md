@@ -10,9 +10,10 @@ Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's 
 
 Before publishing a release, GitHub Actions builds the guest, checks its imports
 against the pinned shared WASM standard, then runs it through the **real Sunrise
-Wasmtime loader** at the exact SDK commit. The smoke test verifies load,
-registration and hook dispatch in a simulated server host. This **does not**
-replace real-world gameplay or graphical testing.
+Wasmtime loader** at the exact SDK commit. The runtime test also executes in-memory command and entity-event scenarios:
+command pagination, enchantment limits and villager griefing. These are
+real guest-side behavior checks, but **not** a complete Minecraft world,
+multiplayer session or graphical test.
 
 See [sandbox design and limitations](docs/SANDBOX.md) or run the
 [standalone sandbox workflow](https://github.com/lueefr/Sunrise-QOL-WASM/actions/workflows/sandbox.yml).
