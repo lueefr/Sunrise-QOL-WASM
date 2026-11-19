@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/sandbox.yml'
       - 'tools/sandbox/**'
+      - 'tools/sdk_sync.py'
   pull_request:
     branches: [main]
     paths:
@@ -14,6 +15,7 @@ on:
       - 'tools/sandbox/**'
       - 'src/**'
       - 'tests/**'
+      - 'tools/sdk_sync.py'
       - 'Cargo.toml'
       - 'sunrise-mod.toml'
 
@@ -32,6 +34,15 @@ jobs:
       - name: Check out mod source
         uses: actions/checkout@v4
 
+      # Exercise the exact SDK of the published nightly on every PR and push.
+      # This modifies the runner's Cargo.toml only; release.yml persists the
+      # updated SDK pin after a successful validation on main.
+      - name: Resolve and pin latest published Sunrise SDK
+        id: sdk
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/sdk_sync.py --github-output "$GITHUB_OUTPUT"
+
       - name: Validate source and sandbox assertions
         run: python3 -m unittest discover -s tests -v
 
@@ -47,11 +58,13 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/.cargo/bin/cargo-sunrise-mod
-          key: ${{ runner.os }}-${{ runner.arch }}-sunrise-cli-7fb2aa4d-rust-1.99.1-v1
+          key: ${{ runner.os }}-${{ runner.arch }}-sunrise-cli-${{ steps.sdk.outputs.revision }}-rust-1.99.1-v1
 
       - name: Install Sunrise WASM builder
         if: steps.builder-cache.outputs.cache-hit != 'true'
-        run: cargo install --git https://github.com/sunrise-org/sunrise --rev 7fb2aa4d cargo-sunrise-mod --locked
+        env:
+          SDK_REVISION: ${{ steps.sdk.outputs.revision }}
+        run: cargo install --git https://github.com/sunrise-org/sunrise --rev "$SDK_REVISION" cargo-sunrise-mod --locked
 
       - name: Save Sunrise builder
         if: steps.builder-cache.outputs.cache-hit != 'true'
@@ -59,17 +72,6 @@ jobs:
         with:
           path: ~/.cargo/bin/cargo-sunrise-mod
           key: ${{ steps.builder-cache.outputs.cache-primary-key }}
-
-      - name: Read pinned SDK revision
-        id: sdk
-        shell: bash
-        run: |
-          python3 - <<'PY' >> "$GITHUB_OUTPUT"
-          from pathlib import Path
-          import tomllib
-          with Path("Cargo.toml").open("rb") as f:
-              print("revision=" + tomllib.load(f)["package"]["metadata"]["sunrise"]["sdk"])
-          PY
 
       - name: Restore pinned SDK
         id: sdk-cache
