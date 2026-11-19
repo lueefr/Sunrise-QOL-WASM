@@ -4,7 +4,18 @@
 
 Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's quality-of-life bundle**, adapted to the Sunrise runtime. It also includes several independent convenience features. This is not an official Serilum release; feature and configuration parity remain in development.
 
-> **Development status — not a stable release.** Version 1.0.0 is the initial version label, not a claim of feature parity. The source archive has passed structural Python checks, but successful Rust/WASM compilation, loading into Sunrise, multiplayer correctness, and gameplay parity are **not yet verified**. Do not assume a module works merely because it appears in the configuration interface.
+> **Development status — not a stable release.** Successful Rust/WASM builds do not certify in-game behavior or feature parity. The release pipeline now also checks WASM imports and loads the actual .smod with Sunrise's runtime, but multiplayer correctness, GUI behavior and gameplay still require game-level tests. Do not assume a module works merely because it appears in the configuration interface.
+
+## Runtime sandbox
+
+Before publishing a release, GitHub Actions builds the guest, checks its imports
+against the pinned shared WASM standard, then runs it through the **real Sunrise
+Wasmtime loader** at the exact SDK commit. The smoke test verifies load,
+registration and hook dispatch in a simulated server host. This **does not**
+replace real-world gameplay or graphical testing.
+
+See [sandbox design and limitations](docs/SANDBOX.md) or run the
+[standalone sandbox workflow](https://github.com/lueefr/Sunrise-QOL-WASM/actions/workflows/sandbox.yml).
 
 ## Features
 **Checklist legend:** `[x]` means a matching implementation is present in the source archive, even if partial; `[ ]` means the behavior has not been ported. **No checked item has been certified as 1:1 or verified in-game.** Some entries require new Sunrise hooks.

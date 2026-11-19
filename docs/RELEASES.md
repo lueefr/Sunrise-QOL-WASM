@@ -42,5 +42,11 @@ classification**. A change that adds a feature but lacks `feat:` will be
 classified as maintenance; GitHub Actions cannot reliably infer intent
 from a diff. Review commit titles before merging.
 
-The build validates package structure and test results; actual gameplay
-behavior and compatibility with your Sunrise binary need separate testing.
+The release build also creates the pinned shared WASM standard, checks the
+mod's Rust imports, and runs the compiled .smod through Sunrise's real Wasmtime
+loader with a simulated host. Guest initialization, registration and hook
+dispatch must pass **before** publishing. See [SANDBOX.md](SANDBOX.md).
+
+This does not yet run actual world/gameplay scenarios or test against the
+standard library packaged in a specific installed game. Those still require
+separate validation.

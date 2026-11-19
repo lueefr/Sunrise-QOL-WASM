@@ -14,6 +14,7 @@ on:
       - 'preparar-rust.fish'
       - 'diagnosticar.fish'
       - 'tools/wasm_link_check.py'
+      - 'tools/sandbox/**'
       - 'tools/migrate_settings.py'
       - 'tests/**'
       - 'tools/release.py'
@@ -157,6 +158,44 @@ jobs:
           mkdir -p dist
           cp target/sunrise-mod/horizon_qol_suite.smod "dist/Sunrise-QOL-${{ steps.version.outputs.version }}.smod"
           (cd dist && sha256sum *.smod > SHA256SUMS.txt)
+
+      # Validate the exact .smod under the same Sunrise Wasmtime runtime that loads game mods.
+      # Pin the upstream source to the SDK commit to avoid silently testing a different API.
+      - name: Build matching WASM standard for runtime test
+        if: steps.version.outputs.changed == 'true'
+        run: cargo sunrise-mod wasm-std target/sunrise-wasm-std.wasm
+
+      - name: Check guest imports against shared WASM standard
+        if: steps.version.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/sandbox/check.py \
+            target/sunrise-mod/horizon_qol_suite.smod target/sunrise-wasm-std.wasm \
+            | tee "${{ runner.temp }}/sunrise-abi.json"
+
+      - name: Restore real Sunrise runtime cache
+        if: steps.version.outputs.changed == 'true'
+        uses: actions/cache@v4
+        with:
+          path: target/sunrise-sandbox
+          key: ${{ runner.os }}-${{ runner.arch }}-sunrise-runtime-${{ steps.sdk.outputs.revision }}-rust1.99.1-v1
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-sunrise-runtime-${{ steps.sdk.outputs.revision }}-
+
+      - name: Smoke test with actual Sunrise runtime
+        if: steps.version.outputs.changed == 'true'
+        timeout-minutes: 30
+        shell: bash
+        run: bash tools/sandbox/run.sh
+
+      - name: Attach sandbox ABI report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sunrise-qol-abi
+          path: ${{ runner.temp }}/sunrise-abi.json
+          if-no-files-found: ignore
 
       - name: Commit version and tag only after a successful build
         if: steps.version.outputs.changed == 'true'
