@@ -35,6 +35,8 @@ mod enchant_command;
 mod extended_bonemeal;
 mod followers;
 mod trading;
+mod soil;
+mod soft_hay;
 
 use mod_api::{
     AnvilUpdateEvent, BlockChangedEvent, LevelHost, ClientHost, EntityJoinLevelEvent, EntityLeaveLevelEvent,
@@ -76,6 +78,7 @@ impl Hooks for SunriseQol {
         settings::register(r);
         zoom::register(r);
         durability::register(r);
+        soft_hay::register(r);
     }
 
     fn setting_changed(&self, host: &mut dyn ClientHost, event: &mut SettingChangedEvent<'_>) {
@@ -127,6 +130,7 @@ impl Hooks for SunriseQol {
         self.mining.block(host, event);
         self.beacon.broken(host, event);
         self.conduit.broken(host, event);
+        soil::harvested(host, event);
     }
 
     fn block_changed(&self, level: &dyn LevelHost, event: &mut BlockChangedEvent) {
@@ -194,6 +198,7 @@ impl Hooks for SunriseQol {
     }
 
     fn server_tick(&self, host: &mut dyn ServerHost, event: &mut ServerTickEvent<'_>) {
+        soft_hay::refresh(host);
         self.decay.tick(host, event);
         self.doors.tick(host, event);
         self.automatic_doors.tick(host, event);
