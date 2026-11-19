@@ -258,6 +258,7 @@ impl Hooks for SunriseQol {
         self.followers.reset();
         self.elytra.reset();
         self.shulkers.reset();
+        soft_hay::reset();
     }
 
     fn render_hand(&self, host: &dyn ClientHost, event: &mut RenderHandEvent<'_, '_>) -> Flow {
