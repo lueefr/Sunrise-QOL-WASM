@@ -101,9 +101,9 @@ class SandboxTests(unittest.TestCase):
         self.assertIn('anvil_update(world, 75, false, None)', fixture)
         self.assertIn('anvil_update(world, 75, true, Some("Renamed"))', fixture)
         # Assert material item drop counts from actual guest dispatch, not toggles alone.
-        self.assertIn("check_wither_skull(&mut world);", fixture)
-        self.assertIn("check_dragon_elytra(&mut world);", fixture)
-        self.assertIn("check_shulker_shells(&mut world);", fixture)
+        self.assertIn("check_wither_skull(&mut loot_world);", fixture)
+        self.assertIn("check_dragon_elytra(&mut loot_world);", fixture)
+        self.assertIn("check_shulker_shells(&mut loot_world);", fixture)
         self.assertIn("mod_api::dispatch_loot_drops(world, &context, drops, &mut |candidate|", fixture)
         self.assertIn("impl mod_api::prelude::ItemsHost for LootWorld", fixture)
         self.assertIn('assert_eq!(&applied, drops, "the committed loot', fixture)
@@ -112,6 +112,13 @@ class SandboxTests(unittest.TestCase):
         self.assertIn('count(&drops, "minecraft:shulker_shell"), 4', fixture)
         self.assertIn('count(&larger, "minecraft:shulker_shell"), 9', fixture)
         self.assertIn('set_toggle(world, "always_drop", true)', fixture)
+        # Tooltips are rendered by the real guest's client hook.
+        self.assertIn("check_langpatch(&mut tooltip_world);", fixture)
+        self.assertIn("check_cap_indicator(&mut tooltip_world);", fixture)
+        self.assertIn("mod_api::dispatch_item_tooltip(world,", fixture)
+        self.assertIn('literal(&roman[0].0), "XVII"', fixture)
+        self.assertIn('literal(&lines[0].0.children[0]), " ★"', fixture)
+        self.assertIn("enchanted_sword(4)", fixture)
 
 
     def test_release_gates_on_real_loader(self):
