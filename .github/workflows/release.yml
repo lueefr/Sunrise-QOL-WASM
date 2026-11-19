@@ -15,6 +15,7 @@ on:
       - 'diagnosticar.fish'
       - 'tools/wasm_link_check.py'
       - 'tools/migrate_settings.py'
+      - 'tests/**'
       - 'tools/release.py'
 
 permissions:
@@ -40,7 +41,6 @@ jobs:
         run: python3 tools/release.py plan --github-output "$GITHUB_OUTPUT"
 
       - name: Install Python and validate source
-        if: steps.version.outputs.changed == 'true'
         run: python3 -m unittest discover -s tests -p 'test*.py' -v
 
       - name: Update manifests and release notes
