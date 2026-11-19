@@ -1,5 +1,5 @@
 //! Automatic Doors: open nearby doors for real players, close only mod-opened doors.
-//! All block mutations happen on the authoritative server's tick, with bounded scans.
+//! Match the original per-player tick scan and whole-second close scheduling.
 use crate::settings::{amount, flag, on};
 use mod_api::{
     BlockUpdateFlags, LevelRef, ServerHost, ServerTickEvent, ServerTickPhase,
@@ -10,7 +10,6 @@ use std::sync::atomic::{AtomicU64, Ordering};
 const MAX_TRACKED: usize = 256;
 const MAX_PLAYERS: usize = 24;
 const MAX_CLOSES: usize = 32;
-const SCAN_EVERY: u64 = 4;
 const NEAR_SQUARED: f64 = 9.0;
 
 #[derive(Clone)]
@@ -69,14 +68,21 @@ fn door_name(state: &str, iron: bool) -> Option<&str> {
 }
 
 fn close_enough(a: [f64; 3], block: [i32; 3]) -> bool {
-    let dx = a[0] - (f64::from(block[0]) + 0.5);
-    let dy = a[1] - f64::from(block[1]);
-    let dz = a[2] - (f64::from(block[2]) + 0.5);
-    dx * dx + dy * dy + dz * dz < NEAR_SQUARED
+    // The original checks an AABB around the doorway, then compares the
+    // player's integer BlockPos at a strict radius of three blocks.
+    let inside = (a[0] - f64::from(block[0])).abs() <= 2.0
+        && (a[1] - f64::from(block[1])).abs() <= 1.0
+        && (a[2] - f64::from(block[2])).abs() <= 2.0;
+    let pos = a.map(|axis| axis.floor() as i32);
+    let dx = f64::from(pos[0] - block[0]);
+    let dy = f64::from(pos[1] - block[1]);
+    let dz = f64::from(pos[2] - block[2]);
+    inside && dx * dx + dy * dy + dz * dz < NEAR_SQUARED
 }
 
 fn delay_ticks(milliseconds: f64) -> u64 {
-    (milliseconds.clamp(0.0, 10000.0) / 50.0).ceil() as u64
+    // Serilum schedules (doorOpenTime / 1000) * 20 using integer division.
+    ((milliseconds.clamp(0.0, 10000.0) as u64) / 1000) * 20
 }
 
 fn lower_pos(state: &str, pos: [i32; 3]) -> Option<[i32; 3]> {
@@ -137,12 +143,14 @@ impl AutomaticDoors {
     }
 
     fn close_due(&self, host: &mut dyn ServerHost, players: &[Nearby], now: u64, iron: bool) {
+        let skip_sneak = flag(host, "auto_prevent_sneak", true);
         let due = self.opened.lock().ok().map(|list| {
             list.iter().filter(|entry| entry.due <= now)
                 .take(MAX_CLOSES).cloned().collect::<Vec<_>>()
         }).unwrap_or_default();
         for entry in due {
             if players.iter().any(|player| player.dimension == entry.dimension
+                && (!skip_sneak || !player.sneaking)
                 && close_enough(player.pos, entry.pos)) {
                 continue;
             }
@@ -150,11 +158,21 @@ impl AutomaticDoors {
             if !level.in_place(host) { continue; }
             let Some(state) = level.block_state(host, entry.pos) else { continue; };
             let Some(text) = host.block_state_string(state) else { continue; };
-            // A player may have closed or removed this door after we opened it.
-            if door_name(&text, iron) == Some(entry.block.as_str())
-                && property(&text, "open") == Some("true")
-                && property(&text, "powered") != Some("true") {
-                let _ = flip(host, level, entry.pos, &entry.block, false, iron);
+            if door_name(&text, iron) == Some(entry.block.as_str()) {
+                // Upstream closes every supported door in the adjacent 3x3
+                // square, including doors not initially opened by this module.
+                for dx in -1..=1 {
+                    for dz in -1..=1 {
+                        let pos = [entry.pos[0] + dx, entry.pos[1], entry.pos[2] + dz];
+                        let Some(state) = level.block_state(host, pos) else { continue; };
+                        let Some(text) = host.block_state_string(state) else { continue; };
+                        let Some(name) = door_name(&text, iron) else { continue; };
+                        if property(&text, "half") == Some("lower")
+                            && property(&text, "open") == Some("true") {
+                            let _ = flip(host, level, pos, name, false, iron);
+                        }
+                    }
+                }
             }
             if let Ok(mut list) = self.opened.lock() {
                 list.retain(|item| item.dimension != entry.dimension || item.pos != entry.pos);
@@ -193,28 +211,20 @@ impl AutomaticDoors {
     fn open_nearby(&self, host: &mut dyn ServerHost,
                    players: &[Nearby], now: u64, delay: u64, iron: bool) {
         let prevent_sneak = flag(host, "auto_prevent_sneak", true);
-        let count = players.len();
-        if count == 0 { return; }
-        let start = (now / SCAN_EVERY) as usize % count;
-        for index in 0..count.min(MAX_PLAYERS) {
-            let player = &players[(start + index) % count];
+        // Original onPlayerTick: the 3x3 X/Z square on the block layer
+        // directly above the player's feet, not a 3x3x3 proximity sphere.
+        for player in players.iter().take(MAX_PLAYERS) {
             if prevent_sneak && player.sneaking { continue; }
             let Some(level) = host.level(&player.dimension) else { continue; };
             if !level.in_place(host) { continue; }
-            let [x, y, z] = player.pos.map(|part| part.floor() as i32);
-            for dy in -1_i32..=1 {
-                for dx in -1_i32..=1 {
-                    for dz in -1_i32..=1 {
-                        let (Some(px), Some(py), Some(pz)) =
-                            (x.checked_add(dx), y.checked_add(dy), z.checked_add(dz)) else {
-                            continue;
-                        };
-                        let pos = [px, py, pz];
-                        if close_enough(player.pos, pos) {
-                            self.try_open(host, level, &player.dimension, pos,
-                                          now.saturating_add(delay), iron);
-                        }
-                    }
+            let [x, feet, z] = player.pos.map(|part| part.floor() as i32);
+            let Some(y) = feet.checked_add(1) else { continue; };
+            for dx in -1_i32..=1 {
+                for dz in -1_i32..=1 {
+                    let (Some(px), Some(pz)) =
+                        (x.checked_add(dx), z.checked_add(dz)) else { continue; };
+                    self.try_open(host, level, &player.dimension, [px, y, pz],
+                                  now.saturating_add(delay), iron);
                 }
             }
         }
@@ -233,9 +243,7 @@ impl AutomaticDoors {
         let iron = flag(host, "auto_iron_doors", true);
         let players = self.players(host);
         self.close_due(host, &players, now, iron);
-        if now % SCAN_EVERY == 0 {
-            self.open_nearby(host, &players, now, delay, iron);
-        }
+        self.open_nearby(host, &players, now, delay, iron);
     }
 
     pub fn reset(&self) {
@@ -264,7 +272,9 @@ mod tests {
 
     #[test]
     fn delay_and_proximity_are_bounded() {
-        assert_eq!(delay_ticks(2500.), 50);
+        assert_eq!(delay_ticks(2500.), 40);
+        assert_eq!(delay_ticks(999.), 0);
+        assert_eq!(delay_ticks(1999.), 20);
         assert_eq!(delay_ticks(10000.), 200);
         assert_eq!(delay_ticks(0.), 0);
         assert!(close_enough([1.5, 64., 1.5], [1, 64, 1]));
