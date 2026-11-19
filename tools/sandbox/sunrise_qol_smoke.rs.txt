@@ -529,6 +529,8 @@ fn check_shulker_shells(world: &mut LootWorld) {
 #[derive(Default)]
 struct TooltipWorld {
     files: bulk_files::World,
+    playing: bool,
+    down: bool,
 }
 impl mod_api::Host for TooltipWorld {}
 mod_api::impl_host_areas!(TooltipWorld, except(config, items));
@@ -546,7 +548,16 @@ impl mod_api::prelude::ConfigHost for TooltipWorld {
     }
 }
 impl mod_api::ClientHost for TooltipWorld {}
-mod_api::impl_client_host_areas!(TooltipWorld, except(items, config));
+mod_api::impl_client_host_areas!(TooltipWorld, except(items, config, client_input));
+impl mod_api::prelude::ClientInputClientHost for TooltipWorld {
+    fn playing(&self) -> bool {
+        self.playing
+    }
+    fn is_down(&self, mod_id: &str, id: &str) -> bool {
+        assert_eq!((mod_id, id), ("horizon_qol_suite", "qol_zoom"));
+        self.down
+    }
+}
 impl mod_api::prelude::ConfigClientHost for TooltipWorld {
     fn translate(&self, _: &str) -> Option<String> {
         None
@@ -661,6 +672,118 @@ fn check_cap_indicator(world: &mut TooltipWorld) {
     eprintln!("PASS enchantment_level_indicator: off, max-only, unaffected lines, custom marker");
 }
 
+
+// First-person rendering is checked at the same cancellable hook used by the client.
+struct HandDraw;
+impl mod_api::BlockEntityDrawContext for HandDraw {
+    fn push(&mut self) {}
+}
+
+fn hand_hidden(
+    world: &TooltipWorld,
+    hand: mod_api::Hand,
+    held: Option<&mod_api::ItemStack>,
+) -> bool {
+    let mut render = mod_api::HandRender {
+        player: 7,
+        player_entity_id: 99,
+        hand,
+        stack: held,
+        partial: 0.5,
+        interpolated_pitch: 0.0,
+        swing: 0.0,
+        equip: 0.0,
+        packed_light: 0,
+        translation: [0.0; 3],
+        rotation: [0.0; 3],
+        scale: 1.0,
+    };
+    let mut canceled = false;
+    let mut draw = HandDraw;
+    assert!(mod_api::__private::listened(mod_api::HookId::RenderHand),
+        "the guest must register the actual render_hand hook");
+    mod_api::dispatch_render_hand(world, &mut render, &mut draw, &mut canceled);
+    canceled
+}
+
+fn check_hide_hands(world: &mut TooltipWorld) {
+    use mod_api::Hand::{Main, Off};
+    let sword = stack("minecraft:iron_sword", 1);
+    let totem = stack("minecraft:totem_of_undying", 1);
+    let torch = stack("minecraft:torch", 1);
+
+    assert!(!hand_hidden(world, Main, None), "disabled mode preserves the empty main hand");
+    assert!(!hand_hidden(world, Off, Some(&totem)), "disabled mode preserves the totem");
+
+    set_toggle(world, "hide_hands", true);
+    assert!(hand_hidden(world, Main, None), "enabled mode hides an empty main hand by default");
+    assert!(!hand_hidden(world, Main, Some(&sword)), "a held item stays visible by default");
+    assert!(hand_hidden(world, Off, Some(&totem)), "a held offhand totem is hidden by default");
+    assert!(hand_hidden(world, Off, Some(&torch)), "a held offhand torch is hidden by default");
+    assert!(!hand_hidden(world, Off, Some(&sword)), "other offhand items remain visible");
+
+    set_toggle(world, "alwayshidemainhand", true);
+    assert!(hand_hidden(world, Main, Some(&sword)), "the main hand override hides held items");
+    set_toggle(world, "alwayshidemainhand", false);
+    set_toggle(world, "alwayshideemptymainhand", false);
+    assert!(!hand_hidden(world, Main, None), "the empty-hand toggle restores empty hand rendering");
+
+    set_toggle(world, "alwayshideoffhand", true);
+    assert!(hand_hidden(world, Off, Some(&sword)), "forced offhand hide applies to arbitrary items");
+
+    set_toggle(world, "hide_hands", false);
+    assert!(!hand_hidden(world, Main, None), "disabling module overrides saved sub-options");
+    assert!(!hand_hidden(world, Off, Some(&torch)), "disabling module restores offhand items");
+
+    for key in [
+        "hide_hands", "alwayshidemainhand", "alwayshideemptymainhand", "alwayshideoffhand"
+    ] {
+        clear_toggle(world, key);
+    }
+    eprintln!("PASS hide_hands: OFF, empty main hand, held gear, offhand items, overrides");
+}
+
+fn zoom(world: &TooltipWorld) -> Option<mod_api::Zoom> {
+    assert!(mod_api::__private::listened(mod_api::HookId::Zoom),
+        "the guest must register its actual zoom hook");
+    let mut output = None;
+    mod_api::dispatch_zoom(world, &mut output);
+    output
+}
+
+fn check_vanilla_zoom(world: &mut TooltipWorld) {
+    world.playing = true;
+    world.down = true;
+    assert_eq!(zoom(world), None, "disabled zoom must leave the regular field of view alone");
+
+    set_toggle(world, "vanilla_zoom", true);
+    world.down = false;
+    assert_eq!(zoom(world), None, "zoom must not engage without the bound key");
+
+    world.down = true;
+    assert_eq!(zoom(world), Some(mod_api::Zoom { factor: 10.0, smooth: true, turn: 0.15 }),
+        "default zoom must return its actual factor and smooth behavior");
+
+    let factor = ConfigPath::new("horizon_qol_suite/zoom_factor").unwrap();
+    world.config_files().write(&factor, b"18.5").unwrap();
+    set_toggle(world, "zoom_smooth", false);
+    assert_eq!(zoom(world), Some(mod_api::Zoom { factor: 18.5, smooth: false, turn: 0.15 }),
+        "zoom must honor configured strength and easing");
+
+    world.playing = false;
+    assert_eq!(zoom(world), None, "zoom must be disabled outside gameplay");
+
+    world.playing = true;
+    set_toggle(world, "vanilla_zoom", false);
+    assert_eq!(zoom(world), None, "turning the module off releases zoom");
+    world.down = false;
+    for key in ["vanilla_zoom", "zoom_smooth"] {
+        clear_toggle(world, key);
+    }
+    let _ = world.config_files().remove(&factor);
+    eprintln!("PASS vanilla_zoom: OFF, held input, custom strength, smooth switch, playing state");
+}
+
 #[test]
 fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
     test_stack::on_guest_stack(|| {
@@ -704,6 +827,7 @@ fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
                 "minecraft:coal", "minecraft:wither_skeleton_skull",
                 "minecraft:dragon_egg", "minecraft:elytra",
                 "minecraft:shulker_shell", "minecraft:diamond",
+                "minecraft:totem_of_undying", "minecraft:torch",
             ]).expect("resolve scenario item IDs");
             check_superflat_slimes(&mut world);
             check_infinite_trading(&mut world);
@@ -715,6 +839,8 @@ fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
             let mut tooltip_world = TooltipWorld::default();
             check_langpatch(&mut tooltip_world);
             check_cap_indicator(&mut tooltip_world);
+            check_hide_hands(&mut tooltip_world);
+            check_vanilla_zoom(&mut tooltip_world);
             // Test teardown also traverses the real guest hook.
             mod_api::dispatch_server_stopped(&mut world, false);
         });
