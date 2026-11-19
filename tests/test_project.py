@@ -177,7 +177,7 @@ class ProjectTests(unittest.TestCase):
             (previous / 'enablefastleafdecay').write_text('false')
             (previous / 'open_ui').write_text('0')
             (previous / 'junk').write_text('unsafe')
-            self.assertEqual(migrate(game, ROOT), 3)
+            self.assertEqual(migrate(game, ROOT), 4)
             target = game / 'config' / 'horizon_qol_suite'
             self.assertEqual((target / 'vein_miner').read_text(), 'true')
             self.assertEqual((target / 'amountofleavesbrokenpertick').read_text(), '7')
@@ -251,7 +251,7 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('enchant::tooltip(host, event.stack, event.lines)', src)
         self.assertIn('crate::unlimited::anvil(host, event)', (ROOT/'src/anvil.rs').read_text())
         self.assertIn('let active = on(host, module.key);', gui)
-        self.assertIn('if !on(host, "leaf_decay")', (ROOT/'src/decay.rs').read_text())
+        self.assertIn('let standalone = on(host, "leaf_decay")', (ROOT/'src/decay.rs').read_text())
 
     def test_outstanding_modules_documented(self):
         docs = (ROOT / 'docs/PARITY.md').read_text()
