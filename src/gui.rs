@@ -207,6 +207,8 @@ const TREE: &[OptionSpec] = &[
     toggle("treeHarvestIgnoresCrouching", "Ignore Sneaking", false),
     toggle("automaticallyFindBottomBlock", "Find Bottom Log Automatically", true),
     toggle("ignorePlayerMadeTrees", "Ignore Player-Planted Trees", true),
+    toggle("enableFastLeafDecay", "Fast Leaf Decay After Harvest", true),
+    range("treeLeavesPerTick", "Tree Leaves per Tick", 5., 1., 16., 1.),
     toggle("enableNetherTrees", "Nether Trees", true),
     toggle("enableHugeMushrooms", "Huge Mushrooms", true),
     range("maxAmountOfLogsBrokenPerHarvest", "Maximum Logs", 256., 1., 1024., 16.),
