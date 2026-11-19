@@ -35,7 +35,7 @@ class CommandHelpTests(unittest.TestCase):
         self.assertIn("- [x] Active conduit effects suppress nearby", readme)
 
     def test_colored_clickable_commands_and_pages(self):
-        self.assertIn("TextStyle {", self.src)
+        self.assertIn("TextStyle::default()", self.src)
         self.assertIn("TextClick::SuggestCommand(format!", self.src)
         self.assertIn("TextClick::RunCommand(format!", self.src)
         self.assertIn('color(host, "help_command_color", 2.)', self.src)
