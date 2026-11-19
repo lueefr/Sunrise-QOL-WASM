@@ -19,9 +19,9 @@ Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's 
 - [x] Glass bottles can temporarily restore underwater air *(initial oxygen restoration on bottle use; original potion/fire-item rules pending, gameplay validation pending)*
 - [x] The help command gains clearer, paginated output *(initial support: configurable colors and clickable command/page links; detailed command syntax uses vanilla)*
 - [x] Active conduit effects suppress nearby drowned spawning *(initial support: read-only spawn veto near Conduit Power players; in-game validation pending)*
-- [ ] Placed paintings can be cycled without breaking them
-- [ ] Passengers can be removed from mounted entities more conveniently
-- [ ] Fireworks can launch Elytra flight directly from the ground
+- [x] Placed paintings can be cycled without breaking them *(initial support: same-size placeable variants from the server data pack; painting entity is replaced without drops; gameplay validation pending)*
+- [x] Passengers can be removed from mounted entities more conveniently *(initial support: sneak + right-click, protects player passengers by default)*
+- [x] Fireworks can launch Elytra flight directly from the ground *(experimental client sequence: upward lift, vanilla glide request and rocket use; runtime validation pending)*
 - [ ] Commands can apply enchantments above vanilla level limits
 - [ ] Bone meal supports additional plants and faster growth
 - [ ] Tamed companions follow their owners during command teleportation
@@ -80,6 +80,8 @@ Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's 
 
 - [ ] Extract enchantments from equipment onto books, or separate enchanted books using a grindstone.
 - [ ] Toggle full-bright world lighting without changing the game's normal gamma limits.
+
+Original upstream references for this batch: [Cycle Paintings](https://github.com/Serilum/Cycle-Paintings), [Dismount Entity](https://github.com/Serilum/Dismount-Entity) and [Easy Elytra Takeoff](https://github.com/Serilum/Easy-Elytra-Takeoff).
 
 ## Settings and controls
 

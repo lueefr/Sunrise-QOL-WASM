@@ -65,12 +65,12 @@ class ProjectTests(unittest.TestCase):
         settings = (ROOT / 'src/settings.rs').read_text()
         modules = re.findall(r'ModuleSpec \{ key: "([^"]+)", label:', gui)
         options = re.findall(r'(?:toggle|range|choice)\("([^"]+)", "', gui)
-        self.assertEqual(len(modules), 32)
-        self.assertEqual(len(options), 81)
+        self.assertEqual(len(modules), 35)
+        self.assertEqual(len(options), 83)
         self.assertIn('let _ = save(host, key,', gui)
         self.assertIn('let _ = save(host, option.key,', gui)
         self.assertNotIn('host.set_setting(', gui)
-        self.assertEqual(len(set(modules) | set(options)), 113)
+        self.assertEqual(len(set(modules) | set(options)), 118)
         for hook in ('input_key', 'client_tick_pre', 'screen_render_post',
                      'screen_mouse_button_pressed_pre', 'screen_mouse_button_released_pre',
                      'screen_mouse_dragged_pre', 'screen_key_pressed_pre',
@@ -164,7 +164,7 @@ class ProjectTests(unittest.TestCase):
     def test_migration_preserves_legacy_settings(self):
         import tempfile
         from migrate_settings import keys, migrate
-        self.assertEqual(len(keys(ROOT)), 113)
+        self.assertEqual(len(keys(ROOT)), 118)
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)
             previous = game / 'sunrise-mods' / '.sunrise-mod-data' / 'horizon_qol_suite'
@@ -203,6 +203,10 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('bottled_air::use_bottle(side, event)', hooks)
         self.assertIn('self.help.sent(host, event)', hooks)
         self.assertIn('self.help.command(host, event)', hooks)
+        self.assertIn('painting::interact(host, event)', hooks)
+        self.assertIn('dismount::interact(host, event)', hooks)
+        self.assertIn('self.elytra.clicked(HostSide::Client(host), event)', hooks)
+        self.assertIn('self.elytra.tick(host, event)', hooks)
         self.assertIn('conduit_drowned::check(host, event)', hooks)
         self.assertIn('fn gui_render_post(', hooks)
         self.assertIn('self.compass.render(host, event)', hooks)

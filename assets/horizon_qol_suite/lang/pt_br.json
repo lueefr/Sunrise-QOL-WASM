@@ -90,5 +90,13 @@
   "horizon_qol_suite.option.drowned_prevention": "Drowned Prevention: ON/OFF",
   "qol.option.drowned_radius": "Protection Radius",
   "qol.option.help_command_color": "Command Color",
-  "qol.option.help_detail_color": "Detail Color"
+  "qol.option.help_detail_color": "Detail Color",
+  "qol.module.cycle_paintings": "Painting Cycling",
+  "horizon_qol_suite.option.cycle_paintings": "Painting Cycling: ON/OFF",
+  "qol.module.dismount_entity": "Passenger Removal",
+  "horizon_qol_suite.option.dismount_entity": "Passenger Removal: ON/OFF",
+  "qol.module.ground_elytra_fireworks": "Ground Elytra Fireworks",
+  "horizon_qol_suite.option.ground_elytra_fireworks": "Ground Elytra Fireworks: ON/OFF",
+  "qol.option.dismount_players": "Allow Removing Player Passengers",
+  "qol.option.elytra_launch_strength": "Ground Lift Strength (%)"
 }

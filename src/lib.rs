@@ -12,6 +12,9 @@ mod spawner;
 mod bottled_air;
 mod help;
 mod conduit_drowned;
+mod painting;
+mod dismount;
+mod elytra;
 mod compass;
 mod clock;
 mod zoom;
@@ -41,7 +44,7 @@ use mod_api::{
     ScreenMouseScrolledPreEvent, ScreenRenderPreEvent, SettingChangedEvent,
     RightClickBlockEvent, RightClickItemEvent, GuiRenderPostEvent, LivingDeathEvent, LivingDeathPostEvent,
     PlayerXpChangeEvent, ItemTooltipEvent, MobSpawnPositionCheckEvent,
-    PlayerCommandEvent, PlayerCommandsSentEvent,
+    PlayerCommandEvent, PlayerCommandsSentEvent, EntityInteractEvent, InteractionResult,
 };
 
 #[derive(Default)]
@@ -55,6 +58,7 @@ pub struct SunriseQol {
     beacon: beacon::Beacon,
     conduit: conduit::Conduit,
     help: help::Help,
+    elytra: elytra::Elytra,
     compass: compass::Compass,
     clock: clock::Clock,
     shulkers: shulkers::Shulkers,
@@ -78,6 +82,7 @@ impl Hooks for SunriseQol {
 
     fn client_tick_pre(&self, host: &mut dyn ClientHost, event: &mut ClientTickPreEvent) {
         self.gui.tick(host, event);
+        self.elytra.tick(host, event);
     }
 
     fn screen_render_pre(&self, host: &dyn ClientHost, event: &mut ScreenRenderPreEvent<'_>) -> Flow {
@@ -124,7 +129,16 @@ impl Hooks for SunriseQol {
     }
 
     fn right_click_item(&self, side: HostSide<'_>, event: &mut RightClickItemEvent<'_>) -> Flow {
-        bottled_air::use_bottle(side, event)
+        match side {
+            HostSide::Client(host) => self.elytra.clicked(HostSide::Client(host), event),
+            HostSide::Server(host) => bottled_air::use_bottle(HostSide::Server(host), event),
+        }
+    }
+
+    fn entity_interact(&self, side: HostSide<'_>, event: &mut EntityInteractEvent<'_>) -> Option<InteractionResult> {
+        let HostSide::Server(host) = side else { return None; };
+        if let Some(answer) = painting::interact(host, event) { return Some(answer); }
+        dismount::interact(host, event)
     }
 
     fn right_click_block(&self, side: HostSide<'_>, event: &mut RightClickBlockEvent<'_>) -> Flow {
@@ -215,6 +229,7 @@ impl Hooks for SunriseQol {
         self.doors.reset();
         self.automatic_doors.reset();
         self.help.reset();
+        self.elytra.reset();
         self.shulkers.reset();
     }
 

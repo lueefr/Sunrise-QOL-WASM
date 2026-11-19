@@ -12,5 +12,6 @@ sdk = "2d8126336e579777eabf9b2fd8b3d476236a04f2"
 
 [dependencies]
 sunrise-mod-api = { path = ".sunrise/sdk/api/crates/sunrise-mod-api" }
+serde_json = "1"
 
 [workspace]

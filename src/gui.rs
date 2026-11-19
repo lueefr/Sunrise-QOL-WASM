@@ -145,6 +145,14 @@ const HELP: &[OptionSpec] = &[
     range("help_detail_color", "Detail Color", 7., 0., 15., 1.),
 ];
 
+const DISMOUNT: &[OptionSpec] = &[
+    toggle("dismount_players", "Allow Removing Player Passengers", false),
+];
+
+const ELYTRA: &[OptionSpec] = &[
+    range("elytra_launch_strength", "Ground Lift Strength (%)", 35., 20., 80., 5.),
+];
+
 const RESPAWN: &[OptionSpec] = &[
     range("respawn_ticks", "Respawn Delay (Ticks)", 1200., 1., 72000., 20.),
     toggle("skip_spawner", "Ignore Spawner Shulkers", true),
@@ -258,6 +266,9 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "beacon_placement", label: "Beacon Placement", options: BEACON, category: Category::World },
     ModuleSpec { key: "conduit_placement", label: "Conduit Placement", options: CONDUIT, category: Category::World },
     ModuleSpec { key: "spawner_control", label: "Spawner Control", options: &[], category: Category::World },
+    ModuleSpec { key: "cycle_paintings", label: "Painting Cycling", options: &[], category: Category::World },
+    ModuleSpec { key: "dismount_entity", label: "Passenger Removal", options: DISMOUNT, category: Category::World },
+    ModuleSpec { key: "ground_elytra_fireworks", label: "Ground Elytra Fireworks", options: ELYTRA, category: Category::World },
     ModuleSpec { key: "friendly_griefing", label: "Mob Griefing", options: &[], category: Category::World },
     ModuleSpec { key: "superflat_world_no_slimes", label: "Superflat Slime Spawns", options: SUPERFLAT, category: Category::World },
     ModuleSpec { key: "drowned_prevention", label: "Drowned Prevention", options: DROWNED, category: Category::Creatures },
