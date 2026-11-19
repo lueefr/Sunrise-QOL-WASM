@@ -8,6 +8,7 @@ on:
       - '.github/workflows/sandbox.yml'
       - 'tools/sandbox/**'
       - 'tools/sdk_sync.py'
+      - 'tools/install_sdk_tool.sh'
   pull_request:
     branches: [main]
     paths:
@@ -16,6 +17,7 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'tools/sdk_sync.py'
+      - 'tools/install_sdk_tool.sh'
       - 'Cargo.toml'
       - 'sunrise-mod.toml'
 
@@ -58,13 +60,13 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ~/.cargo/bin/cargo-sunrise-mod
-          key: ${{ runner.os }}-${{ runner.arch }}-sunrise-cli-${{ steps.sdk.outputs.revision }}-rust-1.99.1-v1
+          key: ${{ runner.os }}-${{ runner.arch }}-sunrise-cli-${{ steps.sdk.outputs.revision }}-signed-prebuilt-v1
 
-      - name: Install Sunrise WASM builder
+      - name: Install signed Sunrise WASM builder
         if: steps.builder-cache.outputs.cache-hit != 'true'
         env:
           SDK_REVISION: ${{ steps.sdk.outputs.revision }}
-        run: cargo install --git https://github.com/sunrise-org/sunrise --rev "$SDK_REVISION" cargo-sunrise-mod --locked
+        run: bash tools/install_sdk_tool.sh "$SDK_REVISION"
 
       - name: Save Sunrise builder
         if: steps.builder-cache.outputs.cache-hit != 'true'
