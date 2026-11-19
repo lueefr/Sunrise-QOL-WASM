@@ -3,8 +3,9 @@
 use crate::settings::{amount, on};
 use mod_api::{
     Flow, Host, PlayerCommandEvent, PlayerCommandsSentEvent, ServerHost,
-    Text, TextClick, TextStyle,
+    Text,
 };
+use mod_api::text::{TextClick, TextStyle};
 use std::collections::BTreeMap;
 use std::sync::Mutex;
 
