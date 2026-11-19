@@ -245,6 +245,7 @@ const SHULKER: &[OptionSpec] = &[
 const TRADING: &[OptionSpec] = &[
     toggle("villagers", "Villagers", true),
     toggle("wandering_trader", "Wandering Trader", true),
+    range("minimumVillagerLevel", "Minimum Villager Level", 1., 1., 5., 1.),
     toggle("remove_demand", "Remove Demand", true),
 ];
 
