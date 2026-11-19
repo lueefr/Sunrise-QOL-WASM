@@ -541,7 +541,12 @@ impl mod_api::prelude::ConfigHost for TooltipWorld {
     }
 }
 impl mod_api::ClientHost for TooltipWorld {}
-mod_api::impl_client_host_areas!(TooltipWorld, except(items));
+mod_api::impl_client_host_areas!(TooltipWorld, except(items, config));
+impl mod_api::prelude::ConfigClientHost for TooltipWorld {
+    fn translate(&self, _: &str) -> Option<String> {
+        None
+    }
+}
 impl mod_api::prelude::ItemsClientHost for TooltipWorld {
     fn enchantments(&self) -> Vec<mod_api::EnchantmentInfo> {
         vec![mod_api::EnchantmentInfo::new("minecraft:sharpness".into(), 5, false)]
