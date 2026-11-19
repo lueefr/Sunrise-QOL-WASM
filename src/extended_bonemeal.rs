@@ -76,7 +76,7 @@ pub fn apply(side: HostSide<'_>, event: &mut BonemealEvent<'_>) -> Flow {
         return Flow::Continue;
     }
     let Some(level) = player.level(host) else { return Flow::Continue; };
-    let pos = event.pos;
+    let pos = [event.pos.x, event.pos.y, event.pos.z];
     let id = event.state.block().id(host);
     let sneaking = player.is_secondary_use_active(host) == Some(true);
     let state = host.block_state_string(event.state);

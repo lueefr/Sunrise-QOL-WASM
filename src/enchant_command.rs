@@ -125,9 +125,9 @@ impl EnchantCommands {
             let _ = player.tell(host, Text::literal("Sunrise QOL: incompatible enchantments."));
             return;
         }
-        if levels.get(&request.enchantment.clone().into()).and_then(level_of)
+        if levels.get(&request.enchantment.as_str().into()).and_then(level_of)
             .is_some_and(|current| current >= request.level) { return; }
-        levels.insert(request.enchantment.clone().into(), Tag::Int(request.level as i32));
+        levels.insert(request.enchantment.as_str().into(), Tag::Int(request.level as i32));
         let Ok(result) = ItemResource::of(&stack).with_component(host, &id, Tag::Compound(levels)) else { return; };
         let Some(next) = result.to_stack(stack.count()) else { return; };
         if player.set_inventory_slot(host, slot, Some(next)).is_ok() {
