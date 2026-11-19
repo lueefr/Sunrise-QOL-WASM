@@ -337,7 +337,6 @@ fn check_affordable_anvil(world: &mut bulk_files::World) {
 // This host shares the in-memory config fixture but makes a minimal real item
 // registry visible to guest code, as Sunrise's game host normally does.
 #[derive(Default)]
-#[derive(Default)]
 struct LootWorld {
     files: bulk_files::World,
 }
