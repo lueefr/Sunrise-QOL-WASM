@@ -10,7 +10,7 @@ mod bulk_files;
 
 use mod_api::{ConfigFiles, ConfigPath, Host};
 use mod_api::prelude::ConfigHost;
-use mod_api::__private::game::BackendRefOf;
+use mod_api::__private::game::{BackendRefOf, BackendMutRefOf};
 use mod_api::text::{TextClick, TextContent};
 
 use sunrise_mod_package::manifest::Package;
@@ -804,8 +804,24 @@ struct JoinWorld {
     players: mod_api::testing::FakePlayers,
     told: Vec<(u128, mod_api::Text)>,
 }
-impl mod_api::Host for JoinWorld {}
+impl mod_api::Host for JoinWorld {
+    fn backend(&self) -> Option<mod_api::BackendRef<'_>> {
+        Some(mod_api::BackendRef::of(self))
+    }
+}
 mod_api::impl_host_areas!(JoinWorld, except(config, players));
+impl mod_api::Backend for JoinWorld {}
+mod_api::impl_backend_areas!(JoinWorld);
+impl mod_api::BackendMut for JoinWorld {}
+mod_api::impl_backend_mut_areas!(JoinWorld, except(players));
+impl mod_api::prelude::PlayersBackendMut for JoinWorld {
+    fn player_tell(
+        &mut self, player: mod_api::PlayerRef, line: mod_api::Text,
+    ) -> Result<bool, mod_api::TextFormError> {
+        self.told.push((player.uuid(), line));
+        Ok(true)
+    }
+}
 impl mod_api::prelude::ConfigHost for JoinWorld {
     fn config_files(&self) -> &'static dyn mod_api::ConfigFiles {
         self.files.config_files()
@@ -820,19 +836,15 @@ impl mod_api::prelude::PlayersHost for JoinWorld {
             .into_iter().find(|player| player.uuid() == uuid)
     }
 }
-impl mod_api::ServerHost for JoinWorld {}
-mod_api::impl_server_host_areas!(JoinWorld, except(config, players));
+impl mod_api::ServerHost for JoinWorld {
+    fn backend_mut(&mut self) -> Option<mod_api::BackendMutRef<'_>> {
+        Some(mod_api::BackendMutRef::of(self))
+    }
+}
+mod_api::impl_server_host_areas!(JoinWorld, except(config));
 impl mod_api::prelude::ConfigServerHost for JoinWorld {
     fn world_data_files(&self) -> &dyn mod_api::ConfigFiles {
         self.files.world_data_files()
-    }
-}
-impl mod_api::prelude::PlayersServerHost for JoinWorld {
-    fn player_tell(
-        &mut self, player: mod_api::PlayerRef, line: mod_api::Text,
-    ) -> Result<bool, mod_api::TextFormError> {
-        self.told.push((player.uuid(), line));
-        Ok(true)
     }
 }
 
