@@ -174,7 +174,8 @@ pub fn on_death(host: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> 
     }
     // The statistic is public, but the vanilla USED_TOTEM criterion and byte-35
     // activation animation still require a dedicated public API operation.
-    let _ = player.award_stat(host, StatType::Used, &original.item().id(host), 1);
+    let item_id = original.item().id(host);
+    let _ = player.award_stat(host, StatType::Used, &item_id, 1);
     Flow::Cancel
 }
 
