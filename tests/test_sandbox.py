@@ -112,6 +112,13 @@ class SandboxTests(unittest.TestCase):
         self.assertIn('count(&drops, "minecraft:shulker_shell"), 4', fixture)
         self.assertIn('count(&larger, "minecraft:shulker_shell"), 9', fixture)
         self.assertIn('set_toggle(world, "always_drop", true)', fixture)
+        # Tooltips are rendered by the real guest's client hook.
+        self.assertIn("check_langpatch(&mut tooltip_world);", fixture)
+        self.assertIn("check_cap_indicator(&mut tooltip_world);", fixture)
+        self.assertIn("mod_api::dispatch_item_tooltip(world,", fixture)
+        self.assertIn('literal(&roman[0].0), "XVII"', fixture)
+        self.assertIn('literal(&lines[0].0.children[0]), " ★"', fixture)
+        self.assertIn("enchanted_sword(4)", fixture)
 
 
     def test_release_gates_on_real_loader(self):
