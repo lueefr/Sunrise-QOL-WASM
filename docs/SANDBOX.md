@@ -71,18 +71,21 @@ answers**, and the test fails when an assertion does not hold:
 | Shulker Drops Two | Shulker death with configurable minimum of four shells | Existing stack is raised to four, higher counts are preserved, and missing shells appear only with always-drop enabled |
 | Enchantment Level Language Patch | High enchantment levels and potion potency in client tooltip lines | Raw localization is preserved when disabled; enabled levels become decimal or Roman based on independent settings |
 | Enchantment Level Cap Indicator | Sharpness 5 and 4 tooltips | Only enchantments at or above their known vanilla level cap gain a configurable colored marker |
+| Hide Hands | Render empty/held main hands and several offhand items | Cancellation changes only while enabled; per-hand settings and held totem/torch rules are respected |
+| Vanilla Zoom | Held/not-held binding, world playing/not-playing and saved strength | Zoom appears only for held input in-game and honors factor/smoothing; OFF resets behavior |
 
-**Coverage:** 11 of 38 implemented modules have direct behavioral sandbox
+**Coverage:** 13 of 38 implemented modules have direct behavioral sandbox
 scenarios at this stage. They execute the actual packaged guest through Wasmtime
 and assert output/event mutations; they do **not** simulate a complete world.
-The remaining 27 modules are compiled and smoke-loaded, but their gameplay
+The remaining 25 modules are compiled and smoke-loaded, but their gameplay
 effects are **not yet automatically verified**. Source-pattern unit tests do
 not count toward gameplay coverage.
 
 The test host is `crates/sunrise-mod-wasm/tests/support/bulk_files.rs`
 from the pinned Sunrise source tree. It provides real in-memory config
-storage and dispatches command, entity lifecycle, merchant trade, anvil and
-loot-drop and client tooltip events through Wasmtime;
+storage and dispatches command, entity lifecycle, merchant trade,
+anvil, loot-drop, client tooltip, first-person render and camera zoom hooks
+through Wasmtime;
 it is **not** the full Sunrise `Game` or a populated level.
 
 ## What this *does not* prove
@@ -102,6 +105,8 @@ it is **not** the full Sunrise `Game` or a populated level.
   distinctions are deliberately not counted as full-world gameplay tests.
   The tooltip tests assert the modified `Text` trees produced by the guest
   from a simulated client host, without rendering a real GUI or loading fonts.
+  The render-hand test checks cancellation of the default geometry; the zoom
+  test checks its output struct, not an actual rendered camera or FOV transition.
 - Future world-state tests should use Sunrise's existing headless `Game` test
   fixtures to create players, blocks and entities, then assert changes after
   dispatching QOL's hooks. Such tests must explicitly enable the relevant

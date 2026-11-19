@@ -119,6 +119,16 @@ class SandboxTests(unittest.TestCase):
         self.assertIn('literal(&roman[0].0), "XVII"', fixture)
         self.assertIn('literal(&lines[0].0.children[0]), " ★"', fixture)
         self.assertIn("enchanted_sword(4)", fixture)
+        # Client-world hooks must assert actual render suppression and camera results.
+        self.assertIn("check_hide_hands(&mut tooltip_world);", fixture)
+        self.assertIn("check_vanilla_zoom(&mut tooltip_world);", fixture)
+        self.assertIn("mod_api::dispatch_render_hand(world, &mut render, &mut draw, &mut canceled)", fixture)
+        self.assertIn("mod_api::dispatch_zoom(world, &mut output)", fixture)
+        self.assertIn("assert!(hand_hidden(world, Main, None)", fixture)
+        self.assertIn('hand_hidden(world, Off, Some(&totem))', fixture)
+        self.assertIn("factor: 18.5, smooth: false", fixture)
+        self.assertIn("world.playing = false;", fixture)
+
 
 
     def test_release_gates_on_real_loader(self):
