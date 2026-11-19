@@ -11,6 +11,7 @@ pub fn storage_key(key: &str) -> &str {
         "clockWidthOffset" => "clockwidthoffset",
         "clockTextShadow" => "clocktextshadow",
         "minuteStep" => "minutestep",
+        "minimumVillagerLevel" => "minimumvillagerlevel",
         "showDaysPlayedWorld" => "showdaysplayedworld",
         "mustHaveClockInInventoryForGameTime" => "musthaveclockininventoryforgametime",
         "alwaysHideEmptyMainHand" => "alwayshideemptymainhand",
