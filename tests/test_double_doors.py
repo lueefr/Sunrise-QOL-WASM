@@ -8,7 +8,7 @@ class DoubleDoorsTests(unittest.TestCase):
     def test_manual_click_does_not_wait_for_server_tick(self):
         source = (ROOT / "src/doors.rs").read_text()
         click = source.split("pub fn clicked(&self,", 1)[1].split("pub fn changed(&self,", 1)[0]
-        self.assertIn("self.process(host, task);", click)
+        self.assertIn("self.process(host, task, true);", click)
         self.assertIn('event.click.hand != Hand::Main', click)
         self.assertIn('player.is_secondary_use_active(host) == Some(true)', click)
         self.assertIn('name == "minecraft:iron_door"', click)
@@ -23,7 +23,7 @@ class DoubleDoorsTests(unittest.TestCase):
         self.assertIn("if self.writing.load(Ordering::Acquire)", changed)
         self.assertIn("MAX_PENDING", source)
         self.assertIn("fn tick(&self,", source)
-        self.assertIn("self.process(host, task);", source)
+        self.assertIn("self.process(host, task, false);", source)
 
     def test_upstream_rules_are_explicit(self):
         source = (ROOT / "src/doors.rs").read_text()
