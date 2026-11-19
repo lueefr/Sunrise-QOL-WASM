@@ -35,7 +35,7 @@ fi
 git -C "$source" checkout -q --force --detach "$revision"
 test "$(git -C "$source" rev-parse HEAD)" = "$revision"
 
-cp "$root/tools/sandbox/sunrise_qol_smoke.rs" \
+cp "$root/tools/sandbox/sunrise_qol_smoke.rs.txt" \
    "$source/crates/sunrise-mod-wasm/tests/sunrise_qol_smoke.rs"
 
 export SUNRISE_QOL_SMOD="$(realpath "$package")"
