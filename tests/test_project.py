@@ -66,11 +66,11 @@ class ProjectTests(unittest.TestCase):
         modules = re.findall(r'ModuleSpec \{ key: "([^"]+)", label:', gui)
         options = re.findall(r'(?:toggle|range|choice)\("([^"]+)", "', gui)
         self.assertEqual(len(modules), 38)
-        self.assertEqual(len(options), 89)
+        self.assertEqual(len(options), 91)
         self.assertIn('let _ = save(host, key,', gui)
         self.assertIn('let _ = save(host, option.key,', gui)
         self.assertNotIn('host.set_setting(', gui)
-        self.assertEqual(len(set(modules) | set(options)), 127)
+        self.assertEqual(len(set(modules) | set(options)), 129)
         for hook in ('input_key', 'client_tick_pre', 'screen_render_post',
                      'screen_mouse_button_pressed_pre', 'screen_mouse_button_released_pre',
                      'screen_mouse_dragged_pre', 'screen_key_pressed_pre',
@@ -146,6 +146,9 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('fn leaf_match(', src)
         self.assertIn('fn log_match(', src)
         self.assertIn('fn supported(', src)
+        self.assertIn('let tree_fast = on(host, "tree_harvester")', src)
+        self.assertIn('flag(host, "enableFastLeafDecay", true)', src)
+        self.assertIn('amount(host, "treeLeavesPerTick", 5., 1., 16.)', src)
         self.assertIn('MAX_TASKS', src)
         self.assertIn('"persistent"', src)
         self.assertIn('"distance"', src)
@@ -164,7 +167,7 @@ class ProjectTests(unittest.TestCase):
     def test_migration_preserves_legacy_settings(self):
         import tempfile
         from migrate_settings import keys, migrate
-        self.assertEqual(len(keys(ROOT)), 127)
+        self.assertEqual(len(keys(ROOT)), 129)
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)
             previous = game / 'sunrise-mods' / '.sunrise-mod-data' / 'horizon_qol_suite'
