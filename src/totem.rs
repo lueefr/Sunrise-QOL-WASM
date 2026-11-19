@@ -10,8 +10,8 @@ use mod_api::{
 #[derive(Clone, Debug, PartialEq)]
 struct Potion {
     id: String,
-    duration: u32,
-    amplifier: u32,
+    duration: i32,
+    amplifier: i32,
     ambient: bool,
     particles: bool,
     icon: bool,
@@ -85,8 +85,9 @@ fn decode(tag: &Tag) -> Option<Vec<DeathEffect>> {
                 let mut potions = Vec::new();
                 for item in items {
                     let Tag::Compound(spec) = item else { return None; };
-                    let duration = u32::try_from(number(spec, "duration", 0)?).ok()?;
-                    let amplifier = u32::try_from(number(spec, "amplifier", 0)?).ok()?;
+                    let duration = number(spec, "duration", 0)?;
+                    let amplifier = number(spec, "amplifier", 0)?;
+                    if duration < -1 || amplifier < 0 { return None; }
                     potions.push(Potion {
                         id: text(spec, "id")?,
                         duration,
