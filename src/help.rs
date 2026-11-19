@@ -54,7 +54,8 @@ fn styled(text: impl Into<String>, color: &str, click: Option<TextClick>) -> Tex
 impl Help {
     pub fn sent(&self, _: &mut dyn ServerHost, event: &mut PlayerCommandsSentEvent<'_>) {
         let mut names: Vec<String> = event.names.iter().take(MAX_COMMANDS)
-            .filter(|name| !name.is_empty() && name.len() <= 96).cloned().collect();
+            .filter(|name| !name.is_empty() && name.len() <= 96
+                && !name.chars().any(char::is_whitespace)).cloned().collect();
         names.sort_unstable();
         names.dedup();
         if let Ok(mut map) = self.names.lock() {
