@@ -10,6 +10,7 @@ mod bulk_files;
 
 use mod_api::{ConfigFiles, ConfigPath, Host};
 use mod_api::prelude::ConfigHost;
+use mod_api::__private::game::BackendRefOf;
 use mod_api::text::{TextClick, TextContent};
 
 use sunrise_mod_package::manifest::Package;
@@ -333,6 +334,197 @@ fn check_affordable_anvil(world: &mut bulk_files::World) {
     eprintln!("PASS affordable_anvil: off, configurable cost, absent output, cheap rename");
 }
 
+
+// This host shares the in-memory config fixture but makes a minimal real item
+// registry visible to guest code, as Sunrise's game host normally does.
+#[derive(Default)]
+struct LootWorld {
+    files: bulk_files::World,
+}
+impl mod_api::Host for LootWorld {
+    fn backend(&self) -> Option<mod_api::BackendRef<'_>> {
+        Some(mod_api::BackendRef::of(self))
+    }
+}
+mod_api::impl_host_areas!(LootWorld, except(config, items));
+impl mod_api::Backend for LootWorld {}
+mod_api::impl_backend_areas!(LootWorld, except(keys));
+impl mod_api::prelude::KeysBackend for LootWorld {
+    fn item_key_id(&self, key: mod_api::ItemKey) -> String {
+        mod_api::__private::item_key_id(key).expect("registered item key").to_owned()
+    }
+}
+impl mod_api::prelude::ConfigHost for LootWorld {
+    fn config_files(&self) -> &'static dyn mod_api::ConfigFiles {
+        self.files.config_files()
+    }
+    fn data_files(&self) -> &'static dyn mod_api::ConfigFiles {
+        self.files.data_files()
+    }
+}
+impl mod_api::prelude::ItemsHost for LootWorld {
+    fn item_key(&self, id: &mod_api::Identifier) -> Option<mod_api::ItemKey> {
+        mod_api::__private::item_key(&id.to_string())
+    }
+}
+impl mod_api::ServerHost for LootWorld {}
+mod_api::impl_server_host_areas!(LootWorld, except(config));
+impl mod_api::prelude::ConfigServerHost for LootWorld {
+    fn world_data_files(&self) -> &dyn mod_api::ConfigFiles {
+        self.files.world_data_files()
+    }
+}
+
+fn stack(id: &str, count: u32) -> mod_api::ItemStack {
+    let key = mod_api::__private::item_key(id)
+        .unwrap_or_else(|| panic!("scenario item is not registered: {id}"));
+    mod_api::ItemStack::new(key, count).expect("valid scenario stack")
+}
+
+fn loot(
+    world: &mut LootWorld,
+    kind: &str,
+    drops: &mut Vec<mod_api::ItemStack>,
+    death: bool,
+    used: bool,
+) {
+    let context: mod_api::LootDrops = mod_api::__private::built::LootDrops {
+        table: "minecraft:entities/sandbox",
+        dimension: "minecraft:overworld",
+        origin: [2.0, 65.0, 3.0],
+        block: None,
+        entity: Some((321, kind)),
+        player: None,
+        damage_source: death.then_some(mod_api::HurtSource {
+            damage_type: "minecraft:player_attack",
+            causing: 14,
+            direct: 14,
+            position: Some([2.0, 65.0, 3.0]),
+        }),
+        weapon: None,
+        tool: None,
+        explosion: None,
+        used,
+    }.into();
+    // The dispatcher validates and commits each candidate through this writer.
+    // Keep the applied copy separate so the test exercises the write boundary.
+    let mut committed: Option<Vec<mod_api::ItemStack>> = None;
+    assert!(mod_api::__private::listened(mod_api::HookId::LootDrops),
+        "the real guest must be registered for loot events");
+    mod_api::dispatch_loot_drops(world, &context, drops, &mut |candidate| {
+        committed = Some(candidate.clone());
+        Ok(())
+    });
+    if let Some(applied) = committed {
+        assert_eq!(&applied, drops, "the committed loot must match the hook's result");
+    }
+}
+
+fn count(drops: &[mod_api::ItemStack], id: &str) -> u32 {
+    let key = mod_api::__private::item_key(id).expect("registered item");
+    drops.iter().filter(|drop| drop.item() == key).map(|drop| drop.count()).sum()
+}
+
+fn check_wither_skull(world: &mut LootWorld) {
+    let mut drops = vec![stack("minecraft:coal", 2)];
+    loot(world, "minecraft:wither_skeleton", &mut drops, true, false);
+    assert_eq!(count(&drops, "minecraft:wither_skeleton_skull"), 0, "OFF must not add skulls");
+    assert_eq!(count(&drops, "minecraft:coal"), 2, "vanilla coal must survive");
+
+    set_toggle(world, "always_wither_skull", true);
+    assert_eq!(
+        world.config_files().read(&ConfigPath::new("horizon_qol_suite/always_wither_skull").unwrap()).unwrap(),
+        b"true", "the real guest setting must be present in the simulated host"
+    );
+    assert!(mod_api::prelude::ItemsHost::item_key(
+        world, &mod_api::Identifier::parse("minecraft:wither_skeleton_skull").unwrap()
+    ).is_some(), "the runtime host must resolve the skull item");
+    let mut empty_drops = Vec::new();
+    loot(world, "minecraft:wither_skeleton", &mut empty_drops, true, false);
+    assert_eq!(count(&empty_drops, "minecraft:wither_skeleton_skull"), 1, "empty loot must gain the guaranteed skull");
+    loot(world, "minecraft:wither_skeleton", &mut drops, true, false);
+    assert_eq!(count(&drops, "minecraft:wither_skeleton_skull"), 1, "a killed Wither Skeleton must drop a skull");
+    assert_eq!(count(&drops, "minecraft:coal"), 2, "unrelated loot must remain");
+
+    loot(world, "minecraft:wither_skeleton", &mut drops, true, false);
+    assert_eq!(count(&drops, "minecraft:wither_skeleton_skull"), 1, "an existing skull must never be duplicated");
+
+    let mut no_damage = vec![stack("minecraft:coal", 1)];
+    loot(world, "minecraft:wither_skeleton", &mut no_damage, false, false);
+    assert_eq!(count(&no_damage, "minecraft:wither_skeleton_skull"), 0, "non-death event must not add a skull");
+
+    let mut used = vec![stack("minecraft:coal", 1)];
+    loot(world, "minecraft:wither_skeleton", &mut used, true, true);
+    assert_eq!(count(&used, "minecraft:wither_skeleton_skull"), 0, "item-use drops must not trigger death rewards");
+
+    let mut other = vec![stack("minecraft:coal", 2)];
+    loot(world, "minecraft:skeleton", &mut other, true, false);
+    assert_eq!(count(&other, "minecraft:wither_skeleton_skull"), 0, "ordinary skeletons must be untouched");
+    clear_toggle(world, "always_wither_skull");
+    eprintln!("PASS always_wither_skull: OFF, guarantee, no duplicates, preserved vanilla loot");
+}
+
+fn check_dragon_elytra(world: &mut LootWorld) {
+    let mut drops = vec![stack("minecraft:dragon_egg", 1)];
+    loot(world, "minecraft:ender_dragon", &mut drops, true, false);
+    assert_eq!(count(&drops, "minecraft:elytra"), 0, "OFF must not add Elytra");
+
+    set_toggle(world, "dragon_drops_elytra", true);
+    loot(world, "minecraft:ender_dragon", &mut drops, true, false);
+    assert_eq!(count(&drops, "minecraft:elytra"), 1, "dragon death must add one Elytra");
+    assert_eq!(count(&drops, "minecraft:dragon_egg"), 1, "existing drops must remain");
+
+    loot(world, "minecraft:ender_dragon", &mut drops, true, false);
+    assert_eq!(count(&drops, "minecraft:elytra"), 1, "already present Elytra must not be duplicated");
+
+    let mut unrelated = vec![stack("minecraft:dragon_egg", 1)];
+    loot(world, "minecraft:phantom", &mut unrelated, true, false);
+    assert_eq!(count(&unrelated, "minecraft:elytra"), 0, "other entities must not gain Elytra");
+    let mut nondeath = Vec::new();
+    loot(world, "minecraft:ender_dragon", &mut nondeath, false, false);
+    assert!(nondeath.is_empty(), "non-death loot must be preserved without mutation");
+    clear_toggle(world, "dragon_drops_elytra");
+    eprintln!("PASS dragon_drops_elytra: OFF, addition, uniqueness, unrelated entity");
+}
+
+fn check_shulker_shells(world: &mut LootWorld) {
+    let mut drops = vec![stack("minecraft:shulker_shell", 1), stack("minecraft:diamond", 3)];
+    loot(world, "minecraft:shulker", &mut drops, true, false);
+    assert_eq!(count(&drops, "minecraft:shulker_shell"), 1, "OFF must preserve vanilla shell count");
+
+    set_toggle(world, "shulker_drops_two", true);
+    let cap = ConfigPath::new("horizon_qol_suite/drop_count").unwrap();
+    world.config_files().write(&cap, b"4").unwrap();
+    loot(world, "minecraft:shulker", &mut drops, true, false);
+    assert_eq!(count(&drops, "minecraft:shulker_shell"), 4, "enabled minimum must raise the stack count");
+    assert_eq!(count(&drops, "minecraft:diamond"), 3, "other mod or vanilla loot must remain");
+
+    let mut larger = vec![stack("minecraft:shulker_shell", 9)];
+    loot(world, "minecraft:shulker", &mut larger, true, false);
+    assert_eq!(count(&larger, "minecraft:shulker_shell"), 9, "minimum must never reduce a larger drop");
+
+    let mut no_shell = vec![stack("minecraft:diamond", 1)];
+    loot(world, "minecraft:shulker", &mut no_shell, true, false);
+    assert_eq!(count(&no_shell, "minecraft:shulker_shell"), 0, "missing vanilla shell remains absent by default");
+
+    set_toggle(world, "always_drop", true);
+    loot(world, "minecraft:shulker", &mut no_shell, true, false);
+    assert_eq!(count(&no_shell, "minecraft:shulker_shell"), 4, "always_drop must add the configured minimum");
+    assert_eq!(count(&no_shell, "minecraft:diamond"), 1);
+
+    let mut unrelated = vec![stack("minecraft:diamond", 1)];
+    loot(world, "minecraft:slime", &mut unrelated, true, false);
+    assert_eq!(count(&unrelated, "minecraft:shulker_shell"), 0, "unrelated mobs cannot gain Shulker shells");
+
+    let mut used = Vec::new();
+    loot(world, "minecraft:shulker", &mut used, true, true);
+    assert!(used.is_empty(), "item-use drops must not grant shells");
+    clear_toggle(world, "shulker_drops_two");
+    clear_toggle(world, "always_drop");
+    let _ = world.config_files().remove(&cap);
+    eprintln!("PASS shulker_drops_two: OFF, configurable minimum, no loss, optional always_drop");
+}
+
 #[test]
 fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
     test_stack::on_guest_stack(|| {
@@ -373,10 +565,17 @@ fn sunrise_qol_links_initializes_and_dispatches_wasm_hook() {
             // Resolve the minimal vanilla item registry needed for trade/anvil fixtures.
             mod_api::__private::resolve_items([
                 "minecraft:emerald", "minecraft:bread", "minecraft:iron_sword",
+                "minecraft:coal", "minecraft:wither_skeleton_skull",
+                "minecraft:dragon_egg", "minecraft:elytra",
+                "minecraft:shulker_shell", "minecraft:diamond",
             ]).expect("resolve scenario item IDs");
             check_superflat_slimes(&mut world);
             check_infinite_trading(&mut world);
             check_affordable_anvil(&mut world);
+            let mut loot_world = LootWorld::default();
+            check_wither_skull(&mut loot_world);
+            check_dragon_elytra(&mut loot_world);
+            check_shulker_shells(&mut loot_world);
             // Test teardown also traverses the real guest hook.
             mod_api::dispatch_server_stopped(&mut world, false);
         });
