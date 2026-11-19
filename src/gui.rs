@@ -141,6 +141,8 @@ const BOTTLED_AIR: &[OptionSpec] = &[
 
 const HELP: &[OptionSpec] = &[
     range("help_page_size", "Commands per Page", 8., 1., 50., 1.),
+    range("help_command_color", "Command Color", 2., 0., 15., 1.),
+    range("help_detail_color", "Detail Color", 7., 0., 15., 1.),
 ];
 
 const RESPAWN: &[OptionSpec] = &[

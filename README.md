@@ -17,7 +17,7 @@ Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's 
 - [x] Conduits and their surrounding blocks become easier to place *(initial support; frame blocks placed only in water or empty spaces, in-game validation pending)*
 - [x] Mob spawners can be disabled with a torch arrangement *(initial support; five surrounding torches, in-game validation pending)*
 - [x] Glass bottles can temporarily restore underwater air *(initial oxygen restoration on bottle use; original potion/fire-item rules pending, gameplay validation pending)*
-- [x] The help command gains clearer, paginated output *(initial support: paginated commands visible to each player; full syntax formatting pending)*
+- [x] The help command gains clearer, paginated output *(initial support: configurable colors and clickable command/page links; detailed command syntax uses vanilla)*
 - [x] Active conduit effects suppress nearby drowned spawning *(initial support: read-only spawn veto near Conduit Power players; in-game validation pending)*
 - [ ] Placed paintings can be cycled without breaking them
 - [ ] Passengers can be removed from mounted entities more conveniently

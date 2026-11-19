@@ -66,11 +66,11 @@ class ProjectTests(unittest.TestCase):
         modules = re.findall(r'ModuleSpec \{ key: "([^"]+)", label:', gui)
         options = re.findall(r'(?:toggle|range|choice)\("([^"]+)", "', gui)
         self.assertEqual(len(modules), 32)
-        self.assertEqual(len(options), 79)
+        self.assertEqual(len(options), 81)
         self.assertIn('let _ = save(host, key,', gui)
         self.assertIn('let _ = save(host, option.key,', gui)
         self.assertNotIn('host.set_setting(', gui)
-        self.assertEqual(len(set(modules) | set(options)), 111)
+        self.assertEqual(len(set(modules) | set(options)), 113)
         for hook in ('input_key', 'client_tick_pre', 'screen_render_post',
                      'screen_mouse_button_pressed_pre', 'screen_mouse_button_released_pre',
                      'screen_mouse_dragged_pre', 'screen_key_pressed_pre',
