@@ -66,18 +66,21 @@ answers**, and the test fails when an assertion does not hold:
 | Infinite Trading | Exhausted villager and wandering-trader offers | Enabled merchants regain available uses; demand resets only when configured |
 | Affordable Anvil | Vanilla anvil result costs 75 levels with configured cap 20 | Cost becomes 20 only for an existing result; optional cheap rename costs 1 |
 | Affordable Anvil | Vanilla provides no result | No output is created and its cost is not rewritten |
+| Guaranteed Wither Skeleton Skulls | Wither Skeleton death and existing loot | One skull is added only while enabled; existing skulls are not duplicated, and coal remains |
+| Dragon Drops Elytra | Ender Dragon death with other loot | Exactly one Elytra is added while enabled; existing Elytra and unrelated loot are preserved |
+| Shulker Drops Two | Shulker death with configurable minimum of four shells | Existing stack is raised to four, higher counts are preserved, and missing shells appear only with always-drop enabled |
 
-**Coverage:** 6 of 38 implemented modules have direct behavioral sandbox
+**Coverage:** 9 of 38 implemented modules have direct behavioral sandbox
 scenarios at this stage. They execute the actual packaged guest through Wasmtime
 and assert output/event mutations; they do **not** simulate a complete world.
-The remaining 32 modules are compiled and smoke-loaded, but their gameplay
+The remaining 29 modules are compiled and smoke-loaded, but their gameplay
 effects are **not yet automatically verified**. Source-pattern unit tests do
 not count toward gameplay coverage.
 
 The test host is `crates/sunrise-mod-wasm/tests/support/bulk_files.rs`
 from the pinned Sunrise source tree. It provides real in-memory config
-storage and dispatches command, entity lifecycle, merchant trade and anvil
-events through Wasmtime;
+storage and dispatches command, entity lifecycle, merchant trade, anvil and
+loot-drop events through Wasmtime;
 it is **not** the full Sunrise `Game` or a populated level.
 
 ## What this *does not* prove
@@ -92,6 +95,9 @@ it is **not** the full Sunrise `Game` or a populated level.
   The slime test checks the join veto decision, not an actual populated level;
   trading and anvil tests check the mutable authoritative event snapshots,
   not a real player's inventory or client screen.
+  The loot tests inspect mutable drop lists in a Wasmtime callback; they do
+  not spawn item entities in chunks or persist them in a game world. These
+  distinctions are deliberately not counted as full-world gameplay tests.
 - Future world-state tests should use Sunrise's existing headless `Game` test
   fixtures to create players, blocks and entities, then assert changes after
   dispatching QOL's hooks. Such tests must explicitly enable the relevant
