@@ -38,6 +38,7 @@ mod trading;
 mod soil;
 mod soft_hay;
 mod milk;
+mod zombie;
 
 use mod_api::{
     AnvilUpdateEvent, BlockChangedEvent, LevelHost, ClientHost, EntityJoinLevelEvent, EntityLeaveLevelEvent,
@@ -243,6 +244,7 @@ impl Hooks for SunriseQol {
 
     fn entity_join_level(&self, host: &mut dyn ServerHost, event: &mut EntityJoinLevelEvent<'_>) -> Flow {
         if superflat::on_join(host, event) == Flow::Cancel { return Flow::Cancel; }
+        zombie::joined(host, event);
         self.villagers.on_join(event)
     }
 
