@@ -90,6 +90,16 @@ class SandboxTests(unittest.TestCase):
         self.assertIn("maximum enchantment level is 10", fixture)
         self.assertIn("check_help(&mut world);", fixture)
         self.assertIn("check_villager_griefing(&mut world);", fixture)
+        # Gameplay coverage must execute guest hooks and inspect their responses.
+        self.assertIn("check_superflat_slimes(&mut world);", fixture)
+        self.assertIn("check_infinite_trading(&mut world);", fixture)
+        self.assertIn("check_affordable_anvil(&mut world);", fixture)
+        self.assertIn("mod_api::dispatch_trade_with_villager(", fixture)
+        self.assertIn("mod_api::dispatch_anvil_update(", fixture)
+        self.assertIn('set_toggle(world, "confirm_superflat", true)', fixture)
+        self.assertIn('assert!(!offer.out_of_stock()', fixture)
+        self.assertIn('anvil_update(world, 75, false, None)', fixture)
+        self.assertIn('anvil_update(world, 75, true, Some("Renamed"))', fixture)
 
     def test_release_gates_on_real_loader(self):
         workflow = (ROOT / ".github/workflows/release.yml").read_text()
