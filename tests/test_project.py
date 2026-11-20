@@ -345,7 +345,7 @@ class DurabilityRegressionTests(unittest.TestCase):
         gui = (ROOT / 'src/gui.rs').read_text()
         self.assertIn('zombie::joined(host, event);', hooks)
         self.assertIn('mob.remove_goal(host, "BreakDoor")', zombie)
-        self.assertIn('mob.set_can_open_doors(host, false)', zombie)
+        self.assertNotIn('mob.set_can_open_doors(host, false)', zombie)
         self.assertIn('key: "zombie_proof_doors"', gui)
 
     def test_exact_original_harvest_tags(self):
