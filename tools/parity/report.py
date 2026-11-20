@@ -61,14 +61,16 @@ def inventory(root=ROOT):
     parity = (root / "docs/PARITY.md").read_text()
     audit = (root / "docs/UPSTREAM-AUDIT.md").read_text()
     listed = dict(MODULE.findall(gui))
-    rows = {name: (status, details) for name, status, details in TABLE.findall(parity)}
-    reviewed = {name for name, status, details in TABLE.findall(audit)
-                if "github.com/" in status or "github.com/" in details}
+    matrix = [(name, status, details) for name, status, details
+              in TABLE.findall(parity) if name not in ("Module", "---")]
+    rows = {name: (status, details) for name, status, details in matrix}
+    reviewed = {line.split("|")[1].strip() for line in audit.splitlines()
+                if line.startswith("| ") and "github.com/" in line}
     missing = set(listed) - set(NAMES)
     extra = set(NAMES) - set(listed)
     if missing or extra:
         raise ValueError(f"Unmapped GUI modules {sorted(missing)}; obsolete mappings {sorted(extra)}")
-    if len(rows) != len(TABLE.findall(parity)):
+    if len(rows) != len(matrix):
         raise ValueError("Repeated rows in parity matrix")
     absent = sorted((key, NAMES[key]) for key in listed if NAMES[key] not in rows)
     if absent:
