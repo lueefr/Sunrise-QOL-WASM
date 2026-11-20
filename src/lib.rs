@@ -3,6 +3,8 @@
 //! never represented as a working toggle.
 mod anvil;
 mod drops;
+mod wither_skull;
+mod dragon_drops;
 mod decay;
 mod doors;
 mod automatic_doors;
@@ -56,7 +58,7 @@ use mod_api::{
     PlayerCommandEvent, PlayerCommandsSentEvent, EntityInteractEvent, InteractionResult,
     BonemealEvent, TeleportCommandEvent, PlayerTeleportedEvent,
     PlayerBreakSpeedEvent,
-    LivingEntityUseItemFinishEvent,
+    LivingEntityUseItemFinishEvent, VanillaGameEventEvent,
 };
 
 #[derive(Default)]
@@ -76,6 +78,8 @@ pub struct SunriseQol {
     compass: compass::Compass,
     clock: clock::Clock,
     shulkers: shulkers::Shulkers,
+    wither_skulls: wither_skull::WitherSkulls,
+    dragon_drops: dragon_drops::DragonDrops,
 }
 
 #[mod_api::sunrise_mod]
@@ -223,6 +227,8 @@ impl Hooks for SunriseQol {
         self.doors.tick(host, event);
         self.automatic_doors.tick(host, event);
         self.shulkers.tick(host, event);
+        self.wither_skulls.tick(host, event);
+        self.dragon_drops.tick(event);
         self.enchant_command.tick(host, event);
     }
 
@@ -244,11 +250,13 @@ impl Hooks for SunriseQol {
 
     fn living_death(&self, host: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
         self.shulkers.death(host, event);
+        self.wither_skulls.dying(host, event);
         totem::on_death(host, event)
     }
 
     fn living_death_post(&self, host: &mut dyn ServerHost, event: &mut LivingDeathPostEvent<'_>) {
         self.shulkers.confirmed(host, event);
+        self.wither_skulls.confirmed(host, event);
     }
 
     fn player_logged_in(&self, host: &mut dyn ServerHost, event: &mut PlayerLoggedInEvent<'_>) {
@@ -262,11 +270,18 @@ impl Hooks for SunriseQol {
     fn entity_join_level(&self, host: &mut dyn ServerHost, event: &mut EntityJoinLevelEvent<'_>) -> Flow {
         if superflat::on_join(host, event) == Flow::Cancel { return Flow::Cancel; }
         zombie::joined(host, event);
+        self.dragon_drops.joined(event);
         self.villagers.on_join(event)
     }
 
     fn entity_leave_level(&self, _: &mut dyn ServerHost, event: &mut EntityLeaveLevelEvent<'_>) {
         self.villagers.on_leave(event);
+        self.dragon_drops.left(event);
+    }
+
+    fn vanilla_game_event(&self, host: &mut dyn ServerHost, event: &mut VanillaGameEventEvent<'_>) -> Flow {
+        self.dragon_drops.died(host, event);
+        Flow::Continue
     }
 
     fn entity_mob_griefing(&self, host: &dyn Host, event: &mut EntityMobGriefingEvent) {
@@ -283,6 +298,8 @@ impl Hooks for SunriseQol {
         self.followers.reset();
         self.elytra.reset();
         self.shulkers.reset();
+        self.wither_skulls.reset();
+        self.dragon_drops.reset();
         soft_hay::reset();
         messages::reset();
     }

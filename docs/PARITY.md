@@ -38,12 +38,12 @@ installer to stop before replacing the installed mod.
 | Respawning Shulkers | Partial | Captures and restores original entity NBT, health 30, new UUID and scheduled respawn; engine entity recreation, unloaded chunks and shutdown differ |
 | Enchantment Level Indicator | Partial | Tooltip max-level suffix, with saved NBT and registered max-level lookup; modded tooltip layouts unverified |
 | What Durability | Partial | damage_item parts for 67 common vanilla IDs plus tagged items; prevents future wear by default and preserves normal wear for IDs or #tags in itemsWithDurability; cannot rewrite already present damage or intercept arbitrary untagged third-party items |
-| Always a Wither Skull | Initial | Drops hook only; alternate death routes unverified |
+| Always a Wither Skull | Partial | Death events now queue a one-tick-delayed world-item check in a ±1-block box; fresh skull items (age under 10 ticks) prevent duplicates. The loot table is no longer modified prematurely. Real-game timing, death cancellations and modded item entities remain unverified |
 | Friendly Griefing | Initial | Entity lifecycle and griefing predicate hooks; incomplete mob-specific rules |
 | GUI Clock | Initial | Minecraft clock time only; real computer clock and original advanced options not implemented |
 | GUI Compass | Initial | HUD position and direction; exact display parity unverified |
 | Vanilla Zoom | Initial | Native zoom hook with Controls binding; original Java item swap is not ported |
-| Dragon Drops Elytra | Initial | Loot hook only, dragon death path requires validation |
+| Dragon Drops Elytra | Partial | Tracks dragon joins/leaves and handles the dragon-specific `minecraft:entity_die` game event after its 200-tick death sequence; spawns one Elytra as an item near a player in the original 30-block AABB or at the death site; sends localized component messages. Missing the original killing-player priority (game event has no damage source); death event ordering, locale resource keys and player recipient handling need game tests |
 | Hide Hands | Initial | Hand rendering hide rules; original item filter lists unavailable |
 | Full Brightness Toggle | Not implemented | No public WASM API to set gamma or replace world lighting; adding screen tint would not reproduce it |
 | Superflat World No Slimes | Partial (manual) | Blocks joining slimes ONLY when the user explicitly confirms flat-world status; no accessible world-generator flag |
