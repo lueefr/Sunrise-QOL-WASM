@@ -5,6 +5,9 @@ pub const ID: &str = "horizon_qol_suite";
 
 pub fn storage_key(key: &str) -> &str {
     match key {
+        "disableWaterConsumptionUnderwater" => "disablewaterconsumptionunderwater",
+        "holdFireTypeItemInOffhandToPreventWaterBottleCreation" => "holdfiretypeiteminoffhandtopreventwaterbottlecreation",
+        "chanceGlassBottleBreaksWithFireTypeInOffhand" => "chanceglassbottlebreakswithfiretypeinoffhand",
         "cropBlockBreakSpeedModifier" => "cropblockbreakspeedmodifier",
         "onlyUntillWithOtherHandEmpty" => "onlyuntillwithotherhandempty",
         "mustCrouchToHaveBiggerHoeRange" => "mustcrouchtohavebiggerhoerange",
