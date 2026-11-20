@@ -16,3 +16,8 @@ all significant configurations, entity types, event order, RNG and edge cases.**
 The current CI has only one attempted real-engine scenario group and requires
 private licensed Minecraft resources on an authorized runner. No feature is
 claimed certified on the strength of synthetic-host or source-only tests.
+
+Both CI workflows now attach a `sunrise-qol-parity-matrix` artifact. It
+lists every module, whether its original source was inspected, source-status,
+known differences and explicit full-1:1 certification=false. This artifact
+is independent of the real-engine gameplay evidence and does not replace it.

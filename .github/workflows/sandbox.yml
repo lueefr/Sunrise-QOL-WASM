@@ -50,6 +50,9 @@ jobs:
       - name: Validate source and sandbox assertions
         run: python3 -m unittest discover -s tests -v
 
+      - name: Export 44-module source parity coverage
+        run: python3 tools/parity/report.py --output target/parity-coverage.json
+
       - name: Install pinned Rust
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -147,6 +150,14 @@ jobs:
           name: sunrise-qol-unverified-build
           path: target/sunrise-mod/horizon_qol_suite.smod
           if-no-files-found: ignore
+
+      - name: Upload complete parity matrix
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sunrise-qol-parity-matrix
+          path: target/parity-coverage.json
+          if-no-files-found: warn
 
       - name: Upload real-game evidence
         if: always()

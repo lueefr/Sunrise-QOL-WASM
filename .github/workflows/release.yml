@@ -22,6 +22,7 @@ on:
       - 'tools/wasm_link_check.py'
       - 'tools/sandbox/**'
       - 'tools/gameplay/**'
+      - 'tools/parity/**'
       - 'tools/migrate_settings.py'
       - 'tests/**'
       - 'tools/release.py'
@@ -61,6 +62,9 @@ jobs:
 
       - name: Install Python and validate source
         run: python3 -m unittest discover -s tests -p 'test*.py' -v
+
+      - name: Export 44-module source parity coverage
+        run: python3 tools/parity/report.py --output target/parity-coverage.json
 
       - name: Update manifests and release notes
         if: steps.version.outputs.changed == 'true'
@@ -207,6 +211,14 @@ jobs:
         timeout-minutes: 70
         shell: bash
         run: bash tools/gameplay/run.sh
+
+      - name: Upload complete parity matrix
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sunrise-qol-parity-matrix
+          path: target/parity-coverage.json
+          if-no-files-found: warn
 
       - name: Upload real-game evidence
         if: always()

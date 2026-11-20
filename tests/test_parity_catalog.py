@@ -20,6 +20,12 @@ class ParityCatalogTests(unittest.TestCase):
         self.assertEqual(report["fully_certified"], 0)
         self.assertTrue(all(not row["certified_one_to_one"] for row in report["modules"]))
 
+    def test_parity_matrix_is_collected_by_both_workflows(self):
+        for path in [".github/workflows/sandbox.yml", ".github/workflows/release.yml"]:
+            workflow = (ROOT / path).read_text()
+            self.assertIn("python3 tools/parity/report.py --output target/parity-coverage.json", workflow)
+            self.assertIn("sunrise-qol-parity-matrix", workflow)
+
     def test_requested_unavailable_feature_is_not_in_module_roster(self):
         report = parity.inventory()
         self.assertIn("Full Brightness Toggle", report["other_requested_features_not_configured"])
