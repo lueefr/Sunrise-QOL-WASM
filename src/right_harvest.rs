@@ -136,8 +136,7 @@ fn mature(host: &dyn ServerHost, level: LevelRef, pos: [i32; 3],
     // The pinned ServerHost exposes block_state_id, but not the metadata
     // definition API. Probe the next legal age to detect maturity, without
     // assuming vanilla-only level caps or discarding modded properties.
-    if current >= 31 { return None; }
-    let next = age_value(&raw, current + 1)?;
+    let next = age_value(&raw, current.checked_add(1)?)?;
     if host.block_state_id(&next).is_some() { return None; }
 
     // Keep the original's CropBlock/Cocoa/NetherWart scope. Unknown modded
