@@ -336,9 +336,22 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
 
     match kind {
         Crop::Column => {
-            // Unlike direct set_block, the player break path keeps ordinary
-            // loot, neighbour shape changes, damage and block-break hooks.
-            if !player.destroy_block(host, position, false) { return false; }
+            // JamCoreModding's Block.getDrops runs even for creative players.
+            // Sunrise's creative-mode player break suppresses normal loot,
+            // so use the level's loot-aware destroy path for that mode.
+            if creative {
+                if level.destroy_block(host, position, true, held, false)
+                    .ok().flatten().is_none() {
+                    return false;
+                }
+                let _ = player.award_stat(host, StatType::Mined, &id, 1);
+            } else {
+                // Survival runs the player's real break path, including
+                // permissions, block hooks and native tool wear.
+                if !player.destroy_block(host, position, false) {
+                    return false;
+                }
+            }
         }
         Crop::Age => {
             let Some(mut drops) = level.block_drops(host, pos, held, Some(player.entity()))
