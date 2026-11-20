@@ -63,6 +63,18 @@ fn tier(host: &dyn Host, stack: &ItemStack) -> Tier {
 }
 
 fn positions(pos: [i32; 3], tier: Tier) -> Vec<[i32; 3]> {
+    // Upstream's low tier traverses NORTH, EAST, SOUTH, WEST in this order,
+    // not the nested-coordinate loop used for middle and high tiers.
+    if tier == Tier::Low {
+        let mut result = Vec::with_capacity(5);
+        for [dx, dz] in [[0, -1], [1, 0], [0, 1], [-1, 0]] {
+            if let (Some(x), Some(z)) = (pos[0].checked_add(dx), pos[2].checked_add(dz)) {
+                result.push([x, pos[1], z]);
+            }
+        }
+        result.push(pos);
+        return result;
+    }
     let radius: i32 = match tier {
         Tier::None => 0,
         Tier::Low | Tier::Mid => 1,
@@ -495,7 +507,9 @@ mod tests {
     fn original_hoe_shapes() {
         let center = [10, 64, 10];
         assert_eq!(positions(center, Tier::None), vec![center]);
-        assert_eq!(positions(center, Tier::Low).len(), 5);
+        assert_eq!(positions(center, Tier::Low), vec![
+            [10, 64, 9], [11, 64, 10], [10, 64, 11], [9, 64, 10], center
+        ]);
         assert_eq!(positions(center, Tier::Mid).len(), 9);
         assert_eq!(positions(center, Tier::High).len(), 13);
         assert!(positions(center, Tier::High).contains(&[12, 64, 10]));
