@@ -212,8 +212,9 @@ impl Hooks for SunriseQol {
         conduit_drowned::check(host, event);
     }
 
-    fn server_started(&self, _: &mut dyn ServerHost, event: &mut ServerStartedEvent) {
+    fn server_started(&self, host: &mut dyn ServerHost, event: &mut ServerStartedEvent) {
         messages::started(event);
+        soft_hay::refresh(host);
     }
 
     fn server_tick(&self, host: &mut dyn ServerHost, event: &mut ServerTickEvent<'_>) {
