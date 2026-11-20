@@ -389,6 +389,8 @@ class DurabilityRegressionTests(unittest.TestCase):
         self.assertIn('subtract_replant(host, &id, state.block(), &mut drops)', module)
         self.assertIn('host.block_item(block)', module)
         self.assertIn('host.item_block(stack.item()) == Some(block)', module)
+        self.assertIn('level.destroy_block(host, position, true, held, false)', module)
+        self.assertIn('player.destroy_block(host, position, false)', module)
         self.assertNotIn('id.contains("seed")', module)
         self.assertIn('BlockUpdateFlags::NEIGHBORS | BlockUpdateFlags::CLIENTS', module)
         self.assertIn('InteractionResult::SuccessServer', module)
