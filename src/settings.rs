@@ -5,6 +5,14 @@ pub const ID: &str = "horizon_qol_suite";
 
 pub fn storage_key(key: &str) -> &str {
     match key {
+        "onlyUntillWithOtherHandEmpty" => "onlyuntillwithotherhandempty",
+        "mustCrouchToHaveBiggerHoeRange" => "mustcrouchtohavebiggerhoerange",
+        "woodenTierHoeRange" => "woodentierhoerange",
+        "stoneTierHoeRange" => "stonetierhoerange",
+        "goldTierHoeRange" => "goldtierhoerange",
+        "ironTierHoeRange" => "irontierhoerange",
+        "diamondTierHoeRange" => "diamondtierhoerange",
+        "netheriteTierHoeRange" => "netheritetierhoerange",
         "clock24Hour" => "clock24hour",
         "clockPosition" => "clockposition",
         "clockHeightOffset" => "clockheightoffset",
