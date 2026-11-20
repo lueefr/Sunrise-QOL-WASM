@@ -140,6 +140,14 @@ jobs:
         shell: bash
         run: bash tools/gameplay/run.sh
 
+      - name: Upload built mod for manual game testing (unverified)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sunrise-qol-unverified-build
+          path: target/sunrise-mod/horizon_qol_suite.smod
+          if-no-files-found: ignore
+
       - name: Upload real-game evidence
         if: always()
         uses: actions/upload-artifact@v4

@@ -58,6 +58,7 @@ def main():
         "sdk_revision": args.source,
         "package": args.package.name,
         "test_exit_code": args.exit_code,
+        "blocked_reason": ("missing-prepared-game-resources" if "QOL_GAMEPLAY_BLOCKED|missing-resources" in log else "engine-compile-failure" if "QOL_GAMEPLAY_BLOCKED|engine-compile-failure" in log else None),
         "gate_passed": passed,
         "scenarios": scenarios,
         "modules_total": len(modules),
