@@ -18,6 +18,7 @@ pub fn storage_key(key: &str) -> &str {
         "rchHarvestInRadius" => "rchharvestinradius",
         "rchHungerLevel" => "rchhungerlevel",
         "rchExperienceType" => "rchexperiencetype",
+        "rchHoeWarned" => "rchhoewarned",
         "showDaysPlayedWorld" => "showdaysplayedworld",
         "mustHaveClockInInventoryForGameTime" => "musthaveclockininventoryforgametime",
         "alwaysHideEmptyMainHand" => "alwayshideemptymainhand",
