@@ -360,7 +360,7 @@ class DurabilityRegressionTests(unittest.TestCase):
         }
         for filename, expected in original_blobs.items():
             data = (ROOT / 'data/rightclickharvest/tags' / filename).read_bytes()
-            sha = hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\\0' + data).hexdigest()
+            sha = hashlib.sha1(b'blob ' + str(len(data)).encode() + bytes([0]) + data).hexdigest()
             self.assertEqual(sha, expected, f'{filename} must match upstream byte for byte')
 
     def test_upstream_harvest_tags_and_component_support(self):
