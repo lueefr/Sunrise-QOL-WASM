@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "engine": "sunrise-client::Game",
+  "module": "keep_soil_tilled",
+  "source": "Serilum/Keep-My-Soil-Tilled 26.3.0",
+  "required": [
+    "soil.disabled",
+    "soil.harvest_melon",
+    "soil.harvest_pumpkin",
+    "soil.no_farmland",
+    "soil.other_block"
+  ]
+}
