@@ -2,7 +2,7 @@
 //! The ordinary vanilla bottle action is not canceled, as in the source mod.
 use crate::settings::{amount, flag, on};
 use mod_api::{
-    ComponentId, Flow, Hand, HostSide, InteractionResult, ItemResource, ItemStack,
+    ComponentId, Flow, Hand, HostSide, InteractionResult, ItemResource, ItemStack, Identifier,
     JavaString, RightClickItemEvent, ServerHost, Tag,
 };
 
@@ -82,7 +82,8 @@ pub fn use_bottle(side: HostSide<'_>, event: &mut RightClickItemEvent<'_>) -> Fl
     let survives = level.with_random(host, |random| random.next_double() > chance)
         .unwrap_or(false);
     if survives {
-        if let Some(item) = host.item_key("minecraft:glass_bottle") {
+        if let Some(item) = Identifier::parse("minecraft:glass_bottle")
+            .and_then(|id| host.item_key(&id)) {
             if let Some(stack) = ItemStack::new(item, 1) {
                 let _ = player.give_stack(host, stack);
             }
