@@ -50,6 +50,7 @@ installer to stop before replacing the installed mod.
 | Welcome Message | Partial | All three default messages, independent text/colors/HTTP URL click options, preceding blank line and dedicated-server-only switch from original; real lifecycle, UI input and integrated-server checks pending |
 | Vein Miner | Initial | Bounded connected search; tool costs and player block events not fully ported |
 | Tree Harvester | Partial | Bounded tree removal. Harvested logs trigger the shared Leaf Decay event/queue; fast decay requires the Leaf Decay module enabled and uses its own speed, per-tick cap and matching settings. Original replant/durability timing is not 1:1 |
+| Leaf Decay | Partial | Shared Leaves Be Gone / Leaves Us In Peace path: bounded queued decay, match-leaf and match-log options and per-tick work limits; Tree Harvester uses this same module instead of duplicating fast-decay behavior. The public WASM host does not expose vanilla `LeavesBlock.updateDistance` for the precise original scheduling, so true 1:1 timing and every custom species remain unverified |
 | Ench. Level LangPatch | Partial | Formats missing enchantment/potion tooltip translation levels; does not modify global language storage |
 | Tax Free Levels | Partial (anvil only) | One-level rename and existing-result limit; original flattened XP cost is NOT implemented |
 | Unlimited Enchantments | Partial | Combines equal-level enchantments at anvil when vanilla made output, up to 255; not a registry or enchantment-table patch |
