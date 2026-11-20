@@ -324,7 +324,7 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
     if let Some([min_x, min_z, max_x, max_z]) = level.world_border(host) {
         let x = f64::from(pos[0]);
         let z = f64::from(pos[2]);
-        if x < min_x || x + 1.0 > max_x || z < min_z || z + 1.0 > max_z {
+        if x < min_x || x >= max_x || z < min_z || z >= max_z {
             return false;
         }
     }
