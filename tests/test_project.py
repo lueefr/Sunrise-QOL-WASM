@@ -375,6 +375,12 @@ class DurabilityRegressionTests(unittest.TestCase):
         module = (ROOT / 'src/right_harvest.rs').read_text()
         gui = (ROOT / 'src/gui.rs').read_text()
         self.assertIn('right_harvest::click(host, event)', hooks)
+        self.assertIn('right_harvest::client_click(host, event)', hooks)
+        self.assertIn('SoundPlay::at(sound, SoundSource::Blocks, origin)', module)
+        self.assertIn('minecraft:item.nether_wart.plant', module)
+        self.assertIn('minecraft:item.crop.plant', module)
+        self.assertIn('host.chat_line(Text::literal(', module)
+        self.assertIn('rchHoeWarned', module)
         self.assertIn('key: "right_click_harvest"', gui)
         for key in ('rchRequireHoe', 'rchHarvestInRadius',
                     'rchHungerLevel', 'rchExperienceType'):
