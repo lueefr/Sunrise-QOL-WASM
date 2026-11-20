@@ -83,7 +83,7 @@ pub fn use_bottle(side: HostSide<'_>, event: &mut RightClickItemEvent<'_>) -> Fl
         .unwrap_or(false);
     if survives {
         if let Some(item) = Identifier::parse("minecraft:glass_bottle")
-            .and_then(|id| host.item_key(&id)) {
+            .ok().and_then(|id| host.item_key(&id)) {
             if let Some(stack) = ItemStack::new(item, 1) {
                 let _ = player.give_stack(host, stack);
             }
