@@ -47,8 +47,10 @@ Minecraft game data into the repository or public CI artifacts.
 This is a fail-closed requirement. A green synthetic-host build alone is not
 an in-game verification.
 
-The runner compiles the real Game integration harness even when private
-prepared resources are unavailable, so code errors are still detected.
+The runner performs a Rust `cargo check --tests` of the real Game integration
+harness even when private prepared resources are unavailable, so type errors
+are still detected without spending time on full native linking. Full Game
+compilation and gameplay execution happen only when game data exist.
 If resources are missing the job fails with a machine-readable
 `blocked_reason=missing-prepared-game-resources` instead of skipping or
 passing a fake test. PRs retain an explicitly **unverified** .smod artifact

@@ -40,6 +40,9 @@ class GameplayTests(unittest.TestCase):
             self.assertIn(filename, runner)
         self.assertIn("Provision a licensed Sunrise prepared-data folder", runner)
         self.assertIn("exit 1", runner)
+        self.assertIn("cargo check --manifest-path", runner)
+        self.assertIn("--lib --tests --no-default-features --features testing", runner)
+        self.assertIn("cargo test --manifest-path", runner)
 
     def test_real_game_not_just_mock_dispatch(self):
         src = (ROOT / "tools/gameplay/sunrise_qol_gameplay.rs.txt").read_text()
