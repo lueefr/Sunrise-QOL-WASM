@@ -174,7 +174,7 @@ class ProjectTests(unittest.TestCase):
     def test_migration_preserves_legacy_settings(self):
         import tempfile
         from migrate_settings import keys, migrate
-        self.assertEqual(len(keys(ROOT)), 139)
+        self.assertEqual(len(keys(ROOT)), 148)
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)
             previous = game / 'sunrise-mods' / '.sunrise-mod-data' / 'horizon_qol_suite'
@@ -250,7 +250,7 @@ class ProjectTests(unittest.TestCase):
         gui = (ROOT / 'src/gui.rs').read_text()
         src = (ROOT / 'src/lib.rs').read_text()
         matrix = (ROOT / 'docs/PARITY.md').read_text()
-        self.assertEqual(gui.count('ModuleSpec { key:'), 43)
+        self.assertEqual(gui.count('ModuleSpec { key:'), 44)
         self.assertNotIn('key: "full_brightness_toggle"', gui)
         self.assertIn('No public WASM API', matrix)
         self.assertIn('superflat::on_join(host, event)', src)
