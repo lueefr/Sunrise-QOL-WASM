@@ -5,13 +5,10 @@
 //! leaves the normal game to synchronize the authoritative block.
 use crate::settings::{flag, on, saved_value};
 use mod_api::{
-    BlockFace, BlockState, BlockUpdateFlags, EquipmentSlot, Flow, Hand,
-    Identifier, InteractionResult, ItemKey, ItemStack, LevelRef,
-    RightClickBlockEvent, ServerHost, StatType,
+    BlockFace, BlockState, BlockUpdateFlags, ComponentId, EquipmentSlot, Flow, Hand,
+    Identifier, InteractionResult, ItemKey, ItemResource, ItemStack, LevelRef,
+    RightClickBlockEvent, ServerHost, StatType, Tag,
 };
-use std::sync::atomic::{AtomicU64, Ordering};
-
-static XP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Crop {
@@ -29,11 +26,16 @@ enum Tier {
 
 fn is_hoe(host: &dyn ServerHost, stack: &ItemStack) -> bool {
     let item = stack.item();
-    let id = item.id(host);
-    id.ends_with("_hoe") || tagged_item(host, item, "minecraft:hoes")
+    tagged_item(host, item, "minecraft:hoes")
         || tagged_item(host, item, "rightclickharvest:low_tier_hoes")
         || tagged_item(host, item, "rightclickharvest:mid_tier_hoes")
         || tagged_item(host, item, "rightclickharvest:high_tier_hoes")
+        || ComponentId::new("minecraft:block_transformer")
+            .and_then(|component| ItemResource::of(stack).value(host, &component))
+            .is_some_and(|tag| match tag {
+                Tag::String(value) => value.to_string().ok().as_deref() == Some("minecraft:hoe"),
+                _ => false,
+            })
 }
 
 fn tagged_item(host: &dyn ServerHost, item: ItemKey, id: &str) -> bool {
@@ -139,14 +141,12 @@ fn mature(host: &dyn ServerHost, level: LevelRef, pos: [i32; 3],
     let next = age_value(&raw, current.checked_add(1)?)?;
     if host.block_state_id(&next).is_some() { return None; }
 
-    // Keep the original's CropBlock/Cocoa/NetherWart scope. Unknown modded
-    // age-based blocks must live on farmland so that fire or decorative
-    // age-bearing blocks are not mistaken for a crop.
-    if !vanilla_crop(id) {
-        if id.starts_with("minecraft:") { return None; }
-        let below = [pos[0], pos[1].checked_sub(1)?, pos[2]];
-        let ground = level.block(host, below)?.id(host);
-        if !ground.contains("farmland") { return None; }
+    // CropBlock subclasses are not visible to the WASM host. Accept
+    // registered non-vanilla blocks with a bounded age property and
+    // let the exact upstream blacklist decide known exceptions; this
+    // supports modded crops on custom soil and vertical growing systems.
+    if id.starts_with("minecraft:") && !vanilla_crop(id) {
+        return None;
     }
     let reset = age_reset(&raw).and_then(|text| host.block_state_id(&text))?;
     Some((Crop::Age, Some(reset)))
@@ -201,16 +201,12 @@ fn exp_setting(setting: Option<String>) -> &'static str {
     }
 }
 
-fn xp_points() -> u32 {
-    // The public hook cannot borrow the original player's Java Random.
-    // Preserve the source's 0..=2 distribution, with a bounded guest stream.
-    let n = XP_SEQUENCE.fetch_add(1, Ordering::Relaxed);
-    let mut n = n ^ 0x9e3779b97f4a7c15;
-    n ^= n >> 30;
-    n = n.wrapping_mul(0xbf58476d1ce4e5b9);
-    n ^= n >> 27;
-    n = n.wrapping_mul(0x94d049bb133111eb);
-    ((n ^ (n >> 31)) % 3) as u32
+fn xp_points(host: &mut dyn ServerHost, level: LevelRef) -> u32 {
+    // Sample the game's authoritative random source instead of a shared
+    // independent counter. The original samples Player.random, which
+    // Sunrise's WASM API does not currently lend through ServerHost.
+    level.with_random(host, |random| random.next_int_bound(3).clamp(0, 2) as u32)
+        .unwrap_or(0)
 }
 
 fn xp_needed(level: i32) -> i32 {
@@ -338,10 +334,11 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
     }
     if !creative {
         match xp {
-            "Cost" => { let _ = pay_xp(host, player, xp_points() as i32); }
+            "Cost" => { let cost = xp_points(host, level) as i32; let _ = pay_xp(host, player, cost); }
             "Reward" => {
                 let [x,y,z] = pos.map(|v| f64::from(v) + 0.5);
-                let _ = level.award_experience(host, x, y, z, xp_points());
+                let points = xp_points(host, level);
+                let _ = level.award_experience(host, x, y, z, points);
             }
             _ => {}
         }
