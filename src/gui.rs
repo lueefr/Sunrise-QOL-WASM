@@ -136,6 +136,17 @@ const NUTRITIOUS_MILK: &[OptionSpec] = &[
     range("saturationLevelIncrease", "Saturation Restored", 10., 0., 20., 1.),
 ];
 
+const HOE: &[OptionSpec] = &[
+    toggle("onlyUntillWithOtherHandEmpty", "Require Other Hand Empty", true),
+    toggle("mustCrouchToHaveBiggerHoeRange", "Crouch for Area Tilling", true),
+    range("woodenTierHoeRange", "Wood Hoe Radius", 0., 0., 32., 1.),
+    range("stoneTierHoeRange", "Stone Hoe Radius", 1., 0., 32., 1.),
+    range("goldTierHoeRange", "Gold Hoe Radius", 2., 0., 32., 1.),
+    range("ironTierHoeRange", "Iron Hoe Radius", 2., 0., 32., 1.),
+    range("diamondTierHoeRange", "Diamond Hoe Radius", 3., 0., 32., 1.),
+    range("netheriteTierHoeRange", "Netherite Hoe Radius", 4., 0., 32., 1.),
+];
+
 const RIGHT_HARVEST: &[OptionSpec] = &[
     toggle("rchRequireHoe", "Require Hoe", false),
     toggle("rchHarvestInRadius", "Harvest in Radius", true),
@@ -289,6 +300,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "tree_harvester", label: "Tree Harvesting", options: TREE, category: Category::Gathering },
     ModuleSpec { key: "leaf_decay", label: "Leaf Decay", options: LEAF_DECAY, category: Category::Gathering },
     ModuleSpec { key: "extended_bonemeal", label: "Extended Bone Meal", options: BONEMEAL, category: Category::Gathering },
+    ModuleSpec { key: "hoe_tweaks", label: "Hoe Tweaks", options: HOE, category: Category::Gathering },
     ModuleSpec { key: "right_click_harvest", label: "Right Click Harvest", options: RIGHT_HARVEST, category: Category::Gathering },
     ModuleSpec { key: "double_doors", label: "Paired Doors", options: DOORS, category: Category::World },
     ModuleSpec { key: "automatic_doors", label: "Automatic Doors", options: AUTO_DOORS, category: Category::World },
