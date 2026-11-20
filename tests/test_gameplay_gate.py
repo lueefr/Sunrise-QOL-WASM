@@ -27,11 +27,19 @@ class GameplayTests(unittest.TestCase):
         for path in [".github/workflows/sandbox.yml", ".github/workflows/release.yml"]:
             flow = (ROOT / path).read_text()
             self.assertIn("bash tools/gameplay/run.sh", flow)
+            self.assertIn("SUNRISE_TEST_RESOURCES", flow)
             self.assertIn("gameplay-evidence.json", flow)
             self.assertLess(flow.index("bash tools/sandbox/run.sh"), flow.index("bash tools/gameplay/run.sh"))
         release = (ROOT / ".github/workflows/release.yml").read_text()
         self.assertLess(release.index("bash tools/gameplay/run.sh"),
                         release.index("name: Commit version and tag only after a successful build"))
+
+    def test_no_fallback_to_fake_game_resources(self):
+        runner = (ROOT / "tools/gameplay/run.sh").read_text()
+        for filename in ("facts.json", "gameplay-facts.json", "block-behaviours.json"):
+            self.assertIn(filename, runner)
+        self.assertIn("Provision a licensed Sunrise prepared-data folder", runner)
+        self.assertIn("exit 1", runner)
 
     def test_real_game_not_just_mock_dispatch(self):
         src = (ROOT / "tools/gameplay/sunrise_qol_gameplay.rs.txt").read_text()

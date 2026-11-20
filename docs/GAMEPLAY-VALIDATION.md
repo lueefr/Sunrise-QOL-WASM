@@ -26,3 +26,23 @@ prediction and untested configuration combinations. The report explicitly
 tracks the remaining modules without gameplay coverage and never claims a
 fully certified 1:1 module. Expand cases.json and the actual Game fixture for
 each additional contract derived from the original implementation.
+
+## Required game data and runner
+
+Sunrise's original real-Game unit tests require a private, locally prepared
+Minecraft 26.3 data tree. The Sunrise upstream daily CI uses self-hosted
+runners with an owned Minecraft copy; it does not publish that tree. The
+Game test deliberately refuses to run without facts.json,
+gameplay-facts.json and block-behaviours.json and will **block the release**
+instead of passing synthetic tests as game evidence.
+
+To enable the real-game gate in GitHub Actions, provision an authorized
+private runner with Sunrise-prepared game resources. Set the repository
+variables SUNRISE_QOL_GAMEPLAY_RUNNER to its runner label and
+SUNRISE_TEST_RESOURCES to the absolute path of its private prepared game
+directory. The default hosted runner cannot prove gameplay parity until such
+data are legitimately available. Do not commit or upload proprietary
+Minecraft game data into the repository or public CI artifacts.
+
+This is a fail-closed requirement. A green synthetic-host build alone is not
+an in-game verification.

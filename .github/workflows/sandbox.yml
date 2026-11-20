@@ -32,7 +32,7 @@ concurrency:
 
 jobs:
   sandbox:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.SUNRISE_QOL_GAMEPLAY_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 110
     steps:
       - name: Check out mod source
@@ -134,6 +134,8 @@ jobs:
         run: bash tools/sandbox/run.sh
 
       - name: Real Sunrise Game state gameplay tests
+        env:
+          SUNRISE_TEST_RESOURCES: ${{ vars.SUNRISE_TEST_RESOURCES }}
         timeout-minutes: 70
         shell: bash
         run: bash tools/gameplay/run.sh

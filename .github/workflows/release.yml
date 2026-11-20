@@ -37,7 +37,7 @@ concurrency:
 
 jobs:
   release:
-    runs-on: ubuntu-24.04
+    runs-on: ${{ vars.SUNRISE_QOL_GAMEPLAY_RUNNER || 'ubuntu-24.04' }}
     steps:
       - name: Check out sources and tags
         uses: actions/checkout@v4
@@ -202,6 +202,8 @@ jobs:
 
       - name: Real Sunrise Game gameplay validation
         if: steps.version.outputs.changed == 'true'
+        env:
+          SUNRISE_TEST_RESOURCES: ${{ vars.SUNRISE_TEST_RESOURCES }}
         timeout-minutes: 70
         shell: bash
         run: bash tools/gameplay/run.sh

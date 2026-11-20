@@ -14,6 +14,22 @@ test "$(git -C "$source" rev-parse HEAD)" = "$revision" || { echo "Game revision
 smod="$root/target/sunrise-mod/horizon_qol_suite.smod"
 standard="$root/target/sunrise-wasm-std.wasm"
 test -s "$smod" && test -s "$standard" || { echo "Missing actual .smod or matching WASM std" >&2; exit 1; }
+# Sunrise intentionally does not distribute Mojang's prepared game files.
+# The public GitHub runner must NEVER silently fall back to mocked assets.
+resources="$source/.local/sunrise-client/26.3"
+if [ -n "${SUNRISE_TEST_RESOURCES:-}" ]; then
+  resources="$SUNRISE_TEST_RESOURCES"
+fi
+if [ ! -f "$resources/facts.json" ] ||
+   [ ! -f "$resources/gameplay-facts.json" ] ||
+   [ ! -f "$resources/block-behaviours.json" ]; then
+  echo "::error::Real-game parity cannot run: prepared Minecraft 26.3 resources missing at $resources" >&2
+  echo "Provision a licensed Sunrise prepared-data folder on a private runner." >&2
+  echo "Set repository variables SUNRISE_QOL_GAMEPLAY_RUNNER and SUNRISE_TEST_RESOURCES." >&2
+  echo "A .smod/Wasmtime smoke pass is not a gameplay parity pass." >&2
+  exit 1
+fi
+export SUNRISE_TEST_RESOURCES="$(realpath "$resources")"
 cp "$root/tools/gameplay/sunrise_qol_gameplay.rs.txt" "$source/crates/sunrise-client/src/game/modding/sunrise_qol_gameplay.rs"
 game_rs="$source/crates/sunrise-client/src/game.rs"
 if ! grep -Fq 'mod sunrise_qol_gameplay;' "$game_rs"; then
