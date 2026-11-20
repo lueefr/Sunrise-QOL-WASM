@@ -21,6 +21,7 @@ on:
       - 'diagnosticar.fish'
       - 'tools/wasm_link_check.py'
       - 'tools/sandbox/**'
+      - 'tools/gameplay/**'
       - 'tools/migrate_settings.py'
       - 'tests/**'
       - 'tools/release.py'
@@ -198,6 +199,22 @@ jobs:
         timeout-minutes: 30
         shell: bash
         run: bash tools/sandbox/run.sh
+
+      - name: Real Sunrise Game gameplay validation
+        if: steps.version.outputs.changed == 'true'
+        timeout-minutes: 70
+        shell: bash
+        run: bash tools/gameplay/run.sh
+
+      - name: Upload real-game evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sunrise-qol-gameplay
+          path: |
+            target/gameplay-evidence.json
+            target/gameplay-run.log
+          if-no-files-found: warn
 
       - name: Attach sandbox ABI report
         if: always()
