@@ -9,13 +9,15 @@ pub fn interact(host: &mut dyn ServerHost, event: &mut EntityInteractEvent<'_>) 
     if player.is_secondary_use_active(host) != Some(true) { return None; }
     let vehicle = host.entity(u32::try_from(event.entity).ok()?)?;
     let passengers = vehicle.passengers(host)?;
+    if passengers.is_empty() { return None; }
     let allow_players = flag(host, "dismount_players", false);
-    let mut changed = false;
-    for passenger in passengers.into_iter().take(8) {
+    for passenger in passengers {
         if !allow_players && passenger.kind(host).is_some_and(|kind| kind.id(host) == "minecraft:player") {
             continue;
         }
-        if passenger.stop_riding(host) { changed = true; }
+        let _ = passenger.stop_riding(host);
     }
-    changed.then_some(InteractionResult::SuccessServer)
+    // Upstream consumes the interaction whenever the target had passengers,
+    // including when player passengers were protected by configuration.
+    Some(InteractionResult::SuccessServer)
 }

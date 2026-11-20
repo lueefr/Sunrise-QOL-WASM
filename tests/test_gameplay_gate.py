@@ -52,6 +52,7 @@ class GameplayTests(unittest.TestCase):
         self.assertIn("block(game, soil)", src)
         self.assertNotIn("dispatch_player_destroyed_block(", src)
         self.assertIn("mod_platform::__private::initialize()", src)
+        self.assertIn("#![cfg(test)]", src)
         runner = (ROOT / "tools/gameplay/run.sh").read_text()
         self.assertNotIn('game_rs="$source/crates/sunrise-client/src/game.rs"', runner)
         for name in json.loads((ROOT / "tools/gameplay/cases.json").read_text())["required"]:

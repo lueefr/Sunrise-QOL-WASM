@@ -1,4 +1,5 @@
 //! Source-derived behavioral assertions using the real Sunrise Game with the built WASM mod.
+#![cfg(test)]
 //! This differs from the existing synthetic-host Wasmtime smoke tests.
 use super::*;
 use mod_api::{ConfigPath, Host};
