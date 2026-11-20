@@ -65,12 +65,12 @@ class ProjectTests(unittest.TestCase):
         settings = (ROOT / 'src/settings.rs').read_text()
         modules = re.findall(r'ModuleSpec \{ key: "([^"]+)", label:', gui)
         options = re.findall(r'(?:toggle|range|choice)\("([^"]+)", "', gui)
-        self.assertEqual(len(modules), 42)
-        self.assertEqual(len(options), 92)
+        self.assertEqual(len(modules), 43)
+        self.assertEqual(len(options), 96)
         self.assertIn('let _ = save(host, key,', gui)
         self.assertIn('let _ = save(host, option.key,', gui)
         self.assertNotIn('host.set_setting(', gui)
-        self.assertEqual(len(set(modules) | set(options)), 134)
+        self.assertEqual(len(set(modules) | set(options)), 139)
         for hook in ('input_key', 'client_tick_pre', 'screen_render_post',
                      'screen_mouse_button_pressed_pre', 'screen_mouse_button_released_pre',
                      'screen_mouse_dragged_pre', 'screen_key_pressed_pre',
@@ -173,7 +173,7 @@ class ProjectTests(unittest.TestCase):
     def test_migration_preserves_legacy_settings(self):
         import tempfile
         from migrate_settings import keys, migrate
-        self.assertEqual(len(keys(ROOT)), 134)
+        self.assertEqual(len(keys(ROOT)), 139)
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)
             previous = game / 'sunrise-mods' / '.sunrise-mod-data' / 'horizon_qol_suite'
@@ -249,7 +249,7 @@ class ProjectTests(unittest.TestCase):
         gui = (ROOT / 'src/gui.rs').read_text()
         src = (ROOT / 'src/lib.rs').read_text()
         matrix = (ROOT / 'docs/PARITY.md').read_text()
-        self.assertEqual(gui.count('ModuleSpec { key:'), 42)
+        self.assertEqual(gui.count('ModuleSpec { key:'), 43)
         self.assertNotIn('key: "full_brightness_toggle"', gui)
         self.assertIn('No public WASM API', matrix)
         self.assertIn('superflat::on_join(host, event)', src)
@@ -346,6 +346,22 @@ class DurabilityRegressionTests(unittest.TestCase):
         self.assertIn('mob.remove_goal(host, "BreakDoor")', zombie)
         self.assertIn('mob.set_can_open_doors(host, false)', zombie)
         self.assertIn('key: "zombie_proof_doors"', gui)
+
+    def test_right_click_harvest_hook_and_original_options(self):
+        hooks = (ROOT / 'src/lib.rs').read_text()
+        module = (ROOT / 'src/right_harvest.rs').read_text()
+        gui = (ROOT / 'src/gui.rs').read_text()
+        self.assertIn('right_harvest::click(host, event)', hooks)
+        self.assertIn('key: "right_click_harvest"', gui)
+        for key in ('rchRequireHoe', 'rchHarvestInRadius',
+                    'rchHungerLevel', 'rchExperienceType'):
+            self.assertIn(f'"{key}"', gui)
+        self.assertIn('level.block_drops(host, pos, held, Some(player.entity()))', module)
+        self.assertIn('subtract_replant(host, &id, &mut drops)', module)
+        self.assertIn('BlockUpdateFlags::NEIGHBORS | BlockUpdateFlags::CLIENTS', module)
+        self.assertIn('InteractionResult::SuccessServer', module)
+        self.assertIn('rightclickharvest:radius_harvest_blacklist', module)
+        self.assertIn('player.is_secondary_use_active(host)', module)
 
     def test_trading_original_level_guard(self):
         src = (ROOT / 'src/trading.rs').read_text()
