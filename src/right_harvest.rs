@@ -89,6 +89,21 @@ fn prop<'a>(state: &'a str, key: &str) -> Option<&'a str> {
         .find_map(|(name, value)| (name == key).then_some(value))
 }
 
+fn age_value(state: &str, age: u32) -> Option<String> {
+    let (name, values) = state.split_once('[')?;
+    let values = values.strip_suffix(']')?;
+    let mut found = false;
+    let result = values.split(',').map(|entry| {
+        if entry.starts_with("age=") {
+            found = true;
+            format!("age={age}")
+        } else {
+            entry.to_owned()
+        }
+    }).collect::<Vec<_>>();
+    found.then(|| format!("{name}[{}]", result.join(",")))
+}
+
 fn age_reset(state: &str) -> Option<String> {
     let (name, values) = state.split_once('[')?;
     let values = values.strip_suffix(']')?;
@@ -118,10 +133,12 @@ fn mature(host: &dyn ServerHost, level: LevelRef, pos: [i32; 3],
     }
     let raw = host.block_state_string(state)?;
     let current = prop(&raw, "age")?.parse::<u32>().ok()?;
-    let age = host.block_state_definition(state.block())?.into_iter()
-        .find(|field| field.name == "age")?;
-    let maximum = age.values.iter().filter_map(|value| value.parse::<u32>().ok()).max()?;
-    if maximum == 0 || current < maximum { return None; }
+    // The pinned ServerHost exposes block_state_id, but not the metadata
+    // definition API. Probe the next legal age to detect maturity, without
+    // assuming vanilla-only level caps or discarding modded properties.
+    if current >= 31 { return None; }
+    let next = age_value(&raw, current + 1)?;
+    if host.block_state_id(&next).is_some() { return None; }
 
     // Keep the original's CropBlock/Cocoa/NetherWart scope. Unknown modded
     // age-based blocks must live on farmland so that fire or decorative
@@ -307,7 +324,8 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
         }
     }
     if let Some(held) = held {
-        let _ = player.award_stat(host, StatType::Used, &held.item().id(host), 1);
+        let tool_id = held.item().id(host);
+        let _ = player.award_stat(host, StatType::Used, &tool_id, 1);
     }
     // The player-break path already applies normal item wear for column
     // plants. Only age-based crops need the explicit one-point hoe wear.
@@ -345,7 +363,7 @@ pub fn click(host: &mut dyn ServerHost, event: &mut RightClickBlockEvent<'_>) ->
     let Some(level) = player.level(host) else { return Flow::Continue; };
     if !level.in_place(host) { return Flow::Continue; }
 
-    let held = event.click.stack.as_ref();
+    let held = event.click.stack;
     // Clicking the top face with a matching sugar cane/cactus item is vanilla
     // placement, not harvesting. Preserve it as the original does.
     if event.click.hit.face == [0, 1, 0] {
@@ -410,6 +428,13 @@ mod tests {
         assert_eq!(exp_setting(Some("Cost".into())), "Cost");
         assert_eq!(exp_setting(Some("Reward".into())), "Reward");
         assert_eq!(exp_setting(None), "None");
+    }
+
+    #[test]
+    fn validates_next_age_without_losing_other_properties() {
+        assert_eq!(age_value("mod:plant[age=4,ropecrop=true]", 5),
+            Some("mod:plant[age=5,ropecrop=true]".into()));
+        assert_eq!(age_value("minecraft:stone", 1), None);
     }
 
     #[test]
