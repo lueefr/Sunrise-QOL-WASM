@@ -111,6 +111,7 @@ impl DragonDrops {
             // Preserve the world's entity-query order rather than the global
             // online-player order used by the former implementation.
             level.entities_in(host, min, max).unwrap_or_default()
+                .into_iter().map(|entity| entity.id()).collect()
         } else {
             Vec::new()
         };
