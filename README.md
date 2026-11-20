@@ -46,14 +46,14 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [x] Beacon bases can be placed by using mineral blocks on a beacon *(initial support; only empty positions, in-game validation pending)*
 - [x] Conduits and their surrounding blocks become easier to place *(initial support; frame blocks placed only in water or empty spaces, in-game validation pending)*
 - [x] Mob spawners can be disabled with a torch arrangement *(initial support; five surrounding torches, in-game validation pending)*
-- [x] Glass bottles can temporarily restore underwater air *(initial oxygen restoration on bottle use; original potion/fire-item rules pending, gameplay validation pending)*
+- [x] Glass bottles can temporarily restore underwater air *(oxygen restoration, water-potion restrictions and fire-offhand handling; gameplay validation pending)*
 - [x] The help command gains clearer, paginated output *(initial support: configurable colors and clickable command/page links; detailed command syntax uses vanilla)*
 - [x] Active conduit effects suppress nearby drowned spawning *(initial support: read-only spawn veto near Conduit Power players; in-game validation pending)*
 - [x] Placed paintings can be cycled without breaking them *(initial support: same-size placeable variants from the server data pack; painting entity is replaced without drops; gameplay validation pending)*
 - [x] Passengers can be removed from mounted entities more conveniently *(initial support: sneak + right-click, protects player passengers by default)*
 - [x] Fireworks can launch Elytra flight directly from the ground *(experimental client sequence: upward lift, vanilla glide request and rocket use; runtime validation pending)*
 - [x] Commands can apply enchantments above vanilla level limits *(partial: operators can run /enchant @s <enchantment> 6–255 on supported vanilla gear; standard lower levels and other selectors remain vanilla)*
-- [x] Bone meal supports additional plants and faster growth *(initial support: crouching matures common crops; nether wart, cactus, sugar cane, and vine growth; server-side only, in-game validation pending)*
+- [x] Bone meal supports additional plants and faster growth *(one-stage nether wart, registered modded age-based crops, cactus, sugar cane and vines; dispenser and gameplay parity pending)*
 - [x] Tamed companions follow their owners during command teleportation *(partial: capped scan of nearby owned, non-sitting, unleaded vanilla pets during /tp; no damage immunity, allay, or mounted-player parity yet)*
 - [ ] Metal equipment can be smelted back into materials
 - [x] Hoes can till and undo-till soil using the original six material-tier radii, crouching behavior, and durability costs *(Hoe Tweaks; crop break-speed replacement is now wired through the Sunrise break-speed event; some bush-block types and in-game parity remain unverified)*
