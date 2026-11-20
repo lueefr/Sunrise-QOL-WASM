@@ -136,6 +136,13 @@ const NUTRITIOUS_MILK: &[OptionSpec] = &[
     range("saturationLevelIncrease", "Saturation Restored", 10., 0., 20., 1.),
 ];
 
+const RIGHT_HARVEST: &[OptionSpec] = &[
+    toggle("rchRequireHoe", "Require Hoe", false),
+    toggle("rchHarvestInRadius", "Harvest in Radius", true),
+    choice("rchHungerLevel", "Hunger Level", "None", &["None", "Low", "Normal", "High"]),
+    choice("rchExperienceType", "Experience Type", "None", &["None", "Cost", "Reward"]),
+];
+
 const MENDING: &[OptionSpec] = &[
     toggle("mending_hotbar_only", "Repair Hotbar Only", false),
 ];
@@ -282,6 +289,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "tree_harvester", label: "Tree Harvesting", options: TREE, category: Category::Gathering },
     ModuleSpec { key: "leaf_decay", label: "Leaf Decay", options: LEAF_DECAY, category: Category::Gathering },
     ModuleSpec { key: "extended_bonemeal", label: "Extended Bone Meal", options: BONEMEAL, category: Category::Gathering },
+    ModuleSpec { key: "right_click_harvest", label: "Right Click Harvest", options: RIGHT_HARVEST, category: Category::Gathering },
     ModuleSpec { key: "double_doors", label: "Paired Doors", options: DOORS, category: Category::World },
     ModuleSpec { key: "automatic_doors", label: "Automatic Doors", options: AUTO_DOORS, category: Category::World },
     ModuleSpec { key: "zombie_proof_doors", label: "Zombie-Proof Doors", options: &[], category: Category::World },
