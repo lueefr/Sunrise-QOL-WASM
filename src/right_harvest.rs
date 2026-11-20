@@ -421,7 +421,7 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
             }
         }
     }
-    if let Some(original) = before_food {
+    if let Some(original) = before_food.filter(|_| !creative) {
         // Cancel the player-break route's automatic exhaustion and replace
         // it with the source mod's 0.008 * configured hunger modifier.
         let _ = player.set_exhaustion(host, original + 0.008 * hunger);
