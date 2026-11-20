@@ -3,6 +3,10 @@
 use crate::settings::{flag, on};
 use mod_api::{EntityInteractEvent, InteractionResult, ServerHost};
 
+fn has_passengers(count: usize) -> bool {
+    count != 0
+}
+
 fn dismountable(kind: &str, allow_players: bool) -> bool {
     allow_players || kind != "minecraft:player"
 }
@@ -13,7 +17,7 @@ pub fn interact(host: &mut dyn ServerHost, event: &mut EntityInteractEvent<'_>) 
     if player.is_secondary_use_active(host) != Some(true) { return None; }
     let vehicle = host.entity(u32::try_from(event.entity).ok()?)?;
     let passengers = vehicle.passengers(host)?;
-    if passengers.is_empty() { return None; }
+    if !has_passengers(passengers.len()) { return None; }
     let allow_players = flag(host, "dismount_players", false);
     for passenger in passengers {
         if !dismountable(&passenger.kind(host).map(|kind| kind.id(host)).unwrap_or_default(), allow_players) {
@@ -39,9 +43,10 @@ mod tests {
     }
 
     #[test]
-    fn original_consumes_interaction_when_passengers_present() {
-        // The actual entity-interaction path cannot be simulated without a live game.
-        assert_eq!(Some(InteractionResult::SuccessServer),
-                   Some(InteractionResult::SuccessServer));
+    fn original_consumes_any_nonempty_passenger_list() {
+        assert!(!has_passengers(0));
+        assert!(has_passengers(1));
+        assert!(has_passengers(9));
+        assert!(has_passengers(128));
     }
 }
