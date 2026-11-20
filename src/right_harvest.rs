@@ -177,15 +177,22 @@ fn replant_item(crop: &str) -> &str {
     }
 }
 
-fn subtract_replant(host: &dyn ServerHost, crop: &str, drops: &mut Vec<ItemStack>) {
-    let target = replant_item(crop);
-    let index = drops.iter().position(|stack| stack.item().id(host) == target)
-        .or_else(|| (!crop.starts_with("minecraft:")).then(|| {
-            drops.iter().position(|stack| {
-                let id = stack.item().id(host);
-                id.contains("seed") || id == crop
-            })
-        }).flatten());
+fn subtract_replant(host: &dyn ServerHost, crop: &str,
+    block: mod_api::BlockKey, drops: &mut Vec<ItemStack>) {
+    // Block.asItem (and Item.getBlock) are the public SDK equivalents for
+    // most crop clone-item relationships. They are more reliable than
+    // guessing by substring for a modded crop with custom seed names.
+    let target = if crop.starts_with("minecraft:") {
+        Some(replant_item(crop).to_owned())
+    } else {
+        host.block_item(block).map(|item| item.id(host))
+            .filter(|id| id != "minecraft:air")
+    };
+    let index = drops.iter().position(|stack| {
+        target.as_deref() == Some(stack.item().id(host).as_str())
+    }).or_else(|| drops.iter().position(|stack| {
+        host.item_block(stack.item()) == Some(block)
+    }));
     if let Some(index) = index {
         if drops[index].count() <= 1 {
             drops.remove(index);
@@ -341,7 +348,7 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
                     BlockUpdateFlags::NEIGHBORS | BlockUpdateFlags::CLIENTS) != Ok(true) {
                 return false;
             }
-            subtract_replant(host, &id, &mut drops);
+            subtract_replant(host, &id, state.block(), &mut drops);
             for stack in drops {
                 let _ = level.pop_resource(host, pos, stack);
             }
