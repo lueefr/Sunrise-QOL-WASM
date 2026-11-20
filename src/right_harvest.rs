@@ -5,9 +5,9 @@
 //! leaves the normal game to synchronize the authoritative block.
 use crate::settings::{flag, on, saved_value};
 use mod_api::{
-    BlockFace, BlockState, BlockUpdateFlags, ComponentId, EquipmentSlot, Flow, Hand,
-    Identifier, InteractionResult, ItemKey, ItemResource, ItemStack, LevelRef,
-    RightClickBlockEvent, ServerHost, StatType, Tag,
+    BlockFace, BlockState, BlockUpdateFlags, ClientHost, ComponentId, EquipmentSlot, Flow,
+    Hand, Host, Identifier, InteractionResult, ItemKey, ItemResource, ItemStack, LevelRef,
+    RightClickBlockEvent, ServerHost, SoundPlay, SoundSource, StatType, Tag, Text,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -24,7 +24,7 @@ enum Tier {
     High,
 }
 
-fn is_hoe(host: &dyn ServerHost, stack: &ItemStack) -> bool {
+fn is_hoe(host: &dyn Host, stack: &ItemStack) -> bool {
     let item = stack.item();
     tagged_item(host, item, "minecraft:hoes")
         || tagged_item(host, item, "rightclickharvest:low_tier_hoes")
@@ -38,14 +38,14 @@ fn is_hoe(host: &dyn ServerHost, stack: &ItemStack) -> bool {
             })
 }
 
-fn tagged_item(host: &dyn ServerHost, item: ItemKey, id: &str) -> bool {
+fn tagged_item(host: &dyn Host, item: ItemKey, id: &str) -> bool {
     let Ok(identifier) = Identifier::parse(id) else { return false; };
     host.tags().key(&identifier).is_some_and(|tag| {
         host.tags().is_in_tag(item, tag) == Some(true)
     })
 }
 
-fn tier(host: &dyn ServerHost, stack: &ItemStack) -> Tier {
+fn tier(host: &dyn Host, stack: &ItemStack) -> Tier {
     let item = stack.item();
     let id = item.id(host);
     if tagged_item(host, item, "rightclickharvest:high_tier_hoes")
@@ -128,7 +128,7 @@ fn vanilla_crop(id: &str) -> bool {
         | "minecraft:cocoa" | "minecraft:torchflower_crop")
 }
 
-fn mature(host: &dyn ServerHost, _level: LevelRef, _pos: [i32; 3],
+fn mature(host: &dyn Host, _level: LevelRef, _pos: [i32; 3],
     state: BlockState, id: &str) -> Option<(Crop, Option<BlockState>)> {
     if matches!(id, "minecraft:sugar_cane" | "minecraft:cactus") {
         return Some((Crop::Column, None));
@@ -234,6 +234,21 @@ fn pay_xp(host: &mut dyn ServerHost, player: mod_api::PlayerRef, cost: i32) -> b
         && player.set_total_experience(host, old.total - cost)
 }
 
+fn column_top(host: &dyn Host, level: LevelRef, pos: [i32; 3],
+    id: &str) -> Option<[i32; 3]> {
+    let mut bottom = pos;
+    while let Some(y) = bottom[1].checked_sub(1) {
+        let below = [bottom[0], y, bottom[2]];
+        if level.block(host, below).is_none_or(|block| block.id(host) != id) {
+            break;
+        }
+        bottom = below;
+    }
+    let y = bottom[1].checked_add(1)?;
+    let upper = [bottom[0], y, bottom[2]];
+    (level.block(host, upper)?.id(host) == id).then_some(upper)
+}
+
 fn wear_needed(kind: Crop, previous: Option<u32>, current: Option<u32>) -> i32 {
     match (kind, previous, current) {
         (Crop::Age, Some(_), _) => 1,
@@ -279,19 +294,7 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
     let position = match kind {
         Crop::Age => pos,
         Crop::Column => {
-            let mut bottom = pos;
-            while let Some(y) = bottom[1].checked_sub(1) {
-                let below = [bottom[0], y, bottom[2]];
-                if level.block(host, below).is_none_or(|block| block.id(host) != id) {
-                    break;
-                }
-                bottom = below;
-            }
-            let Some(y) = bottom[1].checked_add(1) else { return false; };
-            let upper = [bottom[0], y, bottom[2]];
-            if level.block(host, upper).is_none_or(|block| block.id(host) != id) {
-                return false;
-            }
+            let Some(upper) = column_top(host, level, pos, &id) else { return false; };
             upper
         }
     };
@@ -375,6 +378,68 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
         }
     }
     true
+}
+
+// The source mod plays the planting sound on the client during the click,
+// and warns once when a bare hand cannot harvest because a hoe is required.
+pub fn client_click(host: &mut dyn ClientHost, event: &mut RightClickBlockEvent<'_>) -> Flow {
+    if !host.playing() || !on(host, "right_click_harvest")
+        || event.click.hand != Hand::Main {
+        return Flow::Continue;
+    }
+    let Some(player) = host.local_player() else { return Flow::Continue; };
+    if player.is_spectator(host) != Some(false)
+        || player.is_secondary_use_active(host) == Some(true) {
+        return Flow::Continue;
+    }
+    let Some(level) = player.entity().level(host) else { return Flow::Continue; };
+    let pos = event.click.pos;
+    let Some(state) = level.block_state(host, pos) else { return Flow::Continue; };
+    let id = state.block().id(host);
+    if host.block_in_tag(state.block(), "rightclickharvest:blacklist") == Some(true)
+        || matches!(id.as_str(), "farmersdelight:tomatoes" | "farmersdelight:tomatoes_on_rope") {
+        return Flow::Continue;
+    }
+    let Some((kind, _)) = mature(host, level, pos, state, &id) else {
+        return Flow::Continue;
+    };
+    if kind == Crop::Column && column_top(host, level, pos, &id).is_none() {
+        return Flow::Continue;
+    }
+    if event.click.hit.face == [0, 1, 0] && kind == Crop::Column
+        && event.click.stack.is_some_and(|stack| stack.item().id(host) == id) {
+        return Flow::Continue;
+    }
+    let hoe = event.click.stack.is_some_and(|stack| is_hoe(host, stack));
+    let exempt = id == "minecraft:cocoa"
+        || host.block_in_tag(state.block(), "rightclickharvest:hoe_never_required") == Some(true);
+    if flag(host, "rchRequireHoe", false) && !hoe && !exempt {
+        if event.click.stack.is_none() && !flag(host, "rchHoeWarned", false) {
+            let _ = host.chat_line(Text::literal(
+                "Right Click Harvest requires a hoe to harvest this crop.                  Equip a hoe or disable Require Hoe in the mod configuration.                  This warning is shown only once.",
+            ));
+            let _ = crate::settings::save(host, "rchHoeWarned", "true");
+        }
+        return Flow::Continue;
+    }
+    let creative = player.is_creative(host) == Some(true);
+    if !creative && hunger_modifier(saved_value(host, "rchHungerLevel")) > 0.
+        && player.food(host).is_none_or(|food| food.level <= 0) {
+        return Flow::Continue;
+    }
+    if !creative && exp_setting(saved_value(host, "rchExperienceType")) == "Cost"
+        && player.experience(host).is_none_or(|exp| exp.level < 2) {
+        return Flow::Continue;
+    }
+    let sound = if id == "minecraft:nether_wart" {
+        "minecraft:item.nether_wart.plant"
+    } else {
+        "minecraft:item.crop.plant"
+    };
+    let origin = pos.map(|v| f64::from(v) + 0.5);
+    let _ = host.play_local_sound(&SoundPlay::at(sound, SoundSource::Blocks, origin), 0);
+    *event.cancellation_result = InteractionResult::Success;
+    Flow::Cancel
 }
 
 pub fn click(host: &mut dyn ServerHost, event: &mut RightClickBlockEvent<'_>) -> Flow {
