@@ -110,6 +110,16 @@ fn bypasses(source: &str) -> bool {
     matches!(source, "minecraft:generic_kill" | "minecraft:out_of_world")
 }
 
+fn protection_slot(selected: Option<usize>, slots: &[(u32, bool)]) -> Option<u32> {
+    let selected = u32::try_from(selected?).ok()?;
+    // The original defers to vanilla whenever either held item has the
+    // component, even when another protected stack occurs earlier in storage.
+    if slots.iter().any(|(slot, protected)| *protected && (*slot == selected || *slot == 40)) {
+        return None;
+    }
+    slots.iter().filter(|(_, protected)| *protected).map(|(slot, _)| *slot).min()
+}
+
 pub fn on_death(host: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
     if event.kind != "minecraft:player" || !on(host, "inventory_totem")
         || bypasses(event.source.damage_type) {
@@ -122,17 +132,20 @@ pub fn on_death(host: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> 
         return Flow::Continue;
     };
     let selected = player.selected_slot(host);
-    let Some((slot, mut stack, effects)) = player.inventory_slots(host)
-        .and_then(|slots| slots.into_iter().find_map(|(slot, stack)| {
-            // Vanilla checks the held stack first, using its actual component
-            // and effect executor; it must not be consumed a second time here.
-            if slot == 40 || usize::try_from(slot).ok() == selected {
-                return None;
-            }
-            let protection = ItemResource::of(&stack).value(host, &component)?;
-            let effects = decode(&protection)?;
-            Some((slot, stack, effects))
-        })) else { return Flow::Continue; };
+    let Some(slots) = player.inventory_slots(host) else { return Flow::Continue; };
+    let protected: Vec<_> = slots.iter().map(|(slot, stack)| {
+        (*slot, ItemResource::of(stack).value(host, &component).is_some())
+    }).collect();
+    let Some(slot) = protection_slot(selected, &protected) else { return Flow::Continue; };
+    let Some((_, mut stack)) = slots.into_iter().find(|(index, _)| *index == slot) else {
+        return Flow::Continue;
+    };
+    let Some(protection) = ItemResource::of(&stack).value(host, &component) else {
+        return Flow::Continue;
+    };
+    // Do not skip the original's first protected slot in favor of a later one
+    // merely because our partial effect executor cannot handle its component.
+    let Some(effects) = decode(&protection) else { return Flow::Continue; };
 
     // Resolve every potion effect before mutating either health or inventory.
     // No effect key or unsupported effect form may trigger a partial rescue.
@@ -182,6 +195,20 @@ pub fn on_death(host: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn held_protection_takes_priority_over_earlier_inventory_slots() {
+        assert_eq!(protection_slot(Some(5), &[(0, true), (5, true)]), None);
+        assert_eq!(protection_slot(Some(5), &[(0, true), (40, true)]), None);
+        assert_eq!(protection_slot(Some(5), &[(0, true), (5, false), (8, true)]), Some(0));
+        assert_eq!(protection_slot(None, &[(0, true)]), None);
+    }
+
+    #[test]
+    fn protection_selection_preserves_original_inventory_slot_order() {
+        assert_eq!(protection_slot(Some(5), &[(12, true), (3, true), (1, false)]), Some(3));
+        assert_eq!(protection_slot(Some(5), &[(0, false), (40, false)]), None);
+    }
 
     #[test]
     fn bypass_damage_does_not_consume_an_inventory_item() {

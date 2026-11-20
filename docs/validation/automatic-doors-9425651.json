@@ -1,0 +1,95 @@
+{
+  "sdk": "94256510f74e6843754e0a93fd9e4da7e45b1056",
+  "runtime": "nightly-2026-11-20-9425651",
+  "kind": "actual-game-control-observations",
+  "package_sha256": "e68434abc23a088a6ff2995d3fa8cb2fd8059290feba87b20336362f8f12809b",
+  "module": "automatic_doors",
+  "observations": [
+    {
+      "case": "disabled",
+      "passed": true,
+      "expected_open": false,
+      "states": [
+        "minecraft:oak_door[facing=north,half=lower,hinge=left,open=false,powered=false]",
+        "minecraft:oak_door[facing=north,half=upper,hinge=left,open=false,powered=false]"
+      ]
+    },
+    {
+      "case": "approach_opens_both_halves",
+      "passed": true,
+      "expected_open": true,
+      "states": [
+        "minecraft:oak_door[facing=north,half=lower,hinge=left,open=true,powered=false]",
+        "minecraft:oak_door[facing=north,half=upper,hinge=left,open=true,powered=false]"
+      ]
+    },
+    {
+      "case": "whole_second_delay_not_expired",
+      "passed": true,
+      "expected_open": true,
+      "states": [
+        "minecraft:oak_door[facing=north,half=lower,hinge=left,open=true,powered=false]",
+        "minecraft:oak_door[facing=north,half=upper,hinge=left,open=true,powered=false]"
+      ]
+    },
+    {
+      "case": "departure_closes_after_delay",
+      "passed": true,
+      "expected_open": false,
+      "states": [
+        "minecraft:oak_door[facing=north,half=lower,hinge=left,open=false,powered=false]",
+        "minecraft:oak_door[facing=north,half=upper,hinge=left,open=false,powered=false]"
+      ]
+    },
+    {
+      "case": "return_reopens",
+      "passed": true,
+      "expected_open": true,
+      "states": [
+        "minecraft:oak_door[facing=north,half=lower,hinge=left,open=true,powered=false]",
+        "minecraft:oak_door[facing=north,half=upper,hinge=left,open=true,powered=false]"
+      ]
+    },
+    {
+      "case": "nearby_player_prevents_closure",
+      "passed": true,
+      "expected_open": true,
+      "states": [
+        "minecraft:oak_door[facing=north,half=lower,hinge=left,open=true,powered=false]",
+        "minecraft:oak_door[facing=north,half=upper,hinge=left,open=true,powered=false]"
+      ]
+    },
+    {
+      "case": "departure_after_expiry_closes",
+      "passed": true,
+      "expected_open": false,
+      "states": [
+        "minecraft:oak_door[facing=north,half=lower,hinge=left,open=false,powered=false]",
+        "minecraft:oak_door[facing=north,half=upper,hinge=left,open=false,powered=false]"
+      ]
+    },
+    {
+      "case": "iron_excluded",
+      "passed": true,
+      "expected_open": false,
+      "states": [
+        "minecraft:iron_door[facing=north,half=lower,hinge=left,open=false,powered=false]",
+        "minecraft:iron_door[facing=north,half=upper,hinge=left,open=false,powered=false]"
+      ]
+    },
+    {
+      "case": "iron_included",
+      "passed": true,
+      "expected_open": true,
+      "states": [
+        "minecraft:iron_door[facing=north,half=lower,hinge=left,open=true,powered=false]",
+        "minecraft:iron_door[facing=north,half=upper,hinge=left,open=true,powered=false]"
+      ]
+    }
+  ],
+  "fully_certified_one_to_one": false,
+  "limitations": [
+    "Single integrated-server player; no multiplayer differential reference execution",
+    "Does not verify redstone, custom doors, all entity query boundaries or all modules"
+  ]
+}

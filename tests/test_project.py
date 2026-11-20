@@ -266,7 +266,7 @@ class ProjectTests(unittest.TestCase):
                         'Tax Free Levels', 'What Durability', 'Unlimited Enchantments'):
             self.assertIn(feature, docs)
         self.assertIn('NOT implemented', docs)
-        self.assertIn('not been compiled', docs)
+        self.assertIn('gameplay certification remains incomplete', docs)
 
     def test_english_only_ui(self):
         source = (ROOT / 'src/gui.rs').read_text()

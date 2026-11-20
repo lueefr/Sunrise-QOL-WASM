@@ -1,9 +1,9 @@
-# Feature parity matrix — Sunrise QOL 0.4.0
+# Feature parity matrix — Sunrise QOL 1.1.3
 
 There are 25 entries in the inherited suite catalog. 24 now have **source paths**,
 including deliberately scoped or incomplete ones, and one has no implementation.
 The separate Leaf Decay module and the additional Sunrise modules are not counted among those 25. **Zero modules have
-been certified as 1:1 in-game.** The source has not been compiled in this environment.
+been certified as 1:1 in-game.** Local review compiled the WASM package and ran native helper tests; gameplay certification remains incomplete.
 
 **A feature appearing in this matrix or the Suite Modules screen is NOT proof of runtime compatibility.** See [UPSTREAM-AUDIT.md](UPSTREAM-AUDIT.md) for direct comparisons against Serilum's 26.3.0 Java sources.
 Missing ABI exports in the bundled Sunrise `sunrise-wasm-std.wasm` will cause the
@@ -16,7 +16,7 @@ installer to stop before replacing the installed mod.
 | Softer Hay Bales | Initial | Registered `BlockPart::fall_on` for hay: zero damage multiplier for player landings only; initial toggle now refreshed at server-start, later config edits propagate on server tick. Unverified in gameplay, and per-tick configuration latency can still differ |
 | Nutritious Milk | Partial | Player-only finish event restores hunger and fractional saturation directly. Matching modded milk IDs supported; actual drink-path and multiplayer checks remain |
 | Zombie-Proof Doors | Partial | Covers Zombie subclasses but not zombified piglins. Removes BreakDoor goal without changing normal door-opening navigation. A direct setCanBreakDoors flag, live toggles and goal reconstruction remain unresolved |
-| Automatic Doors | Partial | Rewritten per-player-tick scan, integer-second timer, neighboring closure and sneaking checks from upstream 26.3.0; bounded player/tracked-door limits and gameplay timing still differ |
+| Automatic Doors | Partial | Rewritten per-player-tick scan, integer-second timer, neighboring closure and sneaking checks from upstream 26.3.0; non-upstream player/task caps removed; closing uses real entity AABBs. Nine real-client integrated-server scenarios pass (see docs/validation); original world/player tick ordering, multiplayer and differential gameplay timing still require verification |
 | Beacon Placement | Initial | Right-click with supported vanilla mineral blocks fills empty pyramid positions and spends inventory; optional base recovery; no replacement of occupied blocks or parity for modded minerals |
 | Conduit Placement | Initial | Right-click conduit with prismarine blocks builds a bounded 42-block frame in water or air; consumes held items; frame recovery configurable; no right-click-water placement or occupied-block replacement |
 | Spawner Control | Initial | A read-only spawn position veto for normal spawner blocks surrounded by 5 torches (N/E/S/W/top). Does not reset the spawner's internal delay; other spawn sources unaffected |
@@ -29,8 +29,8 @@ installer to stop before replacing the installed mod.
 | Followers Teleport Too | Partial | Before /tp command, captures at most 32 nearby matching Owner UUID pets (not sitting or leashed); after a successful player teleport, attempts to move them to the target. No allays, mount remounting, temporary damage immunity or guaranteed interdimensional parity |
 | Command Help | Partial | Per-player permitted root commands, configurable colors, clickable command suggestions and page navigation; falls back to vanilla for detailed syntax because the API does not expose Brigadier's usage tree or subcommand formatting |
 | Drowned Prevention | Initial | Read-only drowned spawn veto near online players with Conduit Power in matching level; configurable horizontal radius 0–400. Gameplay validation pending |
-| Hoe Tweaks | Partial | Tiers and crouching match 26.3.0 source; pumpkin/melon speed uses the public break-speed hook; arbitrary BushBlock detection, and click/placement side effects still need SDK/gameplay validation |\n| Inventory Totem | Partial | Honors the `minecraft:death_protection` item component, including modded/data-pack items with empty or supported clear/apply-effects payloads; increments the used-item stat and rolls back consumption on failed health write. Unsupported death effects, original vanilla advancement trigger, visual activation and bypass damage-tag matching remain unverified |
-| Inventory Totem | Partial | Uses the `minecraft:death_protection` item component for inventory items and supported vanilla survival effects, including part of the activation item-stat handling. The original activates on actual incoming lethal damage with complete effect playback, animation and advancement. Unsupported modded effects and original event ordering are not exposed by the current port, so 1:1 is not certified |
+| Hoe Tweaks | Partial | Tiers and crouching match 26.3.0 source; pumpkin/melon speed uses the public break-speed hook; arbitrary BushBlock detection, and click/placement side effects still need SDK/gameplay validation |
+| Inventory Totem | Partial | Preserves held-item precedence and first inventory protection slot, including modded death-protection components; supported clear/apply effects and used-item stat are handled. Arbitrary effects, activation animation, vibration, bypass damage tags, advancement and event ordering still prevent 1:1 |
 | Inventory Mending | Partial | One random eligible inventory item per XP event; guards equipped damaged Mending; exact orb timing, per-player RNG, and custom repair-with-XP effects are not exposed |
 | Double Doors | Partial | Manual clicks synchronize paired blocks in the same server interaction (untested); redstone/AI still defer, and remote client prediction is missing. See [DOORS-SYNC.md](DOORS-SYNC.md) |
 | Infinite Trading | Partial | Completed trade reset now also respects the original configurable minimum villager level (1–5) using Sunrise's merchant API. Still missing original pre-trade stock checks, multiplier, modded traders and recipe-aware trade-loop prevention |
@@ -50,7 +50,7 @@ installer to stop before replacing the installed mod.
 | First Join Message | Partial | Configurable text with %s player-name replacement, 16 formatting colors and independent first-join broadcast; world-local first-join marker. Original spawn event timing and multiplayer broadcasts need real-game checks |
 | Welcome Message | Partial | All three default messages, independent text/colors/HTTP URL click options, preceding blank line and dedicated-server-only switch from original; real lifecycle, UI input and integrated-server checks pending |
 | Vein Miner | Initial | Bounded connected search; tool costs and player block events not fully ported |
-| Tree Harvester | Partial | Bounded tree removal. Harvested logs trigger the shared Leaf Decay event/queue; fast decay requires the Leaf Decay module enabled and uses its own speed, per-tick cap and matching settings. Original replant/durability timing is not 1:1 |
+| Tree Harvester | Partial | Excludes stripped logs, groups mangrove roots with mangrove logs, separates mushroom and Nether-tree options, uses species-appropriate canopies and permits empty hands when mustHoldAxe is disabled. Bounded removal, player-placed log tracking, replanting, break-time synchronization and durability timing still differ. Shared Leaf Decay must be enabled for fast decay |
 | Leaf Decay | Partial | Shared Leaves Be Gone / Leaves Us In Peace path: bounded queued decay, match-leaf and match-log options and per-tick work limits; Tree Harvester uses this same module instead of duplicating fast-decay behavior. The public WASM host does not expose vanilla `LeavesBlock.updateDistance` for the precise original scheduling, so true 1:1 timing and every custom species remain unverified |
 | Ench. Level LangPatch | Partial | Formats missing enchantment/potion tooltip translation levels; does not modify global language storage |
 | Tax Free Levels | Partial (anvil only) | One-level rename and existing-result limit; original flattened XP cost is NOT implemented |
@@ -99,4 +99,4 @@ No Sound Controller / Individual Sounds was re-added.
 - Enchantment Level Language Patch: https://github.com/teddyxlandlee/enchlevel-langpatch
 - Tax Free Levels: https://github.com/Fourmisain/TaxFreeLevels
 - Unlimited Enchantments: https://github.com/SayNooty/Unlimited-Enchantments
-- Sunrise pinned API: https://github.com/sunrise-org/sunrise/tree/2d8126336e579777eabf9b2fd8b3d476236a04f2
+- Sunrise pinned API: https://github.com/sunrise-org/sunrise/tree/94256510f74e6843754e0a93fd9e4da7e45b1056

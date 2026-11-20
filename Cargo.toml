@@ -8,7 +8,7 @@ publish = false
 crate-type = ["cdylib"]
 
 [package.metadata.sunrise]
-sdk = "520fc4882de3abb8ecd8b98293f4d7263bc88181"
+sdk = "94256510f74e6843754e0a93fd9e4da7e45b1056"
 
 [dependencies]
 sunrise-mod-api = { path = ".sunrise/sdk/api/crates/sunrise-mod-api" }

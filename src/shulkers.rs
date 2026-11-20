@@ -45,7 +45,7 @@ impl Shulkers {
                 && tags.iter().any(|tag| tag == "collective.fromspawner") { return; }
         }
         let (Some(level), Some(position)) = (entity.level(host), entity.position(host)) else { return; };
-        let Ok(id) = u32::try_from(event.entity) else { return; };
+        let id = event.entity;
         let Some(dimension) = level.dimension().id(host) else { return; };
         let mut deaths = match self.deaths.lock() { Ok(guard) => guard, Err(_) => return };
         if deaths.len() >= MAX_PENDING { deaths.pop_front(); }

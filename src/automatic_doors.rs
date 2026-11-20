@@ -7,9 +7,6 @@ use mod_api::{
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
 
-const MAX_TRACKED: usize = 256;
-const MAX_PLAYERS: usize = 24;
-const MAX_CLOSES: usize = 32;
 const NEAR_SQUARED: f64 = 9.0;
 
 #[derive(Clone)]
@@ -25,6 +22,7 @@ struct Nearby {
     dimension: String,
     pos: [f64; 3],
     sneaking: bool,
+    bounds: [[f64; 3]; 2],
 }
 
 #[derive(Default)]
@@ -67,12 +65,15 @@ fn door_name(state: &str, iron: bool) -> Option<&str> {
     Some(name)
 }
 
-fn close_enough(a: [f64; 3], block: [i32; 3]) -> bool {
+fn close_enough(a: [f64; 3], bounds: [[f64; 3]; 2], block: [i32; 3]) -> bool {
     // The original checks an AABB around the doorway, then compares the
     // player's integer BlockPos at a strict radius of three blocks.
-    let inside = (a[0] - f64::from(block[0])).abs() <= 2.0
-        && (a[1] - f64::from(block[1])).abs() <= 1.0
-        && (a[2] - f64::from(block[2])).abs() <= 2.0;
+    // Entity queries intersect the player's full box, not just their feet.
+    let radius = [2.0, 1.0, 2.0];
+    let inside = (0..3).all(|axis| {
+        bounds[1][axis] > f64::from(block[axis]) - radius[axis]
+            && bounds[0][axis] < f64::from(block[axis]) + radius[axis]
+    });
     let pos = a.map(|axis| axis.floor() as i32);
     let dx = f64::from(pos[0] - block[0]);
     let dy = f64::from(pos[1] - block[1]);
@@ -136,9 +137,10 @@ impl AutomaticDoors {
             let level = player.level(host)?;
             let dimension = level.dimension().id(host)?;
             let pos = player.entity().position(host)?;
+            let bounds = player.entity().bounding_box(host)?;
             if !pos.iter().all(|axis| axis.is_finite()) { return None; }
             let sneaking = player.is_secondary_use_active(host).unwrap_or(false);
-            Some(Nearby { dimension, pos, sneaking })
+            Some(Nearby { dimension, pos, sneaking, bounds })
         }).collect()
     }
 
@@ -146,13 +148,13 @@ impl AutomaticDoors {
         let skip_sneak = flag(host, "auto_prevent_sneak", true);
         let due = self.opened.lock().ok().map(|list| {
             list.iter().filter(|entry| entry.due <= now)
-                .take(MAX_CLOSES).cloned().collect::<Vec<_>>()
+                .cloned().collect::<Vec<_>>()
         }).unwrap_or_default();
         for entry in due {
             let upper = [entry.pos[0], entry.pos[1].saturating_add(1), entry.pos[2]];
             if players.iter().any(|player| player.dimension == entry.dimension
                 && (!skip_sneak || !player.sneaking)
-                && close_enough(player.pos, upper)) {
+                && close_enough(player.pos, player.bounds, upper)) {
                 continue;
             }
             let Some(level) = host.level(&entry.dimension) else { continue; };
@@ -193,8 +195,7 @@ impl AutomaticDoors {
             _ => return,
         };
         if self.opened.lock().ok().is_none_or(|list| {
-            list.len() >= MAX_TRACKED
-                || list.iter().any(|item| item.dimension == dimension && item.pos == lower)
+            list.iter().any(|item| item.dimension == dimension && item.pos == lower)
         }) {
             return;
         }
@@ -214,7 +215,7 @@ impl AutomaticDoors {
         let prevent_sneak = flag(host, "auto_prevent_sneak", true);
         // Original onPlayerTick: the 3x3 X/Z square on the block layer
         // directly above the player's feet, not a 3x3x3 proximity sphere.
-        for player in players.iter().take(MAX_PLAYERS) {
+        for player in players {
             if prevent_sneak && player.sneaking { continue; }
             let Some(level) = host.level(&player.dimension) else { continue; };
             if !level.in_place(host) { continue; }
@@ -280,7 +281,18 @@ mod tests {
         assert_eq!(delay_ticks(10000.), 200);
         assert_eq!(delay_ticks(0.), 0);
         assert_eq!(delay_ticks(500.), 0);
-        assert!(close_enough([1.5, 64., 1.5], [1, 64, 1]));
-        assert!(!close_enough([10.5, 64., 10.5], [1, 64, 1]));
+        assert!(close_enough([1.5, 64., 1.5], [[1.2, 64., 1.2], [1.8, 65.8, 1.8]], [1, 64, 1]));
+        assert!(!close_enough([10.5, 64., 10.5], [[10.2, 64., 10.2], [10.8, 65.8, 10.8]], [1, 64, 1]));
+    }
+
+    #[test]
+    fn closure_checks_box_overlap_and_strict_integer_distance() {
+        let door = [0, 65, 0];
+        // Feet are outside the query box, but the player's body intersects it.
+        assert!(close_enough([2.2, 64., 0.5], [[1.9, 64., 0.2], [2.5, 65.8, 0.8]], door));
+        // Merely touching the query boundary is not an AABB intersection.
+        assert!(!close_enough([2.3, 64., 0.5], [[2., 64., 0.2], [2.6, 65.8, 0.8]], door));
+        // AABB overlap alone is insufficient: integer BlockPos distance must be < 3.
+        assert!(!close_enough([2.2, 64., 2.2], [[1.9, 64., 1.9], [2.5, 65.8, 2.5]], door));
     }
 }

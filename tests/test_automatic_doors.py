@@ -13,22 +13,22 @@ class AutomaticDoorTests(unittest.TestCase):
         cls.gui = (ROOT / "src/gui.rs").read_text()
         cls.hooks = (ROOT / "src/lib.rs").read_text()
 
-    def test_authoritative_server_and_bounded_work(self):
+    def test_authoritative_server_does_not_drop_players_or_door_tasks(self):
         self.assertIn("fn tick(&self, host: &mut dyn ServerHost", self.src)
         self.assertIn("ServerTickPhase::ServerTickEnd { world_running: true", self.src)
         self.assertIn("host.players().server_players()", self.src)
-        self.assertIn("MAX_TRACKED: usize = 256", self.src)
-        self.assertIn("MAX_PLAYERS: usize = 24", self.src)
-        self.assertIn("MAX_CLOSES: usize = 32", self.src)
+        for limit in ("MAX_TRACKED", "MAX_PLAYERS", "MAX_CLOSES"):
+            self.assertNotIn(limit, self.src)
         self.assertNotIn("SCAN_EVERY", self.src)
-        self.assertIn("for player in players.iter().take(MAX_PLAYERS)", self.src)
+        self.assertIn("for player in players {", self.src)
+        self.assertIn("player.entity().bounding_box(host)?", self.src)
         self.assertIn("self.automatic_doors.reset()", self.hooks)
 
     def test_closes_adjacent_doors_like_original(self):
         self.assertIn("struct Opened", self.src)
         self.assertIn("list.push(Opened {", self.src)
         self.assertIn("self.close_due(host, &players, now, iron)", self.src)
-        self.assertIn("close_enough(player.pos, upper)", self.src)
+        self.assertIn("close_enough(player.pos, player.bounds, upper)", self.src)
         self.assertIn("&& (!skip_sneak || !player.sneaking)", self.src)
         self.assertIn("for dx in -1..=1", self.src)
         self.assertIn("for dz in -1..=1", self.src)
