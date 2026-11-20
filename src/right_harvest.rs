@@ -263,7 +263,11 @@ fn pay_xp(host: &mut dyn ServerHost, player: mod_api::PlayerRef, cost: i32) -> b
         new_level -= 1;
         new_points += xp_needed(new_level);
     }
-    if new_points < 0 || old.total < cost { return false; }
+    if new_points < 0 || old.total < cost {
+        return player.set_experience_levels(host, 0)
+            && player.set_experience_points(host, 0)
+            && player.set_total_experience(host, 0);
+    }
     // Three setters replace one vanilla giveExperiencePoints(-N); if any
     // part cannot write, do not initiate a crop harvest.
     player.set_experience_levels(host, new_level)
@@ -296,7 +300,7 @@ fn wear_needed(kind: Crop, previous: Option<u32>, current: Option<u32>) -> i32 {
 
 fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
     player: mod_api::PlayerRef, pos: [i32; 3], original: [i32; 3],
-    held: Option<&ItemStack>, hoe: bool, creative: bool,
+    held: Option<&ItemStack>, hoe: bool, creative: bool, infinite: bool,
     hunger: f32, xp: &str) -> bool {
     let Some(state) = level.block_state(host, pos) else { return false; };
     let id = state.block().id(host);
@@ -327,11 +331,11 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
             return false;
         }
     }
-    if !creative && hunger > 0.0 &&
+    if !infinite && hunger > 0.0 &&
         player.food(host).is_none_or(|food| food.level <= 0) {
         return false;
     }
-    if !creative && xp == "Cost" &&
+    if !infinite && xp == "Cost" &&
         player.experience(host).is_none_or(|exp| exp.level < 2) {
         return false;
     }
@@ -356,8 +360,8 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
     // hunger multiplier, so measure changes before applying any difference.
     let before_food = (kind == Crop::Column).then(|| player.food(host))
         .flatten().map(|food| food.exhaustion);
-    let before_damage = held.filter(|_| hoe && !creative).map(|stack| stack.damage());
-    let selected = if hoe && !creative { player.selected_slot(host) } else { None };
+    let before_damage = held.filter(|_| hoe).map(|stack| stack.damage());
+    let selected = if hoe { player.selected_slot(host) } else { None };
     let held_id = held.map(|stack| stack.item().id(host));
 
     match kind {
@@ -402,7 +406,7 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
         let tool_id = held.item().id(host);
         let _ = player.award_stat(host, StatType::Used, &tool_id, 1);
     }
-    if hoe && !creative {
+    if hoe {
         let current = if kind == Crop::Column {
             player.inventory_slots(host).and_then(|slots| slots.into_iter()
                 .find(|(slot, stack)| {
@@ -417,26 +421,26 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
             }
         }
     }
-    if !creative {
-        if let Some(original) = before_food {
-            // Cancel the player-break route's automatic exhaustion and
-            // replace it with the source mod's 0.008 * level modifier.
-            let _ = player.set_exhaustion(host, original + 0.008 * hunger);
-        } else if hunger > 0.0 {
-            let _ = player.add_exhaustion(host, 0.008 * hunger);
-        }
+    if let Some(original) = before_food {
+        // Cancel the player-break route's automatic exhaustion and replace
+        // it with the source mod's 0.008 * configured hunger modifier.
+        let _ = player.set_exhaustion(host, original + 0.008 * hunger);
+    } else if hunger > 0.0 {
+        // The native causeFoodExhaustion path skips invulnerable players,
+        // exactly like the original Java call in creative/spectator mode.
+        let _ = player.add_exhaustion(host, 0.008 * hunger);
     }
-    if !creative {
-        match xp {
-            "Cost" => { let cost = xp_points(host, level) as i32; let _ = pay_xp(host, player, cost); }
-            "Reward" => {
-                let [x, y, z] = player.entity().position(host)
-                    .unwrap_or_else(|| pos.map(|v| f64::from(v) + 0.5));
-                let points = xp_points(host, level);
-                let _ = level.award_experience(host, x, y, z, points);
-            }
-            _ => {}
+    // The original awards/removes XP even for creative mode. Infinite
+    // materials bypass the initial XP gate, not the final XP operation.
+    match xp {
+        "Cost" => { let cost = xp_points(host, level) as i32; let _ = pay_xp(host, player, cost); }
+        "Reward" => {
+            let [x, y, z] = player.entity().position(host)
+                .unwrap_or_else(|| pos.map(|v| f64::from(v) + 0.5));
+            let points = xp_points(host, level);
+            let _ = level.award_experience(host, x, y, z, points);
         }
+        _ => {}
     }
     true
 }
@@ -482,7 +486,8 @@ pub fn client_click(host: &mut dyn ClientHost, event: &mut RightClickBlockEvent<
         return Flow::Continue;
     }
     let creative = player.is_creative(host) == Some(true);
-    if !creative && hunger_modifier(saved_value(host, "rchHungerLevel")) > 0.
+    if player.is_creative(host) != Some(true)
+        && hunger_modifier(saved_value(host, "rchHungerLevel")) > 0.
         && player.food(host).is_none_or(|food| food.level <= 0) {
         return Flow::Continue;
     }
@@ -564,9 +569,10 @@ pub fn click(host: &mut dyn ServerHost, event: &mut RightClickBlockEvent<'_>) ->
     let hunger = hunger_modifier(saved_value(host, "rchHungerLevel"));
     let xp = exp_setting(saved_value(host, "rchExperienceType"));
     let creative = player.is_creative(host) == Some(true);
+    let infinite = player.has_infinite_materials(host) == Some(true);
     let mut harvested = 0;
     for pos in positions {
-        if harvest_at(host, level, player, pos, center, held, hoe, creative, hunger, xp) {
+        if harvest_at(host, level, player, pos, center, held, hoe, creative, infinite, hunger, xp) {
             harvested += 1;
         }
     }
