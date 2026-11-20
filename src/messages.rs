@@ -3,8 +3,9 @@
 use crate::settings::{flag, on, saved_value};
 use mod_api::{
     ConfigFileError, ConfigPath, PlayerLoggedInEvent, ServerHost, ServerStartedEvent,
-    Text, TextClick,
+    Text,
 };
+use mod_api::text::TextClick;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 static DEDICATED: AtomicBool = AtomicBool::new(false);
