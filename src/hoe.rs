@@ -12,10 +12,13 @@ fn melon_or_pumpkin(id: &str) -> bool {
 }
 
 fn apply_speed(host: &dyn Host, player: PlayerRef, event: &mut PlayerBreakSpeedEvent) {
-    if !on(host, "hoe_tweaks") || player.entity().id() != event.player
-        || !melon_or_pumpkin(&event.state.block().id(host)) {
+    if !on(host, "hoe_tweaks") || player.entity().id() != event.player {
         return;
     }
+    let Some(level) = player.entity().level(host) else { return; };
+    if !level.block(host, event.pos).is_some_and(|block| {
+        melon_or_pumpkin(&block.id(host))
+    }) { return; }
     let Some(selected) = player.selected_slot(host) else { return; };
     let has_hoe = player.inventory_slots(host).is_some_and(|slots| slots.into_iter().any(
         |(slot, stack)| usize::try_from(slot).ok() == Some(selected)
