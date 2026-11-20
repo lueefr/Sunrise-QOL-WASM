@@ -7,7 +7,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools" / "sandbox"))
-from check import verify
+from check import verify, verify_harvest_tags, HARVEST_TAGS
 
 
 def integer(number):
@@ -52,6 +52,23 @@ class SandboxTests(unittest.TestCase):
     def guest(self, source):
         with ZipFile(self.package, "w") as archive:
             archive.writestr("mod.wasm", source)
+
+    def test_original_harvest_tags_are_in_the_package(self):
+        prefix = "data/rightclickharvest/tags/"
+        with ZipFile(self.package, "w") as archive:
+            archive.writestr("mod.wasm", exports("_Rtag"))
+            for name in HARVEST_TAGS:
+                path = ROOT / (prefix + name)
+                archive.write(path, prefix + name)
+        report = verify_harvest_tags(self.package)
+        self.assertTrue(report["harvest_tags_passed"], report)
+        self.assertEqual(report["harvest_tag_files"], 6)
+        with ZipFile(self.package, "a") as archive:
+            archive.writestr(prefix + "item/low_tier_hoes.json", b'{}')
+        # A duplicate zip member or modified source must not pass silently.
+        changed = verify_harvest_tags(self.package)
+        self.assertFalse(changed["harvest_tags_passed"])
+        self.assertIn(prefix + "item/low_tier_hoes.json", changed["modified_harvest_tags"])
 
     def test_matching_rust_symbol(self):
         self.guest(imports("_Rexample"))
