@@ -8,9 +8,6 @@ use mod_api::{
 use std::collections::VecDeque;
 use std::sync::{Mutex, atomic::{AtomicU64, Ordering}};
 
-const CAP: usize = 1024;
-const PER_TICK: usize = 64;
-
 #[derive(Clone)]
 struct Death {
     id: u32,
@@ -51,7 +48,6 @@ impl WitherSkulls {
         let (Some(level), Some(pos)) = (entity.level(host), entity.position(host)) else { return; };
         let Some(dimension) = level.dimension().id(host) else { return; };
         if let Ok(mut deaths) = self.deaths.lock() {
-            if deaths.len() >= CAP { deaths.pop_front(); }
             deaths.push_back(Death {
                 id: event.entity,
                 dimension, pos, time: self.time.load(Ordering::Relaxed),
@@ -66,10 +62,9 @@ impl WitherSkulls {
         });
         let Some(death) = death else { return; };
         if !on(host, "always_wither_skull") { return; }
-        // A death during the current tick must wait for the *next* tick end.
+        // A death during the current tick must wait through the next tick end.
         let due = self.time.load(Ordering::Relaxed).saturating_add(2);
         if let Ok(mut pending) = self.pending.lock() {
-            if pending.len() >= CAP { pending.pop_front(); }
             pending.push_back(Pending { dimension: death.dimension, pos: death.pos, due });
         }
     }
@@ -86,10 +81,15 @@ impl WitherSkulls {
         if let Ok(mut deaths) = self.deaths.lock() {
             deaths.retain(|death| now.saturating_sub(death.time) < 100);
         }
-        for _ in 0..PER_TICK {
+        // The original runs one queued task per death. Never discard a death
+        // merely because a crowded grinder produced more than 64 in one tick.
+        loop {
             let task = self.pending.lock().ok().and_then(|mut pending| {
-                let index = pending.iter().position(|task| task.due <= now)?;
-                pending.remove(index)
+                if pending.front().is_some_and(|task| task.due <= now) {
+                    pending.pop_front()
+                } else {
+                    None
+                }
             });
             let Some(task) = task else { break; };
             let Some(level) = host.level(&task.dimension) else { continue; };

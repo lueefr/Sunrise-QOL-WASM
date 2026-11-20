@@ -1,9 +1,9 @@
-//! Dragon Drops Elytra: Sunrise's dragon follows its own 200-tick death path.
-//! Track dragon residency and use the vanilla entity-die game event rather than mob loot.
+//! Dragon Drops Elytra uses the dragon-specific death game event after the
+//! vanilla death animation, not the ordinary mob loot pipeline.
 use crate::settings::on;
 use mod_api::{
-    EntityJoinLevelEvent, EntityLeaveLevelEvent, Identifier, ItemStack, ServerHost,
-    ServerTickEvent, ServerTickPhase, Text, VanillaGameEventEvent,
+    EntityJoinLevelEvent, EntityLeaveLevelEvent, Identifier, ItemStack, LivingDamagePostEvent,
+    ServerHost, ServerTickEvent, ServerTickPhase, Text, VanillaGameEventEvent,
 };
 use mod_api::text::TextContent;
 use std::collections::VecDeque;
@@ -17,6 +17,7 @@ struct Dragon {
     id: u32,
     dimension: String,
     left: Option<u64>,
+    cause: Option<i32>,
 }
 
 #[derive(Default)]
@@ -29,8 +30,19 @@ fn death_event(kind: &str, entity: Option<u32>, tracked: u32) -> bool {
     kind == "minecraft:entity_die" && entity == Some(tracked)
 }
 
-fn inside(player: [f64; 3], death: [f64; 3]) -> bool {
-    player.iter().zip(death).all(|(a, b)| (*a - b).abs() <= 30.)
+fn bounds(pos: [f64; 3]) -> ([f64; 3], [f64; 3]) {
+    let origin = pos.map(f64::floor);
+    ([origin[0] - 30., origin[1] - 30., origin[2] - 30.],
+     [origin[0] + 30., origin[1] + 30., origin[2] + 30.])
+}
+
+fn recipient(source: Option<i32>, players: &[u32], nearby: &[u32]) -> Option<u32> {
+    match source.filter(|id| *id != 0) {
+        // The original does not use nearby fallback when a non-player dealt
+        // the final blow. A distant player who dealt it still takes priority.
+        Some(id) => u32::try_from(id).ok().filter(|id| players.contains(id)),
+        None => nearby.iter().copied().find(|id| players.contains(id)),
+    }
 }
 
 fn translate(key: &str, fallback: &str, color: &str) -> Text {
@@ -52,7 +64,22 @@ impl DragonDrops {
                 id: event.entity,
                 dimension: event.dimension.to_owned(),
                 left: None,
+                cause: None,
             });
+        }
+    }
+
+    pub fn damage(&self, event: &LivingDamagePostEvent<'_>) {
+        if event.kind != "minecraft:ender_dragon" || event.container.health_damage() <= 0. {
+            return;
+        }
+        let Ok(id) = u32::try_from(event.entity) else { return; };
+        if let Ok(mut dragons) = self.dragons.lock() {
+            if let Some(dragon) = dragons.iter_mut().find(|dragon| dragon.id == id) {
+                // A later damaging hit replaces the preceding source, including
+                // an environmental (zero-causer) killing blow.
+                dragon.cause = Some(event.source.causing);
+            }
         }
     }
 
@@ -76,30 +103,39 @@ impl DragonDrops {
             })?;
             dragons.remove(index)
         });
-        if dragon.is_none() || !on(host, "dragon_drops_elytra") { return; }
+        let Some(dragon) = dragon else { return; };
+        if !on(host, "dragon_drops_elytra") { return; }
         let Some(level) = host.level(event.dimension) else { return; };
-        // The special dragon event has no killing-damage source. The original
-        // prefers that source and otherwise takes the first nearby player.
-        let player = host.players().server_players().into_iter().find(|player| {
-            player.level(host).and_then(|l| l.dimension().id(host))
-                .as_deref() == Some(event.dimension)
-                && player.entity().position(host).is_some_and(|pos| inside(pos, event.pos))
-        });
-        let at = player.as_ref().and_then(|player| player.entity().position(host))
+        let (min, max) = bounds(event.pos);
+        let nearby = if dragon.cause.unwrap_or(0) == 0 {
+            // Preserve the world's entity-query order rather than the global
+            // online-player order used by the former implementation.
+            level.entities_in(host, min, max).unwrap_or_default()
+        } else {
+            Vec::new()
+        };
+        let players = host.players().server_players();
+        let player_ids: Vec<u32> = players.iter().map(|player| player.entity().id()).collect();
+        let target = recipient(dragon.cause, &player_ids, &nearby);
+        let player = players.iter().find(|player| Some(player.entity().id()) == target);
+        let at = player.and_then(|player| player.entity().position(host))
             .unwrap_or(event.pos);
         let at = [at[0].floor(), at[1].floor() + 1., at[2].floor()];
-        let Some(id) = Identifier::parse("minecraft:elytra").ok() else { return; };
-        let Some(item) = host.item_key(&id) else { return; };
-        let Some(stack) = ItemStack::new(item, 1) else { return; };
-        if !matches!(level.spawn_item(host, at[0], at[1], at[2], stack, 0), Ok(Some(_))) {
-            return;
-        }
+
+        // The Java source broadcasts before attempting the item spawn.
         let broadcast = translate("collective.dragondropselytra.message.seemslikeslain",
             "The Ender Dragon has been slain.", "dark_green");
-        for viewer in host.players().server_players() {
+        for viewer in &players {
             if viewer.level(host).and_then(|l| l.dimension().id(host))
                 .as_deref() == Some(event.dimension) {
                 let _ = viewer.tell(host, broadcast.clone());
+            }
+        }
+        if let Ok(id) = Identifier::parse("minecraft:elytra") {
+            if let Some(item) = host.item_key(&id) {
+                if let Some(stack) = ItemStack::new(item, 1) {
+                    let _ = level.spawn_item(host, at[0], at[1], at[2], stack, 0);
+                }
             }
         }
         if let Some(player) = player {
@@ -128,14 +164,26 @@ impl DragonDrops {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn dragon_game_event_is_exact_and_single_source() {
         assert!(death_event("minecraft:entity_die", Some(2), 2));
         assert!(!death_event("minecraft:entity_die", Some(1), 2));
         assert!(!death_event("minecraft:entity_die", None, 2));
         assert!(!death_event("minecraft:step", Some(2), 2));
-        assert!(inside([30., 1., -30.], [0., 1., 0.]));
-        assert!(!inside([31., 1., 0.], [0., 1., 0.]));
+        assert_eq!(bounds([4.9, 70.8, -2.1]),
+            ([-26., 40., -33.], [34., 100., 27.]));
+    }
+
+    #[test]
+    fn original_player_priority_and_nonplayer_semantics() {
+        let players = [2, 4, 6];
+        let nearby = [6, 4];
+        assert_eq!(recipient(Some(2), &players, &nearby), Some(2));
+        assert_eq!(recipient(None, &players, &nearby), Some(6));
+        assert_eq!(recipient(Some(0), &players, &nearby), Some(6));
+        assert_eq!(recipient(Some(9), &players, &nearby), None);
+        assert_eq!(recipient(None, &players, &[]), None);
     }
 
     #[test]

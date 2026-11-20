@@ -58,7 +58,7 @@ use mod_api::{
     PlayerCommandEvent, PlayerCommandsSentEvent, EntityInteractEvent, InteractionResult,
     BonemealEvent, TeleportCommandEvent, PlayerTeleportedEvent,
     PlayerBreakSpeedEvent,
-    LivingEntityUseItemFinishEvent, VanillaGameEventEvent,
+    LivingEntityUseItemFinishEvent, VanillaGameEventEvent, HitHost, LivingDamagePostEvent,
 };
 
 #[derive(Default)]
@@ -246,6 +246,10 @@ impl Hooks for SunriseQol {
 
     fn player_xp_change(&self, host: &mut dyn ServerHost, event: &mut PlayerXpChangeEvent<'_>) -> Flow {
         mending::on_xp(host, event)
+    }
+
+    fn living_damage_post(&self, _: &mut dyn HitHost, event: &mut LivingDamagePostEvent<'_>) {
+        self.dragon_drops.damage(event);
     }
 
     fn living_death(&self, host: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
