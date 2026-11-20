@@ -156,7 +156,10 @@ impl Hooks for SunriseQol {
     }
 
     fn right_click_block(&self, side: HostSide<'_>, event: &mut RightClickBlockEvent<'_>) -> Flow {
-        let HostSide::Server(host) = side else { return Flow::Continue; };
+        let host = match side {
+            HostSide::Client(host) => return right_harvest::client_click(host, event),
+            HostSide::Server(host) => host,
+        };
         if self.beacon.click(host, event) == Flow::Cancel { return Flow::Cancel; }
         if self.conduit.click(host, event) == Flow::Cancel { return Flow::Cancel; }
         if right_harvest::click(host, event) == Flow::Cancel { return Flow::Cancel; }
