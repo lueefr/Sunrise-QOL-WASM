@@ -96,6 +96,28 @@ fn positions(pos: [i32; 3], tier: Tier) -> Vec<[i32; 3]> {
     result
 }
 
+fn harvest_positions(
+    host: &dyn Host,
+    level: LevelRef,
+    center: [i32; 3],
+    held: Option<&ItemStack>,
+    radius: bool,
+) -> Vec<[i32; 3]> {
+    let Some(stack) = held.filter(|stack| radius && is_hoe(host, stack)) else {
+        return vec![center];
+    };
+    let Some(state) = level.block_state(host, center) else { return vec![center]; };
+    let id = state.block().id(host);
+    // The upstream's recursive radius is entered only from a mature
+    // age-based crop that is not blacklisted for radius harvesting.
+    if host.block_in_tag(state.block(), "rightclickharvest:blacklist") == Some(true)
+        || host.block_in_tag(state.block(), "rightclickharvest:radius_harvest_blacklist") == Some(true)
+        || !matches!(mature(host, level, center, state, &id), Some((Crop::Age, _))) {
+        return vec![center];
+    }
+    positions(center, tier(host, stack))
+}
+
 fn prop<'a>(state: &'a str, key: &str) -> Option<&'a str> {
     let (_, tail) = state.split_once('[')?;
     let inside = tail.strip_suffix(']')?;
@@ -463,13 +485,44 @@ pub fn client_click(host: &mut dyn ClientHost, event: &mut RightClickBlockEvent<
         && player.experience(host).is_none_or(|exp| exp.level < 2) {
         return Flow::Continue;
     }
-    let sound = if id == "minecraft:nether_wart" {
-        "minecraft:item.nether_wart.plant"
-    } else {
-        "minecraft:item.crop.plant"
-    };
-    let origin = pos.map(|v| f64::from(v) + 0.5);
-    let _ = host.play_local_sound(&SoundPlay::at(sound, SoundSource::Blocks, origin), 0);
+    // The original calls onBlockUse recursively for neighboring crops and
+    // plays each successful planting sound at the player's location. The
+    // clicked crop sounds last; sugar cane and cactus never expand a radius.
+    let nearby = harvest_positions(
+        host, level, pos, event.click.stack,
+        flag(host, "rchHarvestInRadius", true),
+    );
+    let origin = player.entity().position(host)
+        .unwrap_or_else(|| pos.map(|v| f64::from(v) + 0.5));
+    let mut played = false;
+    for target in nearby {
+        let Some(state) = level.block_state(host, target) else { continue; };
+        let id = state.block().id(host);
+        if host.block_in_tag(state.block(), "rightclickharvest:blacklist") == Some(true)
+            || (target != pos &&
+                host.block_in_tag(state.block(), "rightclickharvest:radius_harvest_blacklist") == Some(true)) {
+            continue;
+        }
+        let Some((kind, _)) = mature(host, level, target, state, &id) else { continue; };
+        if kind == Crop::Column && (target != pos || column_top(host, level, target, &id).is_none()) {
+            continue;
+        }
+        let exempt = id == "minecraft:cocoa"
+            || host.block_in_tag(state.block(), "rightclickharvest:hoe_never_required") == Some(true);
+        if flag(host, "rchRequireHoe", false) && !hoe && !exempt {
+            continue;
+        }
+        let sound = if id == "minecraft:nether_wart" {
+            "minecraft:item.nether_wart.plant"
+        } else {
+            "minecraft:item.crop.plant"
+        };
+        let _ = host.play_local_sound(
+            &SoundPlay::at(sound, SoundSource::Players, origin), 0,
+        );
+        played = true;
+    }
+    if !played { return Flow::Continue; }
     *event.cancellation_result = InteractionResult::Success;
     Flow::Cancel
 }
@@ -499,17 +552,16 @@ pub fn click(host: &mut dyn ServerHost, event: &mut RightClickBlockEvent<'_>) ->
         }
     }
     let hoe = held.is_some_and(|stack| is_hoe(host, stack));
-    let tier = if hoe && flag(host, "rchHarvestInRadius", true) {
-        held.map(|stack| tier(host, stack)).unwrap_or(Tier::None)
-    } else {
-        Tier::None
-    };
     let center = event.click.pos;
+    let positions = harvest_positions(
+        host, level, center, held,
+        flag(host, "rchHarvestInRadius", true),
+    );
     let hunger = hunger_modifier(saved_value(host, "rchHungerLevel"));
     let xp = exp_setting(saved_value(host, "rchExperienceType"));
     let creative = player.is_creative(host) == Some(true);
     let mut harvested = 0;
-    for pos in positions(center, tier) {
+    for pos in positions {
         if harvest_at(host, level, player, pos, center, held, hoe, creative, hunger, xp) {
             harvested += 1;
         }
