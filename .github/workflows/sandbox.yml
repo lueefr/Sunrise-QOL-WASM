@@ -101,6 +101,9 @@ jobs:
           workspaces: |
             . -> target
 
+      - name: Test Rust parity helpers on native host
+        run: cargo test --lib --locked
+
       - name: Build actual QOL WASM package
         run: cargo sunrise-mod build --wasm
 
