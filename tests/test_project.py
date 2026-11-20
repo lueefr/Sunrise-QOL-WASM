@@ -386,7 +386,10 @@ class DurabilityRegressionTests(unittest.TestCase):
                     'rchHungerLevel', 'rchExperienceType'):
             self.assertIn(f'"{key}"', gui)
         self.assertIn('level.block_drops(host, pos, held, Some(player.entity()))', module)
-        self.assertIn('subtract_replant(host, &id, &mut drops)', module)
+        self.assertIn('subtract_replant(host, &id, state.block(), &mut drops)', module)
+        self.assertIn('host.block_item(block)', module)
+        self.assertIn('host.item_block(stack.item()) == Some(block)', module)
+        self.assertNotIn('id.contains("seed")', module)
         self.assertIn('BlockUpdateFlags::NEIGHBORS | BlockUpdateFlags::CLIENTS', module)
         self.assertIn('InteractionResult::SuccessServer', module)
         self.assertIn('rightclickharvest:radius_harvest_blacklist', module)
