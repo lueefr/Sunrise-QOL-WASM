@@ -69,7 +69,7 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [ ] Paths can be created across a selected route
 - [ ] Some utility blocks can be accessed without placing them
 - [ ] Fishing lines can be recast automatically after a catch
-- [ ] Harvested crops can be replanted using their drops
+- [x] Mature crops can be harvested with right click and automatically replanted *(Right Click Harvest; basic vanilla crops, sugar cane, cactus and age-based modded crops on farmland; Fortune through original loot tables, configurable hoe requirement, tiered radius, hunger and XP; API/gameplay parity pending)*
 - [x] Shulkers can return after a configurable respawn delay *(partial)*
 - [ ] Connected scaffolding drops are collected near the broken block
 - [ ] Allowed sleeping times can be adjusted
@@ -112,6 +112,12 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [ ] Toggle full-bright world lighting without changing the game's normal gamma limits.
 
 Original upstream references for this batch: [Cycle Paintings](https://github.com/Serilum/Cycle-Paintings), [Dismount Entity](https://github.com/Serilum/Dismount-Entity) and [Easy Elytra Takeoff](https://github.com/Serilum/Easy-Elytra-Takeoff). The next three features reference [Extended Bone Meal](https://github.com/Serilum/Extended-Bone-Meal), [Followers Teleport Too](https://github.com/Serilum/Followers-Teleport-Too), and the existing Unlimited Enchantments implementation.
+
+### Right Click Harvest
+
+Based on [JamCoreModding/right-click-harvest](https://github.com/JamCoreModding/right-click-harvest) (MIT). The independent Sunrise WASM implementation supports mature age-based crops, cocoa/nether wart, cactus and sugar cane. The configured hoe tiers harvest a 5-block cross (low), 3×3 square (mid) or 13-block diamond (high). The clicked block is handled last, matching the original radius order. Drops are rolled through Sunrise's real block loot API (including the held tool and its Fortune effects) and one replant item is removed from normal crop drops. The options **Require Hoe** (OFF), **Harvest in Radius** (ON), **Hunger Level** (None/Low/Normal/High) and **Experience Type** (None/Cost/Reward) default to the original values. The whole module is OFF by default.
+
+**Remaining parity limitations:** no client-only prediction sounds, the XP sample uses an independent 0–2 random sequence instead of the original player RNG, and most modded age-bearing crops are recognized only when supported by farmland. Extra platform break/place events and the full JamLib data-tag integration are not available through this Sunrise WASM hook. The module has not been verified 1:1 in a live game.
 
 ## Settings and controls
 
