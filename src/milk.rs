@@ -9,7 +9,9 @@ fn is_milk(item: &str) -> bool {
 
 pub fn finished(side: HostSide<'_>, event: &mut LivingEntityUseItemFinishEvent<'_>) {
     let HostSide::Server(host) = side else { return; };
-    if !on(host, "nutritious_milk") || !is_milk(&event.stack.item().id(host)) {
+    // The upstream callback receives a player, not a mob consuming milk.
+    if event.entity.is_some() || !on(host, "nutritious_milk")
+        || !is_milk(&event.stack.item().id(host)) {
         return;
     }
     let Some(player) = host.players().acting_player() else { return; };
