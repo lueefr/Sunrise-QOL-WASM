@@ -347,6 +347,29 @@ class DurabilityRegressionTests(unittest.TestCase):
         self.assertIn('mob.set_can_open_doors(host, false)', zombie)
         self.assertIn('key: "zombie_proof_doors"', gui)
 
+    def test_upstream_harvest_tags_and_component_support(self):
+        original = ROOT / 'data/rightclickharvest/tags'
+        for kind in ('block', 'item'):
+            self.assertTrue((original / kind).is_dir())
+        for filename in ('blacklist', 'hoe_never_required', 'radius_harvest_blacklist'):
+            data = json.loads((original / 'block' / f'{filename}.json').read_text())
+            self.assertTrue(data['values'])
+        for filename, expected in (
+            ('low_tier_hoes', 'minecraft:iron_hoe'),
+            ('mid_tier_hoes', 'minecraft:diamond_hoe'),
+            ('high_tier_hoes', 'minecraft:netherite_hoe'),
+        ):
+            data = json.loads((original / 'item' / f'{filename}.json').read_text())
+            names = [v['id'] if isinstance(v, dict) else v for v in data['values']]
+            self.assertIn(expected, names)
+        self.assertIn('Copyright 2026 Jamalam',
+                      (ROOT / 'licenses/right-click-harvest.MIT').read_text())
+        source = (ROOT / 'src/right_harvest.rs').read_text()
+        self.assertIn('ComponentId::new("minecraft:block_transformer")', source)
+        self.assertIn('Tag::String(value)', source)
+        self.assertIn('level.with_random(host,', source)
+        self.assertIn('wear_needed(kind, before_damage, current)', source)
+
     def test_right_click_harvest_hook_and_original_options(self):
         hooks = (ROOT / 'src/lib.rs').read_text()
         module = (ROOT / 'src/right_harvest.rs').read_text()
