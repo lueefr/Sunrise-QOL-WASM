@@ -6,7 +6,7 @@ use mod_api::{EntityJoinLevelEvent, ServerHost};
 fn zombie(kind: &str) -> bool {
     matches!(kind,
         "minecraft:zombie" | "minecraft:husk" | "minecraft:drowned"
-        | "minecraft:zombie_villager" | "minecraft:zombified_piglin")
+        | "minecraft:zombie_villager")
 }
 
 pub fn joined(host: &mut dyn ServerHost, event: &EntityJoinLevelEvent<'_>) {
@@ -18,7 +18,7 @@ pub fn joined(host: &mut dyn ServerHost, event: &EntityJoinLevelEvent<'_>) {
     // In Sunrise the door-breaking behaviour lives in a BreakDoor goal;
     // deleting that goal stops door targeting before it can reach the block.
     let _ = mob.remove_goal(host, "BreakDoor");
-    let _ = mob.set_can_open_doors(host, false);
+    // The source does not disable ordinary door-opening navigation.
 }
 
 #[cfg(test)]
@@ -27,10 +27,11 @@ mod tests {
 
     #[test]
     fn vanilla_zombie_subclasses() {
-        for name in ["zombie", "husk", "drowned", "zombie_villager", "zombified_piglin"] {
+        for name in ["zombie", "husk", "drowned", "zombie_villager"] {
             assert!(zombie(&format!("minecraft:{name}")));
         }
         assert!(!zombie("minecraft:vindicator"));
         assert!(!zombie("minecraft:creeper"));
+        assert!(!zombie("minecraft:zombified_piglin"));
     }
 }
