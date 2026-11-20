@@ -133,7 +133,7 @@ const CLOCK: &[OptionSpec] = &[
 
 const NUTRITIOUS_MILK: &[OptionSpec] = &[
     range("hungerLevelIncrease", "Hunger Restored", 10., 0., 20., 1.),
-    range("saturationLevelIncrease", "Saturation Restored", 10., 0., 20., 1.),
+    range("saturationLevelIncrease", "Saturation Restored", 10., 0., 20., 0.1),
 ];
 
 const HOE: &[OptionSpec] = &[
@@ -161,6 +161,9 @@ const MENDING: &[OptionSpec] = &[
 
 const BOTTLED_AIR: &[OptionSpec] = &[
     range("bottled_air_amount", "Oxygen Restored", 150., 0., 1000., 10.),
+    toggle("disableWaterConsumptionUnderwater", "Block Drinking Water Underwater", true),
+    toggle("holdFireTypeItemInOffhandToPreventWaterBottleCreation", "Fire-Item Offhand Effect", true),
+    range("chanceGlassBottleBreaksWithFireTypeInOffhand", "Fire Break Chance", 0.5, 0., 1., 0.05),
 ];
 
 const HELP: &[OptionSpec] = &[
