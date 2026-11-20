@@ -3,9 +3,46 @@
 //! break-speed override not currently exposed by the public WASM callbacks.
 use crate::settings::{amount, flag, on};
 use mod_api::{
-    BlockFace, BlockUpdateFlags, EquipmentSlot, Flow, Hand, InteractionResult,
-    RightClickBlockEvent, ServerHost,
+    BlockFace, BlockUpdateFlags, EquipmentSlot, Flow, Hand, Host, HostSide,
+    InteractionResult, PlayerBreakSpeedEvent, PlayerRef, RightClickBlockEvent, ServerHost,
 };
+
+fn melon_or_pumpkin(id: &str) -> bool {
+    matches!(id, "minecraft:pumpkin" | "minecraft:melon")
+}
+
+fn apply_speed(host: &dyn Host, player: PlayerRef, event: &mut PlayerBreakSpeedEvent) {
+    if !on(host, "hoe_tweaks") || player.entity().id() != event.player
+        || !melon_or_pumpkin(&event.state.block().id(host)) {
+        return;
+    }
+    let Some(selected) = player.selected_slot(host) else { return; };
+    let has_hoe = player.inventory_slots(host).is_some_and(|slots| slots.into_iter().any(
+        |(slot, stack)| usize::try_from(slot).ok() == Some(selected)
+            && hoe(&stack.item().id(host))
+    ));
+    if has_hoe {
+        // The original replaces the break speed with its configured value,
+        // rather than multiplying the vanilla result.
+        event.new_speed = amount(host, "cropBlockBreakSpeedModifier", 8., 0., 20.) as f32;
+    }
+}
+
+pub fn speed(side: HostSide<'_>, event: &mut PlayerBreakSpeedEvent) -> Flow {
+    match side {
+        HostSide::Client(host) => {
+            if let Some(player) = host.local_player() {
+                apply_speed(host, player, event);
+            }
+        }
+        HostSide::Server(host) => {
+            if let Some(player) = host.players().acting_player() {
+                apply_speed(host, player, event);
+            }
+        }
+    }
+    Flow::Continue
+}
 
 fn hoe(id: &str) -> bool {
     id.ends_with("_hoe")
@@ -180,6 +217,9 @@ mod tests {
         assert!(hoe("minecraft:netherite_hoe"));
         assert!(hoe("modid:steel_hoe"));
         assert!(!hoe("minecraft:diamond_axe"));
+        assert!(melon_or_pumpkin("minecraft:melon"));
+        assert!(melon_or_pumpkin("minecraft:pumpkin"));
+        assert!(!melon_or_pumpkin("minecraft:wheat"));
         assert!(air("minecraft:cave_air"));
     }
 }

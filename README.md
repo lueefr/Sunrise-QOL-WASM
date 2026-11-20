@@ -56,7 +56,7 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [x] Bone meal supports additional plants and faster growth *(initial support: crouching matures common crops; nether wart, cactus, sugar cane, and vine growth; server-side only, in-game validation pending)*
 - [x] Tamed companions follow their owners during command teleportation *(partial: capped scan of nearby owned, non-sitting, unleaded vanilla pets during /tp; no damage immunity, allay, or mounted-player parity yet)*
 - [ ] Metal equipment can be smelted back into materials
-- [x] Hoes can till and undo-till soil using the original six material-tier radii, crouching behavior, and durability costs *(Hoe Tweaks; crop break-speed adjustment and some bush-block types still require SDK/gameplay parity)*
+- [x] Hoes can till and undo-till soil using the original six material-tier radii, crouching behavior, and durability costs *(Hoe Tweaks; crop break-speed replacement is now wired through the Sunrise break-speed event; some bush-block types and in-game parity remain unverified)*
 - [x] Undying totems can activate from inventory slots *(partial)*
 - [x] Farmland stays tilled after harvesting melons or pumpkins *(original 3×3 farmland check; gameplay validation pending)*
 - [ ] Kelp can be used as a fertilizer

@@ -137,6 +137,7 @@ const NUTRITIOUS_MILK: &[OptionSpec] = &[
 ];
 
 const HOE: &[OptionSpec] = &[
+    range("cropBlockBreakSpeedModifier", "Melon/Pumpkin Break Speed", 8., 0., 20., 0.1),
     toggle("onlyUntillWithOtherHandEmpty", "Require Other Hand Empty", true),
     toggle("mustCrouchToHaveBiggerHoeRange", "Crouch for Area Tilling", true),
     range("woodenTierHoeRange", "Wood Hoe Radius", 0., 0., 32., 1.),
@@ -390,7 +391,10 @@ impl Screen {
     fn number(&mut self, rect: [f32; 4], option: OptionSpec, value: f64, active: bool) {
         if !self.visible(rect[1], rect[3]) { return; }
         let mut field = TextField::new(rect, 16);
-        field.set_value(&format!("{value:.0}"));
+        let shown = if matches!(option.kind, OptionKind::Range { step, .. } if step.fract() != 0.) {
+            format!("{value}")
+        } else { format!("{value:.0}") };
+        field.set_value(&shown);
         field.message = option.label.to_owned();
         field.active = active;
         let id = self.widgets.add_text_field(field);
@@ -420,14 +424,14 @@ impl Screen {
         let Some((_, option)) = self.numbers.iter().find(|(key, _)| *key == id).copied() else {
             return;
         };
-        let OptionKind::Range { default, min, max, .. } = option.kind else { return; };
+        let OptionKind::Range { default, min, max, step } = option.kind else { return; };
         let old = self.option_amount(host, option.key, default, min, max);
         let draft = self.widgets.text_field(id).map(|field| field.value().trim().to_owned());
         let value = draft.as_deref().and_then(|value| value.parse::<f64>().ok())
             .filter(|value| value.is_finite());
         let shown = if let Some(value) = value {
-            let bounded = value.round().clamp(min, max);
-            if bounded == old || save(host, option.key, &format!("{bounded:.0}")) {
+            let bounded = (if step.fract() == 0. { value.round() } else { value }).clamp(min, max);
+            if bounded == old || save(host, option.key, &format!("{bounded}")) {
                 bounded
             } else {
                 old
@@ -436,7 +440,8 @@ impl Screen {
             old
         };
         if let Some(field) = self.widgets.text_field_mut(id) {
-            field.set_value(&format!("{shown:.0}"));
+            if step.fract() == 0. { field.set_value(&format!("{shown:.0}")); }
+            else { field.set_value(&format!("{shown}")); }
             field.text_color = 0xFFE0_E0E0;
         }
     }

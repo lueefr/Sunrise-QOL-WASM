@@ -67,11 +67,11 @@ class ProjectTests(unittest.TestCase):
         modules = re.findall(r'ModuleSpec \{ key: "([^"]+)", label:', gui)
         options = re.findall(r'(?:toggle|range|choice)\("([^"]+)", "', gui)
         self.assertEqual(len(modules), 44)
-        self.assertEqual(len(options), 104)
+        self.assertEqual(len(options), 105)
         self.assertIn('let _ = save(host, key,', gui)
         self.assertIn('let _ = save(host, option.key,', gui)
         self.assertNotIn('host.set_setting(', gui)
-        self.assertEqual(len(set(modules) | set(options)), 148)
+        self.assertEqual(len(set(modules) | set(options)), 149)
         for hook in ('input_key', 'client_tick_pre', 'screen_render_post',
                      'screen_mouse_button_pressed_pre', 'screen_mouse_button_released_pre',
                      'screen_mouse_dragged_pre', 'screen_key_pressed_pre',
@@ -174,7 +174,7 @@ class ProjectTests(unittest.TestCase):
     def test_migration_preserves_legacy_settings(self):
         import tempfile
         from migrate_settings import keys, migrate
-        self.assertEqual(len(keys(ROOT)), 148)
+        self.assertEqual(len(keys(ROOT)), 149)
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)
             previous = game / 'sunrise-mods' / '.sunrise-mod-data' / 'horizon_qol_suite'

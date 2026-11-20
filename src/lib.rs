@@ -55,6 +55,7 @@ use mod_api::{
     PlayerXpChangeEvent, ItemTooltipEvent, MobSpawnPositionCheckEvent,
     PlayerCommandEvent, PlayerCommandsSentEvent, EntityInteractEvent, InteractionResult,
     BonemealEvent, TeleportCommandEvent, PlayerTeleportedEvent,
+    PlayerBreakSpeedEvent,
     LivingEntityUseItemFinishEvent,
 };
 
@@ -154,6 +155,10 @@ impl Hooks for SunriseQol {
         let HostSide::Server(host) = side else { return None; };
         if let Some(answer) = painting::interact(host, event) { return Some(answer); }
         dismount::interact(host, event)
+    }
+
+    fn player_break_speed(&self, side: HostSide<'_>, event: &mut PlayerBreakSpeedEvent) -> Flow {
+        hoe::speed(side, event)
     }
 
     fn right_click_block(&self, side: HostSide<'_>, event: &mut RightClickBlockEvent<'_>) -> Flow {

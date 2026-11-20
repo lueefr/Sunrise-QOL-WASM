@@ -5,6 +5,7 @@ pub const ID: &str = "horizon_qol_suite";
 
 pub fn storage_key(key: &str) -> &str {
     match key {
+        "cropBlockBreakSpeedModifier" => "cropblockbreakspeedmodifier",
         "onlyUntillWithOtherHandEmpty" => "onlyuntillwithotherhandempty",
         "mustCrouchToHaveBiggerHoeRange" => "mustcrouchtohavebiggerhoerange",
         "woodenTierHoeRange" => "woodentierhoerange",
