@@ -47,15 +47,11 @@ fn tagged_item(host: &dyn Host, item: ItemKey, id: &str) -> bool {
 
 fn tier(host: &dyn Host, stack: &ItemStack) -> Tier {
     let item = stack.item();
-    let id = item.id(host);
-    if tagged_item(host, item, "rightclickharvest:high_tier_hoes")
-        || id == "minecraft:netherite_hoe" {
+    if tagged_item(host, item, "rightclickharvest:high_tier_hoes") {
         Tier::High
-    } else if tagged_item(host, item, "rightclickharvest:mid_tier_hoes")
-        || matches!(id.as_str(), "minecraft:golden_hoe" | "minecraft:diamond_hoe") {
+    } else if tagged_item(host, item, "rightclickharvest:mid_tier_hoes") {
         Tier::Mid
-    } else if tagged_item(host, item, "rightclickharvest:low_tier_hoes")
-        || matches!(id.as_str(), "minecraft:iron_hoe" | "minecraft:copper_hoe") {
+    } else if tagged_item(host, item, "rightclickharvest:low_tier_hoes") {
         Tier::Low
     } else {
         Tier::None
@@ -304,18 +300,16 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
     hunger: f32, xp: &str) -> bool {
     let Some(state) = level.block_state(host, pos) else { return false; };
     let id = state.block().id(host);
-    if host.block_in_tag(state.block(), "rightclickharvest:blacklist") == Some(true)
-        || matches!(id.as_str(), "farmersdelight:tomatoes" | "farmersdelight:tomatoes_on_rope") {
+    if host.block_in_tag(state.block(), "rightclickharvest:blacklist") == Some(true) {
         return false;
     }
     if pos != original &&
-        (host.block_in_tag(state.block(), "rightclickharvest:radius_harvest_blacklist") == Some(true)
-         || matches!(id.as_str(), "minecraft:cocoa" | "minecraft:cactus" | "minecraft:sugar_cane")) {
+        host.block_in_tag(state.block(), "rightclickharvest:radius_harvest_blacklist") == Some(true) {
         return false;
     }
     let Some((kind, replanted)) = mature(host, level, pos, state, &id) else { return false; };
-    let hoe_exempt = id == "minecraft:cocoa"
-        || host.block_in_tag(state.block(), "rightclickharvest:hoe_never_required") == Some(true);
+    let hoe_exempt =
+        host.block_in_tag(state.block(), "rightclickharvest:hoe_never_required") == Some(true);
     if flag(host, "rchRequireHoe", false) && !hoe && !hoe_exempt { return false; }
 
     // The source checks Level.mayInteract for every harvest position.
@@ -463,8 +457,7 @@ pub fn client_click(host: &mut dyn ClientHost, event: &mut RightClickBlockEvent<
     let pos = event.click.pos;
     let Some(state) = level.block_state(host, pos) else { return Flow::Continue; };
     let id = state.block().id(host);
-    if host.block_in_tag(state.block(), "rightclickharvest:blacklist") == Some(true)
-        || matches!(id.as_str(), "farmersdelight:tomatoes" | "farmersdelight:tomatoes_on_rope") {
+    if host.block_in_tag(state.block(), "rightclickharvest:blacklist") == Some(true) {
         return Flow::Continue;
     }
     let Some((kind, _)) = mature(host, level, pos, state, &id) else {
@@ -478,8 +471,7 @@ pub fn client_click(host: &mut dyn ClientHost, event: &mut RightClickBlockEvent<
         return Flow::Continue;
     }
     let hoe = event.click.stack.is_some_and(|stack| is_hoe(host, stack));
-    let exempt = id == "minecraft:cocoa"
-        || host.block_in_tag(state.block(), "rightclickharvest:hoe_never_required") == Some(true);
+    let exempt = host.block_in_tag(state.block(), "rightclickharvest:hoe_never_required") == Some(true);
     if flag(host, "rchRequireHoe", false) && !hoe && !exempt {
         if event.click.stack.is_none() && !flag(host, "rchHoeWarned", false) {
             let _ = host.chat_line(Text::literal(
@@ -520,8 +512,7 @@ pub fn client_click(host: &mut dyn ClientHost, event: &mut RightClickBlockEvent<
         if kind == Crop::Column && (target != pos || column_top(host, level, target, &id).is_none()) {
             continue;
         }
-        let exempt = id == "minecraft:cocoa"
-            || host.block_in_tag(state.block(), "rightclickharvest:hoe_never_required") == Some(true);
+        let exempt = host.block_in_tag(state.block(), "rightclickharvest:hoe_never_required") == Some(true);
         if flag(host, "rchRequireHoe", false) && !hoe && !exempt {
             continue;
         }
