@@ -96,6 +96,10 @@ fn positions(pos: [i32; 3], tier: Tier) -> Vec<[i32; 3]> {
     result
 }
 
+fn starts_radius(mature: Option<Crop>, blocked: bool, hoe: bool, enabled: bool) -> bool {
+    enabled && hoe && !blocked && mature == Some(Crop::Age)
+}
+
 fn harvest_positions(
     host: &dyn Host,
     level: LevelRef,
@@ -103,18 +107,14 @@ fn harvest_positions(
     held: Option<&ItemStack>,
     radius: bool,
 ) -> Vec<[i32; 3]> {
-    let Some(stack) = held.filter(|stack| radius && is_hoe(host, stack)) else {
-        return vec![center];
-    };
     let Some(state) = level.block_state(host, center) else { return vec![center]; };
     let id = state.block().id(host);
-    // The upstream's recursive radius is entered only from a mature
-    // age-based crop that is not blacklisted for radius harvesting.
-    if host.block_in_tag(state.block(), "rightclickharvest:blacklist") == Some(true)
-        || host.block_in_tag(state.block(), "rightclickharvest:radius_harvest_blacklist") == Some(true)
-        || !matches!(mature(host, level, center, state, &id), Some((Crop::Age, _))) {
-        return vec![center];
-    }
+    let blocked = host.block_in_tag(state.block(), "rightclickharvest:blacklist") == Some(true)
+        || host.block_in_tag(state.block(), "rightclickharvest:radius_harvest_blacklist") == Some(true);
+    let crop = mature(host, level, center, state, &id).map(|(crop, _)| crop);
+    let hoe = held.is_some_and(|stack| is_hoe(host, stack));
+    if !starts_radius(crop, blocked, hoe, radius) { return vec![center]; }
+    let Some(stack) = held else { return vec![center]; };
     positions(center, tier(host, stack))
 }
 
@@ -318,6 +318,16 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
         || host.block_in_tag(state.block(), "rightclickharvest:hoe_never_required") == Some(true);
     if flag(host, "rchRequireHoe", false) && !hoe && !hoe_exempt { return false; }
 
+    // The source checks Level.mayInteract for every harvest position.
+    // Its world-border component is accessible separately to WASM, even
+    // when the full spawn-protection / claims decision is not.
+    if let Some([min_x, min_z, max_x, max_z]) = level.world_border(host) {
+        let x = f64::from(pos[0]);
+        let z = f64::from(pos[2]);
+        if x < min_x || x + 1.0 > max_x || z < min_z || z + 1.0 > max_z {
+            return false;
+        }
+    }
     if let Some(held) = held {
         if player.may_use_item_at(host, pos, BlockFace::Up, held) != Some(true) {
             return false;
@@ -388,8 +398,10 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
                 let _ = level.pop_resource(host, pos, stack);
             }
             let _ = player.award_stat(host, StatType::Mined, &id, 1);
-            let replant = replant_item(&id);
-            let _ = player.award_stat(host, StatType::Used, replant, 1);
+            let item_id = host.block_item(state.block())
+                .map(|item| item.id(host))
+                .unwrap_or_else(|| replant_item(&id).to_owned());
+            let _ = player.award_stat(host, StatType::Used, &item_id, 1);
         }
     }
     if let Some(held) = held {
@@ -424,7 +436,8 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
         match xp {
             "Cost" => { let cost = xp_points(host, level) as i32; let _ = pay_xp(host, player, cost); }
             "Reward" => {
-                let [x,y,z] = pos.map(|v| f64::from(v) + 0.5);
+                let [x, y, z] = player.entity().position(host)
+                    .unwrap_or_else(|| pos.map(|v| f64::from(v) + 0.5));
                 let points = xp_points(host, level);
                 let _ = level.award_experience(host, x, y, z, points);
             }
@@ -574,6 +587,16 @@ pub fn click(host: &mut dyn ServerHost, event: &mut RightClickBlockEvent<'_>) ->
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn only_mature_non_blacklisted_crops_start_radius() {
+        assert!(starts_radius(Some(Crop::Age), false, true, true));
+        assert!(!starts_radius(Some(Crop::Age), true, true, true));
+        assert!(!starts_radius(Some(Crop::Column), false, true, true));
+        assert!(!starts_radius(None, false, true, true));
+        assert!(!starts_radius(Some(Crop::Age), false, false, true));
+        assert!(!starts_radius(Some(Crop::Age), false, true, false));
+    }
 
     #[test]
     fn original_hoe_shapes() {
