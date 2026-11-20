@@ -22,7 +22,7 @@ installer to stop before replacing the installed mod.
 | Spawner Control | Initial | A read-only spawn position veto for normal spawner blocks surrounded by 5 torches (N/E/S/W/top). Does not reset the spawner's internal delay; other spawn sources unaffected |
 | Bottled Air | Partial | Restores air; blocks water-potion use when submerged; fire-item hand detects five items, consumes a water-potion from slots 35..1 and probabilistically gives back a glass bottle. Uses world RNG, rather than the source's Collective global RNG; real-game behavior needs validation |
 | Painting Cycling | Partial | Replaces a painting entity with one using the next placeable same-size variant; supports backward cycling while crouching. Nested data-pack tags, FastPaintings blocks, and cycle particles are not implemented; validate entity recreation and UUID handling in-game |
-| Passenger Removal | Initial | Sneak-right-click any mounted entity to dismount non-player passengers; player passengers require explicit opt-in. Rider permissions and cross-mod vehicle behavior require gameplay validation |
+| Passenger Removal | Partial | Original-success behavior on any nonempty passenger list, including when protected player passengers remain; now traverses all passengers without an arbitrary 8-person cap. Still needs actual engine and modded vehicle tests |
 | Ground Elytra Fireworks | Experimental | Client lift on ground rocket use, then a vanilla glide action packet and a queued normal rocket use; only standard rockets and a chest-slot Elytra, no modded boosters. Depends on client/server movement timing and must be gameplay-tested |
 | Extended Enchant Command | Partial | Intercepts only elevated /enchant @s levels 6–255 for a restricted set of vanilla gear and operators (permission >=2); queues the item mutation to the next server tick. All-target selectors, modded items and complete vanilla compatibility are not reproduced |
 | Extended Bone Meal | Partial | Instant crouch growth for vanilla and registered modded age-based crops; nether wart grows one stage even crouched; tall crop/vine paths retained. Vanilla crop callback parity, dispensers and Kelp Fertilizer compatibility remain |
@@ -46,8 +46,8 @@ installer to stop before replacing the installed mod.
 | Hide Hands | Initial | Hand rendering hide rules; original item filter lists unavailable |
 | Full Brightness Toggle | Not implemented | No public WASM API to set gamma or replace world lighting; adding screen tint would not reproduce it |
 | Superflat World No Slimes | Partial (manual) | Blocks joining slimes ONLY when the user explicitly confirms flat-world status; no accessible world-generator flag |
-| First Join Message | Initial | Fixed text only, no editable multilingual/broadcast templates |
-| Welcome Message | Initial | Fixed text only, limited server controls |
+| First Join Message | Partial | Configurable text with %s player-name replacement, 16 formatting colors and independent first-join broadcast; world-local first-join marker. Original spawn event timing and multiplayer broadcasts need real-game checks |
+| Welcome Message | Partial | All three default messages, independent text/colors/HTTP URL click options, preceding blank line and dedicated-server-only switch from original; real lifecycle, UI input and integrated-server checks pending |
 | Vein Miner | Initial | Bounded connected search; tool costs and player block events not fully ported |
 | Tree Harvester | Partial | Bounded tree removal. Harvested logs trigger the shared Leaf Decay event/queue; fast decay requires the Leaf Decay module enabled and uses its own speed, per-tick cap and matching settings. Original replant/durability timing is not 1:1 |
 | Ench. Level LangPatch | Partial | Formats missing enchantment/potion tooltip translation levels; does not modify global language storage |

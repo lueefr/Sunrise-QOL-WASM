@@ -44,7 +44,9 @@ class NextThreeTests(unittest.TestCase):
         self.assertIn('flag(host, "dismount_players", false)', self.dismount)
         self.assertIn('passenger.kind(host).is_some_and(|kind| kind.id(host) == "minecraft:player")', self.dismount)
         self.assertIn("passenger.stop_riding(host)", self.dismount)
-        self.assertIn("passengers.into_iter().take(8)", self.dismount)
+        self.assertIn("for passenger in passengers", self.dismount)
+        self.assertNotIn("passengers.into_iter().take(8)", self.dismount)
+        self.assertIn("Some(InteractionResult::SuccessServer)", self.dismount)
 
     def test_elytra_uses_native_rocket(self):
         self.assertIn('if !host.playing() || !on(host, "ground_elytra_fireworks")', self.elytra)

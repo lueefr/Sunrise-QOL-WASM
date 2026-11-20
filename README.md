@@ -163,3 +163,5 @@ Original projects retain their own licensing and attribution requirements. Do no
 ### In-game gameplay parity gate
 
 A passing WASM build and synthetic-host smoke test **do not** imply 1:1 gameplay parity. The PR and release workflows now also run the built mod against the real Sunrise `Game` world and player-break path; both the resulting block states and positive/negative cases are checked. The first suite tests Keep My Soil Tilled. Coverage and untested modules are recorded in `gameplay-evidence.json`. The release is blocked if this real-engine gate fails; other modules are not represented as verified until they gain equivalent cases. See [in-game validation](docs/GAMEPLAY-VALIDATION.md).
+
+The original First Join Message and Welcome Message options are now exposed in the suite UI: editable text and clickable HTTP(S) URLs, message colors, a per-world first-join broadcast, and dedicated-server gating. The Dismount Entity module also follows upstream success semantics without a passenger count cap. These are **source-level improvements**, not certified 1:1 gameplay parity.
