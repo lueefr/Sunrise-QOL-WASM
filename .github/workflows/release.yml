@@ -12,6 +12,8 @@ on:
       - '.github/workflows/sandbox.yml'
       - 'src/**'
       - 'assets/**'
+      - 'data/**'
+      - 'licenses/**'
       - 'Cargo.toml'
       - 'sunrise-mod.toml'
       - 'instalar.fish'
@@ -146,6 +148,10 @@ jobs:
           cache-on-failure: 'true'
           workspaces: |
             . -> target
+
+      - name: Run Rust module parity tests
+        if: steps.version.outputs.changed == 'true'
+        run: cargo test --lib
 
       - name: Compile sandboxed mod (not the game)
         if: steps.version.outputs.changed == 'true'
