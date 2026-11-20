@@ -5,6 +5,7 @@ description = "Modular quality-of-life features for Sunrise. Full parity with th
 api = "0.2"
 side = "both"
 capabilities = ["registries"]
+namespaces = ["rightclickharvest"]
 
 [wasm]
 sha512 = "6c8291bb9febf53e2b5f494db0202ebaccbffe7d9530541c9194e55747f1152ad9f7e91e5a49048aeb6bed4c18686f78f97ba0fdd5c2fafdfc5b08d342627d55"
