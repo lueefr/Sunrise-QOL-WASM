@@ -66,7 +66,8 @@ impl WitherSkulls {
         });
         let Some(death) = death else { return; };
         if !on(host, "always_wither_skull") { return; }
-        let due = self.time.load(Ordering::Relaxed).saturating_add(1);
+        // A death during the current tick must wait for the *next* tick end.
+        let due = self.time.load(Ordering::Relaxed).saturating_add(2);
         if let Ok(mut pending) = self.pending.lock() {
             if pending.len() >= CAP { pending.pop_front(); }
             pending.push_back(Pending { dimension: death.dimension, pos: death.pos, due });

@@ -3,8 +3,9 @@
 use crate::settings::on;
 use mod_api::{
     EntityJoinLevelEvent, EntityLeaveLevelEvent, Identifier, ItemStack, ServerHost,
-    ServerTickEvent, ServerTickPhase, Text, TextContent, VanillaGameEventEvent,
+    ServerTickEvent, ServerTickPhase, Text, VanillaGameEventEvent,
 };
+use mod_api::text::TextContent;
 use std::collections::VecDeque;
 use std::sync::{Mutex, atomic::{AtomicU64, Ordering}};
 
@@ -71,7 +72,7 @@ impl DragonDrops {
         if event.event != "minecraft:entity_die" { return; }
         let dragon = self.dragons.lock().ok().and_then(|mut dragons| {
             let index = dragons.iter().position(|d| {
-                d.dimension == event.dimension && death_event(event.event, event.cause, d.id)
+                d.dimension == event.dimension && death_event(event.event, Some(cause), d.id)
             })?;
             dragons.remove(index)
         });
@@ -106,7 +107,6 @@ impl DragonDrops {
                 "An Elytra has been dropped near you.", "yellow");
             let _ = player.tell(host, message);
         }
-        let _ = cause;
     }
 
     pub fn tick(&self, event: &ServerTickEvent<'_>) {
