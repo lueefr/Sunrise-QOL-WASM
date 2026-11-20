@@ -102,7 +102,7 @@ jobs:
             . -> target
 
       - name: Test Rust parity helpers on native host
-        run: cargo test --lib --locked
+        run: cargo test --lib
 
       - name: Build actual QOL WASM package
         run: cargo sunrise-mod build --wasm
