@@ -15,10 +15,8 @@ smod="$root/target/sunrise-mod/horizon_qol_suite.smod"
 standard="$root/target/sunrise-wasm-std.wasm"
 test -s "$smod" && test -s "$standard" || { echo "Missing actual .smod or matching WASM std" >&2; exit 1; }
 cp "$root/tools/gameplay/sunrise_qol_gameplay.rs.txt" "$source/crates/sunrise-client/src/game/modding/sunrise_qol_gameplay.rs"
-game_rs="$source/crates/sunrise-client/src/game.rs"
-if ! grep -Fq 'mod sunrise_qol_gameplay;' "$game_rs"; then
-  printf '\n%s\n%s\n%s\n' '#[cfg(test)]' '#[path = "game/modding/sunrise_qol_gameplay.rs"]' 'mod sunrise_qol_gameplay;' >> "$game_rs"
-fi
+# Sunrise build.rs discovers game modules from this directory automatically.
+# Never append a second declaration to game.rs (duplicate E0428).
 export SUNRISE_QOL_SMOD="$(realpath "$smod")"
 export SUNRISE_WASM_STD="$(realpath "$standard")"
 export CARGO_TARGET_DIR="$root/target/sunrise-sandbox"

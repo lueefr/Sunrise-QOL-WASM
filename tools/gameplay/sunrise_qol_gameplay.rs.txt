@@ -2,7 +2,6 @@
 //! This differs from the existing synthetic-host Wasmtime smoke tests.
 use super::*;
 use mod_api::{ConfigPath, Host};
-use mod_api::prelude::ConfigHost;
 use sunrise_client::{command::args::GameMode, items::ItemStack, motion::PlayerMotion};
 use sunrise_core::geometry::Vec3;
 use std::sync::Arc;
@@ -71,7 +70,7 @@ fn real_game() {
         manifest.id.clone(), manifest.version.to_string(),
         mod_api::PackageKind::Code, mod_api::Side::Both,
         vec![manifest.id.clone()], vec![]);
-    mod_api::__private::initialize().expect("mod API initialization");
+    mod_platform::__private::initialize().expect("platform API initialization");
     let loaded = sunrise_mod_wasm::load(
         &std::fs::read(standard).unwrap(),
         vec![sunrise_mod_wasm::WasmPackage {
