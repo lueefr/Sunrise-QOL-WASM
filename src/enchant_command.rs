@@ -5,7 +5,6 @@ use mod_api::{
     ComponentId, Flow, Identifier, ItemResource, PlayerCommandEvent, ServerHost,
     ServerTickEvent, ServerTickPhase, Tag, Text,
 };
-use std::collections::BTreeMap;
 use std::sync::Mutex;
 
 const MAX_QUEUE: usize = 64;
@@ -114,7 +113,7 @@ impl EnchantCommands {
         let Some(id) = ComponentId::new("minecraft:enchantments") else { return; };
         let mut levels = match ItemResource::of(&stack).value(host, &id) {
             Some(Tag::Compound(existing)) => existing,
-            None => BTreeMap::new(),
+            None => mod_api::Compound::new(),
             _ => return,
         };
         // Keep mutually-exclusive enchantments out, as vanilla /enchant does.
