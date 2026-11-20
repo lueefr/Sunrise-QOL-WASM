@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
+from zipfile import ZipFile
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "tools"))
@@ -33,13 +34,48 @@ def verify(package: Path, standard: Path) -> dict:
     }
 
 
+HARVEST_TAGS = (
+    "block/blacklist.json",
+    "block/hoe_never_required.json",
+    "block/radius_harvest_blacklist.json",
+    "item/low_tier_hoes.json",
+    "item/mid_tier_hoes.json",
+    "item/high_tier_hoes.json",
+)
+
+
+def verify_harvest_tags(package: Path) -> dict:
+    """Verify the original tag datasets are actually shipped in the .smod."""
+    prefix = "data/rightclickharvest/tags/"
+    missing = []
+    different = []
+    with ZipFile(package) as archive:
+        files = set(archive.namelist())
+        for name in HARVEST_TAGS:
+            member = prefix + name
+            source = ROOT / member
+            if member not in files:
+                missing.append(member)
+            elif archive.read(member) != source.read_bytes():
+                different.append(member)
+    return {
+        "harvest_tag_files": len(HARVEST_TAGS),
+        "missing_harvest_tags": missing,
+        "modified_harvest_tags": different,
+        "harvest_tags_passed": not missing and not different,
+    }
+
+
 def main() -> None:
     if len(sys.argv) != 3:
         sys.exit("Usage: python tools/sandbox/check.py package.smod sunrise-wasm-std.wasm")
     result = verify(Path(sys.argv[1]), Path(sys.argv[2]))
+    result.update(verify_harvest_tags(Path(sys.argv[1])))
     print(json.dumps(result, indent=2))
     if not result["passed"]:
         sys.exit("Unresolved Rust symbols: the .smod is incompatible with this std member")
+    if not result["harvest_tags_passed"]:
+        sys.exit("The .smod does not contain all original Right Click Harvest tags")
 
 
 if __name__ == "__main__":
