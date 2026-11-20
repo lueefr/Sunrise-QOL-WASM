@@ -309,7 +309,9 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
     if let Some(held) = held {
         let _ = player.award_stat(host, StatType::Used, &held.item().id(host), 1);
     }
-    if hoe && !creative {
+    // The player-break path already applies normal item wear for column
+    // plants. Only age-based crops need the explicit one-point hoe wear.
+    if hoe && !creative && kind == Crop::Age {
         if let Some(living) = host.living(player.entity()) {
             let _ = living.hurt_and_break(host, EquipmentSlot::MainHand, 1);
         }
@@ -344,6 +346,16 @@ pub fn click(host: &mut dyn ServerHost, event: &mut RightClickBlockEvent<'_>) ->
     if !level.in_place(host) { return Flow::Continue; }
 
     let held = event.click.stack.as_ref();
+    // Clicking the top face with a matching sugar cane/cactus item is vanilla
+    // placement, not harvesting. Preserve it as the original does.
+    if event.click.hit.face == [0, 1, 0] {
+        let id = level.block(host, event.click.pos).map(|block| block.id(host));
+        if id.as_deref().is_some_and(|id| matches!(id,
+                "minecraft:cactus" | "minecraft:sugar_cane"))
+            && held.is_some_and(|stack| Some(stack.item().id(host)) == id) {
+            return Flow::Continue;
+        }
+    }
     let hoe = held.is_some_and(|stack| is_hoe(host, stack));
     let tier = if hoe && flag(host, "rchHarvestInRadius", true) {
         held.map(|stack| tier(host, stack)).unwrap_or(Tier::None)
