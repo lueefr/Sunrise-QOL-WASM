@@ -24,6 +24,12 @@ fn set_toggle(host: &dyn Host, name: &str, value: bool) {
         .expect("write QOL config");
 }
 
+fn set_string(host: &dyn Host, name: &str, value: &str) {
+    let key = name.to_ascii_lowercase();
+    let path = ConfigPath::new(&format!("horizon_qol_suite/{key}")).unwrap();
+    host.config_files().write(&path, value.as_bytes()).unwrap();
+}
+
 fn clear_toggle(host: &dyn Host, name: &str) {
     let path = ConfigPath::new(&format!("horizon_qol_suite/{name}"))
         .expect("valid QOL setting");
@@ -972,6 +978,13 @@ fn check_welcome_message(world: &mut JoinWorld) {
     assert!(world.told.is_empty(), "welcome module starts OFF");
 
     set_toggle(world, "welcome_message", true);
+    // Restrict this compatibility fixture to the primary welcome line.
+    // Production defaults remain the original three lines, dedicated-only,
+    // with a blank line and an optional clickable URL.
+    set_string(world, "onlyRunOnDedicatedServers", "false");
+    set_string(world, "sendEmptyLineBeforeFirstMessage", "false");
+    set_string(world, "messageTwoText", "");
+    set_string(world, "messageThreeText", "");
     logged_in(world, ALICE);
     logged_in(world, ALICE);
     assert_eq!(world.told.len(), 2, "welcome must be sent on every connection");
@@ -1002,6 +1015,10 @@ fn check_welcome_message(world: &mut JoinWorld) {
     assert!(world.told.is_empty(), "OFF restores ordinary join without chat");
     clear_toggle(world, "welcome_message");
     clear_toggle(world, "first_join_message");
+    for name in ["onlyRunOnDedicatedServers", "sendEmptyLineBeforeFirstMessage",
+                 "messageTwoText", "messageThreeText"] {
+        clear_toggle(world, &name.to_ascii_lowercase());
+    }
     eprintln!("PASS welcome_message: OFF, repeated logins, simultaneous modules, proper recipient");
 }
 

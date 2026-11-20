@@ -13,10 +13,10 @@ def keys(root: Path) -> set[str]:
     settings = (root / 'src/settings.rs').read_text()
     alias = dict(re.findall(r'"([A-Za-z0-9]+)"\s*=>\s*"([a-z0-9]+)"', settings))
     modules = re.findall(r'ModuleSpec \{ key: "([^"]+)"', gui)
-    options = re.findall(r'(?:toggle|range|choice)\("([^"]+)",', gui)
-    assert len(modules) == 44 and len(options) == 108, 'Unexpected settings catalog: migration stopped'
+    options = re.findall(r'(?:toggle|range|choice|text)\("([^"]+)",', gui)
+    assert len(modules) == 44 and len(options) == 123, 'Unexpected settings catalog: migration stopped'
     all_keys = {alias.get(name, name) for name in modules + options}
-    assert len(all_keys) == 152 and all(re.fullmatch(r'[a-z0-9_.-]+', name) for name in all_keys)
+    assert len(all_keys) == 167 and all(re.fullmatch(r'[a-z0-9_.-]+', name) for name in all_keys)
     return all_keys
 
 

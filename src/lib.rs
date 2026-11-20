@@ -46,7 +46,7 @@ use mod_api::{
     AnvilUpdateEvent, BlockChangedEvent, LevelHost, ClientHost, EntityJoinLevelEvent, EntityLeaveLevelEvent,
     EntityMobGriefingEvent, Flow, Hooks, Host, HostSide,
     LootDropsEvent, PlayerDestroyedBlockEvent, PlayerLoggedInEvent, Registrar,
-    RegistrationContext, RenderHandEvent, ServerHost, ServerStoppedEvent, ServerTickEvent,
+    RegistrationContext, RenderHandEvent, ServerHost, ServerStartedEvent, ServerStoppedEvent, ServerTickEvent,
     TradeWithVillagerEvent, InputKeyEvent, ClientTickPreEvent, ScreenRenderPostEvent,
     ScreenMouseButtonPressedPreEvent, ScreenMouseButtonReleasedPreEvent,
     ScreenMouseDraggedPreEvent, ScreenKeyPressedPreEvent, ScreenCharTypedPreEvent,
@@ -212,6 +212,10 @@ impl Hooks for SunriseQol {
         conduit_drowned::check(host, event);
     }
 
+    fn server_started(&self, _: &mut dyn ServerHost, event: &mut ServerStartedEvent) {
+        messages::started(event);
+    }
+
     fn server_tick(&self, host: &mut dyn ServerHost, event: &mut ServerTickEvent<'_>) {
         soft_hay::refresh(host);
         self.decay.tick(host, event);
@@ -279,6 +283,7 @@ impl Hooks for SunriseQol {
         self.elytra.reset();
         self.shulkers.reset();
         soft_hay::reset();
+        messages::reset();
     }
 
     fn render_hand(&self, host: &dyn ClientHost, event: &mut RenderHandEvent<'_, '_>) -> Flow {

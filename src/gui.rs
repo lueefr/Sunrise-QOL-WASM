@@ -24,6 +24,7 @@ enum OptionKind {
     Toggle { default: bool },
     Range { default: f64, min: f64, max: f64, step: f64 },
     Choice { default: &'static str, values: &'static [&'static str] },
+    Text { default: &'static str, max: usize },
 }
 
 #[derive(Clone, Copy)]
@@ -80,6 +81,31 @@ const fn choice(key: &'static str, label: &'static str, default: &'static str,
                 values: &'static [&'static str]) -> OptionSpec {
     OptionSpec { key, label, kind: OptionKind::Choice { default, values } }
 }
+
+const fn text(key: &'static str, label: &'static str, default: &'static str, max: usize) -> OptionSpec {
+    OptionSpec { key, label, kind: OptionKind::Text { default, max } }
+}
+
+const FIRST_JOIN_OPTIONS: &[OptionSpec] = &[
+    text("firstJoinMessage", "First Join Text", "You wake up in an unfamiliar place.", 256),
+    range("firstJoinMessageTextFormattingColourIndex", "First Join Color (0-15)", 2., 0., 15., 1.),
+    text("serverBroadcastMessage", "First Join Broadcast Text", "", 256),
+    range("serverBroadcastMessageTextFormattingColourIndex", "Broadcast Color (0-15)", 3., 0., 15., 1.),
+];
+
+const WELCOME_OPTIONS: &[OptionSpec] = &[
+    toggle("onlyRunOnDedicatedServers", "Dedicated Servers Only", true),
+    toggle("sendEmptyLineBeforeFirstMessage", "Blank Line Before First", true),
+    text("messageOneText", "Welcome Message One", "Welcome to the server!", 256),
+    range("messageOneColourIndex", "Message One Color (0-15)", 2., 0., 15., 1.),
+    text("messageOneOptionalURL", "Message One URL", "", 512),
+    text("messageTwoText", "Welcome Message Two", "Downloaded from CurseForge! This is a clickable link.", 256),
+    range("messageTwoColourIndex", "Message Two Color (0-15)", 14., 0., 15., 1.),
+    text("messageTwoOptionalURL", "Message Two URL", "https://curseforge.com/members/serilum/projects", 512),
+    text("messageThreeText", "Welcome Message Three", "You should probably edit this in the config :)", 256),
+    range("messageThreeColourIndex", "Message Three Color (0-15)", 15., 0., 15., 1.),
+    text("messageThreeOptionalURL", "Message Three URL", "", 512),
+];
 
 const DOORS: &[OptionSpec] = &[
     toggle("recursive_doors", "Recursive Opening", true),
@@ -326,8 +352,8 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "always_wither_skull", label: "Wither Skull Drops", options: &[], category: Category::Creatures },
     ModuleSpec { key: "dragon_drops_elytra", label: "Dragon Drops", options: &[], category: Category::Creatures },
     ModuleSpec { key: "infinite_trading", label: "Trade Restocking", options: TRADING, category: Category::Trading },
-    ModuleSpec { key: "first_join_message", label: "First Join Message", options: &[], category: Category::Messages },
-    ModuleSpec { key: "welcome_message", label: "Welcome Messages", options: &[], category: Category::Messages },
+    ModuleSpec { key: "first_join_message", label: "First Join Message", options: FIRST_JOIN_OPTIONS, category: Category::Messages },
+    ModuleSpec { key: "welcome_message", label: "Welcome Messages", options: WELCOME_OPTIONS, category: Category::Messages },
     ModuleSpec { key: "compact_help", label: "Command Help", options: HELP, category: Category::Messages },
 ];
 #[derive(Clone, Copy)]
@@ -404,6 +430,17 @@ impl Screen {
         self.numbers.push((id, option));
     }
 
+    fn string(&mut self, rect: [f32; 4], option: OptionSpec, value: &str,
+              max: usize, active: bool) {
+        if !self.visible(rect[1], rect[3]) { return; }
+        let mut field = TextField::new(rect, max);
+        field.set_value(value);
+        field.message = option.label.to_owned();
+        field.active = active;
+        let id = self.widgets.add_text_field(field);
+        self.numbers.push((id, option));
+    }
+
     fn valid_number(value: &str, min: f64, max: f64) -> bool {
         value.trim().parse::<f64>().ok()
             .is_some_and(|number| number.is_finite() && number >= min && number <= max)
@@ -427,6 +464,14 @@ impl Screen {
         let Some((_, option)) = self.numbers.iter().find(|(key, _)| *key == id).copied() else {
             return;
         };
+        if let OptionKind::Text { max, .. } = option.kind {
+            if let Some(draft) = self.widgets.text_field(id).map(|field| field.value().to_owned()) {
+                if draft.chars().count() <= max && !draft.contains('\0') {
+                    let _ = save(host, option.key, &draft);
+                }
+            }
+            return;
+        }
         let OptionKind::Range { default, min, max, step } = option.kind else { return; };
         let old = self.option_amount(host, option.key, default, min, max);
         let draft = self.widgets.text_field(id).map(|field| field.value().trim().to_owned());
@@ -529,6 +574,10 @@ impl Screen {
                                 let current = saved_value(host, opt.key).unwrap_or_else(|| default.to_owned());
                                 let current = if values.contains(&current.as_str()) { current } else { default.to_owned() };
                                 self.button([x + w - 151., next, 145., 20.], &current, active, Action::Cycle(*opt));
+                            }
+                            OptionKind::Text { default, max } => {
+                                let current = saved_value(host, opt.key).unwrap_or_else(|| default.to_owned());
+                                self.string([x + w - 196., next, 190., 20.], *opt, &current, max, active);
                             }
                         }
                     }
