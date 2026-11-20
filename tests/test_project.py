@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import hashlib
 import re
 import sys
 import tomllib
@@ -346,6 +347,21 @@ class DurabilityRegressionTests(unittest.TestCase):
         self.assertIn('mob.remove_goal(host, "BreakDoor")', zombie)
         self.assertIn('mob.set_can_open_doors(host, false)', zombie)
         self.assertIn('key: "zombie_proof_doors"', gui)
+
+    def test_exact_original_harvest_tags(self):
+        # Git blob IDs from JamCoreModding/right-click-harvest (MIT).
+        original_blobs = {
+            'block/blacklist.json': '27b94f91030e05503db9f3d6da625e4d041bd3ea',
+            'block/hoe_never_required.json': '0512ed8b0b2615998c2491ba9cb9bbb2601611f1',
+            'block/radius_harvest_blacklist.json': '7f2a23f642ffe72a7d11d0255576091631ffdbb5',
+            'item/low_tier_hoes.json': '848f378cee4d7c546408234710645f1e655d4bff',
+            'item/mid_tier_hoes.json': '320dc441260333a7a416991fc94ab471f40e63d1',
+            'item/high_tier_hoes.json': '76e37a23e87fe7eb9eff1ea35ba723a7eb2cb260',
+        }
+        for filename, expected in original_blobs.items():
+            data = (ROOT / 'data/rightclickharvest/tags' / filename).read_bytes()
+            sha = hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\\0' + data).hexdigest()
+            self.assertEqual(sha, expected, f'{filename} must match upstream byte for byte')
 
     def test_upstream_harvest_tags_and_component_support(self):
         original = ROOT / 'data/rightclickharvest/tags'
