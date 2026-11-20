@@ -402,10 +402,10 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
             let _ = player.award_stat(host, StatType::Used, &item_id, 1);
         }
     }
-    if let Some(held) = held {
-        let tool_id = held.item().id(host);
-        let _ = player.award_stat(host, StatType::Used, &tool_id, 1);
-    }
+    // The original records ItemUsed even for an empty hand (Items.AIR).
+    let tool_id = held.map(|held| held.item().id(host))
+        .unwrap_or_else(|| "minecraft:air".to_owned());
+    let _ = player.award_stat(host, StatType::Used, &tool_id, 1);
     if hoe {
         let current = if kind == Crop::Column {
             player.inventory_slots(host).and_then(|slots| slots.into_iter()
