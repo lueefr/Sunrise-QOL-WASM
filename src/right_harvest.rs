@@ -128,7 +128,7 @@ fn vanilla_crop(id: &str) -> bool {
         | "minecraft:cocoa" | "minecraft:torchflower_crop")
 }
 
-fn mature(host: &dyn ServerHost, level: LevelRef, pos: [i32; 3],
+fn mature(host: &dyn ServerHost, _level: LevelRef, _pos: [i32; 3],
     state: BlockState, id: &str) -> Option<(Crop, Option<BlockState>)> {
     if matches!(id, "minecraft:sugar_cane" | "minecraft:cactus") {
         return Some((Crop::Column, None));
@@ -234,6 +234,14 @@ fn pay_xp(host: &mut dyn ServerHost, player: mod_api::PlayerRef, cost: i32) -> b
         && player.set_total_experience(host, old.total - cost)
 }
 
+fn wear_needed(kind: Crop, previous: Option<u32>, current: Option<u32>) -> i32 {
+    match (kind, previous, current) {
+        (Crop::Age, Some(_), _) => 1,
+        (Crop::Column, Some(before), Some(after)) if after <= before => 1,
+        _ => 0,
+    }
+}
+
 fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
     player: mod_api::PlayerRef, pos: [i32; 3], original: [i32; 3],
     held: Option<&ItemStack>, hoe: bool, creative: bool,
@@ -295,6 +303,15 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
         }
     }
 
+    // The normal player-break route can spend exhaustion and durability
+    // itself. The original charges exactly one hoe wear and its chosen
+    // hunger multiplier, so measure changes before applying any difference.
+    let before_food = (kind == Crop::Column).then(|| player.food(host))
+        .flatten().map(|food| food.exhaustion);
+    let before_damage = held.filter(|_| hoe && !creative).map(|stack| stack.damage());
+    let selected = if hoe && !creative { player.selected_slot(host) } else { None };
+    let held_id = held.map(|stack| stack.item().id(host));
+
     match kind {
         Crop::Column => {
             // Unlike direct set_block, the player break path keeps ordinary
@@ -322,15 +339,29 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
         let tool_id = held.item().id(host);
         let _ = player.award_stat(host, StatType::Used, &tool_id, 1);
     }
-    // The player-break path already applies normal item wear for column
-    // plants. Only age-based crops need the explicit one-point hoe wear.
-    if hoe && !creative && kind == Crop::Age {
-        if let Some(living) = host.living(player.entity()) {
-            let _ = living.hurt_and_break(host, EquipmentSlot::MainHand, 1);
+    if hoe && !creative {
+        let current = if kind == Crop::Column {
+            player.inventory_slots(host).and_then(|slots| slots.into_iter()
+                .find(|(slot, stack)| {
+                    usize::try_from(*slot).ok() == selected
+                        && held_id.as_deref() == Some(stack.item().id(host).as_str())
+                })
+                .map(|(_, stack)| stack.damage()))
+        } else { None };
+        if wear_needed(kind, before_damage, current) > 0 {
+            if let Some(living) = host.living(player.entity()) {
+                let _ = living.hurt_and_break(host, EquipmentSlot::MainHand, 1);
+            }
         }
     }
-    if !creative && hunger > 0.0 {
-        let _ = player.add_exhaustion(host, 0.008 * hunger);
+    if !creative {
+        if let Some(original) = before_food {
+            // Cancel the player-break route's automatic exhaustion and
+            // replace it with the source mod's 0.008 * level modifier.
+            let _ = player.set_exhaustion(host, original + 0.008 * hunger);
+        } else if hunger > 0.0 {
+            let _ = player.add_exhaustion(host, 0.008 * hunger);
+        }
     }
     if !creative {
         match xp {
@@ -413,6 +444,14 @@ mod tests {
         assert_eq!(age_reset("minecraft:cocoa[age=2,facing=north]"),
             Some("minecraft:cocoa[age=0,facing=north]".into()));
         assert_eq!(age_reset("minecraft:wheat"), None);
+    }
+
+    #[test]
+    fn exact_one_point_of_hoe_wear() {
+        assert_eq!(wear_needed(Crop::Age, Some(9), None), 1);
+        assert_eq!(wear_needed(Crop::Column, Some(9), Some(9)), 1);
+        assert_eq!(wear_needed(Crop::Column, Some(9), Some(10)), 0);
+        assert_eq!(wear_needed(Crop::Column, Some(9), None), 0);
     }
 
     #[test]
