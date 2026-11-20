@@ -39,6 +39,7 @@ mod soil;
 mod soft_hay;
 mod milk;
 mod zombie;
+mod right_harvest;
 
 use mod_api::{
     AnvilUpdateEvent, BlockChangedEvent, LevelHost, ClientHost, EntityJoinLevelEvent, EntityLeaveLevelEvent,
@@ -158,6 +159,7 @@ impl Hooks for SunriseQol {
         let HostSide::Server(host) = side else { return Flow::Continue; };
         if self.beacon.click(host, event) == Flow::Cancel { return Flow::Cancel; }
         if self.conduit.click(host, event) == Flow::Cancel { return Flow::Cancel; }
+        if right_harvest::click(host, event) == Flow::Cancel { return Flow::Cancel; }
         self.doors.clicked(HostSide::Server(host), event)
     }
 
