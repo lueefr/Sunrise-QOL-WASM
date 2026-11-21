@@ -145,6 +145,8 @@ class ReleasePolicyTests(unittest.TestCase):
         self.assertIn("python3 tools/release.py stamp", workflow)
         self.assertIn("uses: ./.github/actions/validate", workflow)
         self.assertIn("sha256sum *.smod > SHA256SUMS.txt", workflow)
+        self.assertIn('package="sunrise_qol-$version.smod"', workflow)
+        self.assertIn('dist/sunrise_qol-$VERSION.smod', workflow)
         self.assertIn("gh release create", workflow)
         self.assertIn("gh release upload", workflow)
         self.assertIn("grep -Fxq 'SHA256SUMS.txt'", workflow)
