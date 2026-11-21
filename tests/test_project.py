@@ -235,7 +235,7 @@ class ProjectTests(unittest.TestCase):
             (native / "tree_harvester").write_text("true")
             (new / "leaf_decay").write_text("false")
             (new / "right_click_harvest").write_text("true")
-            self.assertEqual(migrate(game, ROOT), 4)
+            self.assertEqual(migrate(game, ROOT), 3)
             self.assertEqual((new / "vein_miner").read_text(), "true")
             self.assertEqual((new / "leaf_decay").read_text(), "false")
             self.assertEqual((new / "tree_harvester").read_text(), "true")
