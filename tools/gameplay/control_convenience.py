@@ -5,7 +5,7 @@ parser=argparse.ArgumentParser(description='Destructive tests: disposable develo
 for key in ('ctl','socket','game-dir','package','output'):parser.add_argument('--'+key,required=True)
 args=parser.parse_args()
 base=[args.ctl,'--socket',args.socket]
-root=Path(args.game_dir) / 'config/horizon_qol_suite'
+root=Path(args.game_dir) / 'config/sunrise_qol'
 rows=[]
 def call(*args):
  p=subprocess.run(base+list(args),capture_output=True,text=True);r=json.loads(p.stdout)
