@@ -13,15 +13,10 @@ so documentation-only changes do not bump the version.
 The initial code release is **1.0.0**. Subsequent versions follow the
 requested project-specific scheme (not standard SemVer):
 
-- A commit with `feat:` or `feat(scope):` produces a **major update**:
-  `1.1.1 -> 2.0.0`, resetting the minor and update counter.
-- A commit with `fix:` or `fix(scope):` produces a **minor update**:
-  `1.0.0 -> 1.1.1`, then `1.1.1 -> 1.2.2`.
-- Maintenance changes to mod files without `feat:` or `fix:` increase
-  only the update counter: `2.0.0 -> 2.0.1`.
-- If several commits arrive in a single release, a feature takes
-  precedence over a fix, and a fix takes precedence over maintenance.
-- The third component counts update releases within the current major line.
+- Each successful release increments exactly one decimal step, regardless of commit type:
+  `1.1.4 -> 1.1.5 -> ... -> 1.1.9 -> 1.2.0 -> ... -> 1.9.9 -> 2.0.0`.
+- An SDK update and changes to source files are combined into one release per cycle.
+- A tag whose release assets are missing is resumed without incrementing again.
 
 Examples of recommended commit subjects:
 
@@ -37,10 +32,8 @@ Changes to `main` are checked by Python tests, compiled as `.smod` using
 Only successful jobs commit the version, create the `vX.Y.Z` tag and publish
 an asset named `Sunrise-QOL-X.Y.Z.smod` with a changelog and SHA-256 checksum.
 
-Conventional Commit prefixes are essential for **automatic semantic
-classification**. A change that adds a feature but lacks `feat:` will be
-classified as maintenance; GitHub Actions cannot reliably infer intent
-from a diff. Review commit titles before merging.
+Conventional Commit prefixes help organize release notes but do not control
+version increments. The version planner publishes one sequential update per cycle.
 
 The release build also creates the pinned shared WASM standard, checks the
 mod's Rust imports, and runs the compiled .smod through Sunrise's real Wasmtime
