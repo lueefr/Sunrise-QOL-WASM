@@ -335,6 +335,13 @@ class DurabilityRegressionTests(unittest.TestCase):
         self.assertIn('Flow::Cancel', src)
         self.assertIn('on(host, "what_durability")', src)
 
+    def test_extra_qol_tool_wear_respects_unbreakable(self):
+        for path in ("src/paths.rs", "src/hoe.rs", "src/right_harvest.rs"):
+            with self.subTest(path=path):
+                source = (ROOT / path).read_text()
+                self.assertIn('!on(host, "what_durability")', source)
+                self.assertIn('living.hurt_and_break(', source)
+
     def test_anvil_cost_changes_only_after_upgrading(self):
         src = (ROOT / 'src/unlimited.rs').read_text()
         self.assertIn('if !changed { return; }', src)
