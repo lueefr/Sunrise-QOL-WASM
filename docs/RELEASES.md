@@ -30,7 +30,7 @@ docs: clarify installation instructions
 Changes to `main` are checked by Python tests, compiled as `.smod` using
 `cargo sunrise-mod build --wasm`, and the package must contain `mod.wasm`.
 Only successful jobs commit the version, create the `vX.Y.Z` tag and publish
-an asset named `Sunrise-QOL-X.Y.Z.smod` with a changelog and SHA-256 checksum.
+an asset named `sunrise_qol-X.Y.Z.smod` with a changelog and SHA-256 checksum.
 
 Conventional Commit prefixes help organize release notes but do not control
 version increments. The version planner publishes one sequential update per cycle.
