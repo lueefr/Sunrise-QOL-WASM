@@ -5,8 +5,9 @@ built `horizon_qol_suite.smod` using the SDK from the official Sunrise nightly.
 
 ## Validation
 
-1. Python source checks and Rust unit tests.
-2. Compile the mod with the signed, revision-matched Sunrise SDK and tool.
+1. Run Python source regression tests.
+2. Compile the mod with Rust 1.99.1 and the signed, revision-matched
+   Sunrise SDK and tool.
 3. Check the `.smod` ZIP, bundled assets and guest imports against the
    matching WASM standard.
 4. Load the actual `.smod` in Sunrise's `sunrise-mod-wasm` Wasmtime runtime
@@ -40,6 +41,8 @@ python3 tools/sandbox/check.py target/sunrise-mod/horizon_qol_suite.smod target/
 bash tools/sandbox/run.sh
 ```
 
-The loader compiles against upstream source in `.sunrise/runtime-source` and
-caches its dependencies in `target/sunrise-sandbox`. These checks verify
-loading and binary compatibility, not actual Minecraft interactions.
+A loader cache miss compiles the pinned Sunrise upstream source in
+`.sunrise/runtime-source` and saves the tested binary in
+`.sunrise/loader-cache`. Subsequent runs load the fresh `.smod` using that
+same executable. These checks verify binary compatibility and initialization,
+not actual Minecraft interactions.
