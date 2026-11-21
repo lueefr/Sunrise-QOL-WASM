@@ -1,7 +1,7 @@
 # Fast headless Sunrise validation
 
 The workflows share `.github/actions/validate/action.yml` to check the exact
-built `horizon_qol_suite.smod` using the SDK from the official Sunrise nightly.
+built `sunrise_qol.smod` using the SDK from the official Sunrise nightly.
 
 ## Validation
 
@@ -37,7 +37,7 @@ python3 -m unittest discover -s tests -p 'test*.py'
 cargo test --lib
 cargo sunrise-mod build --wasm
 cargo sunrise-mod wasm-std target/sunrise-wasm-std.wasm
-python3 tools/sandbox/check.py target/sunrise-mod/horizon_qol_suite.smod target/sunrise-wasm-std.wasm
+python3 tools/sandbox/check.py target/sunrise-mod/sunrise_qol.smod target/sunrise-wasm-std.wasm
 bash tools/sandbox/run.sh
 ```
 
