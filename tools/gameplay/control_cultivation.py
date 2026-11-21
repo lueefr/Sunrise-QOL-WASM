@@ -5,7 +5,7 @@ parser=argparse.ArgumentParser(description='Destructive tests: disposable develo
 for key in ('ctl','socket','game-dir','package','output'):parser.add_argument('--'+key,required=True)
 args=parser.parse_args()
 base=[args.ctl,'--socket',args.socket]
-root=Path(args.game_dir) / 'config/horizon_qol_suite'
+root=Path(args.game_dir) / 'config/sunrise_qol'
 rows=[]
 def call(*args):
  p=subprocess.run(base+list(args),capture_output=True,text=True);r=json.loads(p.stdout)
@@ -26,9 +26,9 @@ try:
  cmd('difficulty peaceful');cmd('gamemode survival');cmd('clear @s');cmd('effect clear @s');cmd('tp @s 20.5 91 0.5');cmd('fill 15 90 -3 30 90 3 stone')
  for key,recipe in [('furnace_recycle','furnace_recycle/smelt_bucket'),('village_bell_recipe','village_bell_recipe/bell')]:
   switch(key,False);cmd('reload');time.sleep(.5)
-  r=cmd('recipe give @s horizon_qol_suite:'+recipe);record(key+'_off',not r['success'],response=r)
+  r=cmd('recipe give @s sunrise_qol:'+recipe);record(key+'_off',not r['success'],response=r)
   switch(key,True);cmd('reload');time.sleep(.5);cmd('recipe take @s *')
-  r=cmd('recipe give @s horizon_qol_suite:'+recipe);record(key+'_on',r['success'],response=r)
+  r=cmd('recipe give @s sunrise_qol:'+recipe);record(key+'_on',r['success'],response=r)
  cmd('setblock 21 91 0 furnace');cmd('item replace block 21 91 0 container.0 with bucket 1');cmd('item replace block 21 91 0 container.1 with coal 1');step(205)
  r=data('block 21 91 0','Items');record('bucket_smelted',any('iron_ingot' in x for x in r) and not any('bucket' in x for x in r),items=r)
  switch('kelp_fertilizer',True);cmd('item replace entity @s hotbar.0 with kelp 2');call('select','1');cmd('setblock 20 90 1 farmland');cmd('setblock 20 91 1 wheat[age=0]');cmd('tp @s 20.5 91 3.5');time.sleep(.3)

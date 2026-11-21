@@ -189,7 +189,8 @@ pub fn click(host: &mut dyn ServerHost, event: &mut RightClickBlockEvent<'_>) ->
         }
     }
     if changed == 0 { return Flow::Continue; }
-    if player.is_creative(host) != Some(true) {
+    // Area tilling charges no additional durability with Unbreakable Tools enabled.
+    if player.is_creative(host) != Some(true) && !on(host, "what_durability") {
         if let Some(living) = host.living(player.entity()) {
             let slot = match event.click.hand {
                 Hand::Main => EquipmentSlot::MainHand,

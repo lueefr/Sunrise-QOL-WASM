@@ -23,7 +23,7 @@ def step(n):
    time.sleep(.08);return
   time.sleep(.05)
  raise RuntimeError('world did not complete requested steps')
-config=args.game_dir/'config/horizon_qol_suite'
+config=args.game_dir/'config/sunrise_qol'
 def setting(key,value):
  config.mkdir(exist_ok=True);(config/key).write_text(value)
 def door(kind='oak_door'):

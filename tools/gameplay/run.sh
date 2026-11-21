@@ -11,7 +11,7 @@ print(tomllib.loads(Path("Cargo.toml").read_text())["package"]["metadata"]["sunr
 PY
 )"
 test "$(git -C "$source" rev-parse HEAD)" = "$revision" || { echo "Game revision differs from SDK pin" >&2; exit 1; }
-smod="$root/target/sunrise-mod/horizon_qol_suite.smod"
+smod="$root/target/sunrise-mod/sunrise_qol.smod"
 standard="$root/target/sunrise-wasm-std.wasm"
 test -s "$smod" && test -s "$standard" || { echo "Missing actual .smod or matching WASM std" >&2; exit 1; }
 cp "$root/tools/gameplay/sunrise_qol_gameplay.rs.txt" "$source/crates/sunrise-client/src/game/modding/sunrise_qol_gameplay.rs"

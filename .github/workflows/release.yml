@@ -86,7 +86,7 @@ jobs:
             exit 0
           fi
           version="$(printf '%s' "$PREVIOUS_TAG" | sed 's/^v//')"
-          package="Sunrise-QOL-$version.smod"
+          package="sunrise_qol-$version.smod"
           if gh release view "$PREVIOUS_TAG" --json assets \
              --jq '.assets[].name' > "$RUNNER_TEMP/release-assets.txt" 2>/dev/null; then
             if grep -Fxq "$package" "$RUNNER_TEMP/release-assets.txt" &&
@@ -139,7 +139,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp target/sunrise-mod/horizon_qol_suite.smod "dist/Sunrise-QOL-$VERSION.smod"
+          cp target/sunrise-mod/sunrise_qol.smod "dist/sunrise_qol-$VERSION.smod"
           (cd dist && sha256sum *.smod > SHA256SUMS.txt)
       - name: Commit version and tag only after a successful build
         if: steps.publish.outputs.build == 'true'
@@ -202,7 +202,7 @@ jobs:
               --verify-tag
           fi
           assets="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
-          grep -Fxq "Sunrise-QOL-$VERSION.smod" <<< "$assets"
+          grep -Fxq "sunrise_qol-$VERSION.smod" <<< "$assets"
           grep -Fxq 'SHA256SUMS.txt' <<< "$assets"
           echo "Verified published release $TAG"
 

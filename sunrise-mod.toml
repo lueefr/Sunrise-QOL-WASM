@@ -1,4 +1,4 @@
-id = "horizon_qol_suite"
+id = "sunrise_qol"
 name = "Sunrise QOL"
 version = "1.1.4"
 description = "Modular quality-of-life features for Sunrise. Full parity with the original suite is still in development."

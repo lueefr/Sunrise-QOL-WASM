@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "carpet",
+  "pattern": [
+    "###",
+    "#$#",
+    "###"
+  ],
+  "key": {
+    "#": "#minecraft:wool_carpets",
+    "$": "minecraft:magenta_dye"
+  },
+  "result": {
+    "id": "minecraft:magenta_carpet",
+    "count": 8
+  },
+  "neoforge:conditions": [
+    {
+      "type": "sunrise_qol:wool_tweaks_enabled"
+    }
+  ]
+}

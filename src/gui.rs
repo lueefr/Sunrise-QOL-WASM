@@ -13,7 +13,7 @@ use mod_api::{
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-const SCREEN_ID: &str = "horizon_qol_suite";
+const SCREEN_ID: &str = "sunrise_qol";
 const ROW_H: f32 = 25.0;
 const CATEGORY_H: f32 = 32.0;
 const PAD: f32 = 6.0;
@@ -324,7 +324,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "inventory_mending", label: "XP Item Repair", options: MENDING, category: Category::Inventory },
     ModuleSpec { key: "bottled_air", label: "Bottled Air", options: BOTTLED_AIR, category: Category::Inventory },
     ModuleSpec { key: "nutritious_milk", label: "Nutritious Milk", options: NUTRITIOUS_MILK, category: Category::Inventory },
-    ModuleSpec { key: "what_durability", label: "Durability Control", options: &[], category: Category::Inventory },
+    ModuleSpec { key: "what_durability", label: "Unbreakable Tools", options: &[], category: Category::Inventory },
     ModuleSpec { key: "gui_clock", label: "World Clock", options: CLOCK, category: Category::Hud },
     ModuleSpec { key: "gui_compass", label: "Navigation Compass", options: COMPASS, category: Category::Hud },
     ModuleSpec { key: "vanilla_zoom", label: "Camera Zoom", options: ZOOM, category: Category::Hud },
@@ -370,6 +370,97 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "welcome_message", label: "Welcome Messages", options: WELCOME_OPTIONS, category: Category::Messages },
     ModuleSpec { key: "compact_help", label: "Command Help", options: HELP, category: Category::Messages },
 ];
+
+// Display short, relevant descriptions without adding another setting per module.
+fn module_info(key: &str) -> &'static str {
+    match key {
+        "unlimited_enchantments" => "Combine matching enchantments beyond vanilla levels, up to the configured cap.",
+        "enchant_command" => "Allow the enchant command to apply enchantments beyond their vanilla limits.",
+        "affordable_anvil" => "Adjust anvil costs and the Too Expensive restriction.",
+        "tax_free_levels" => "Reduce renaming and repair cost restrictions at an anvil.",
+        "enchantment_level_indicator" => "Mark enchantments already at their maximum level.",
+        "ench_level_langpatch" => "Display higher enchantment and potion levels consistently.",
+        "inventory_totem" => "Use a Totem of Undying from the inventory when one is needed.",
+        "stack_refill" => "Automatically refill the held item from matching inventory stacks.",
+        "inventory_mending" => "Repair damaged inventory items using experience.",
+        "bottled_air" => "Use glass bottles underwater to restore some breathing time.",
+        "nutritious_milk" => "Make drinking milk restore hunger and saturation.",
+        "what_durability" => "Prevent durability loss on tools, weapons, armor and other damageable gear.",
+        "gui_clock" => "Show the in-game clock and day counter on the HUD.",
+        "gui_compass" => "Show facing direction and coordinates on the HUD.",
+        "vanilla_zoom" => "Zoom the camera using a configurable field of view.",
+        "hide_hands" => "Choose when to hide the main hand or offhand.",
+        "vein_miner" => "Mine connected ore blocks together, with configurable limits.",
+        "tree_harvester" => "Break connected tree logs in one action.",
+        "leaf_decay" => "Accelerate leaf decay while respecting tree and leaf checks.",
+        "extended_bonemeal" => "Let bonemeal affect more plants and speed growth.",
+        "furnace_recycle" => "Recover ingredients by recycling suitable items in a furnace.",
+        "kelp_fertilizer" => "Use kelp to help fertilize crops.",
+        "surface_mushrooms" => "Allow mushrooms to spread or grow on the surface.",
+        "quick_paths" => "Create connected dirt paths using a shovel.",
+        "wool_tweaks" => "Dye wool, carpets and beds and use extra wool crafting recipes.",
+        "hoe_tweaks" => "Improve hoe use and allow configurable area tilling.",
+        "right_click_harvest" => "Harvest and replant mature crops with a right click.",
+        "double_doors" => "Open linked doors together instead of one at a time.",
+        "automatic_doors" => "Automatically open and close nearby doors.",
+        "zombie_proof_doors" => "Prevent zombies from breaking suitable doors.",
+        "beacon_placement" => "Recover a beacon base when breaking its beacon.",
+        "conduit_placement" => "Recover the conduit frame when breaking the conduit.",
+        "no_feather_trample" => "Prevent feather falling interactions from trampling farmland.",
+        "thorny_bush_protection" => "Control damage from thorny bushes.",
+        "village_bell_recipe" => "Add a crafting recipe for village bells.",
+        "sleep_sooner" => "Permit sleeping earlier in the day.",
+        "keep_soil_tilled" => "Help farmland remain tilled in supported situations.",
+        "softer_hay_bales" => "Reduce fall damage when landing on hay bales.",
+        "spawner_control" => "Change selected mob-spawner behavior.",
+        "cycle_paintings" => "Cycle through paintings instead of breaking and replacing them.",
+        "move_boats" => "Carry and reposition boats with their existing contents.",
+        "move_minecarts" => "Carry and reposition minecarts with their existing contents.",
+        "dismount_entity" => "Remove passengers from eligible entities.",
+        "ground_elytra_fireworks" => "Launch using elytra and a firework while on the ground.",
+        "followers_teleport" => "Bring nearby followers along when teleporting.",
+        "friendly_griefing" => "Control whether mobs may change the world around them.",
+        "superflat_world_no_slimes" => "Control slime spawning in superflat worlds.",
+        "drowned_prevention" => "Limit drowned spawning in a configurable radius.",
+        "shulker_drops_two" => "Adjust how many shells a shulker drops.",
+        "respawning_shulkers" => "Allow shulkers to respawn after a delay.",
+        "always_wither_skull" => "Improve the chance of a Wither Skeleton skull drop.",
+        "dragon_drops_elytra" => "Drop special loot, including elytra, from the Ender Dragon.",
+        "infinite_trading" => "Allow villagers and wandering traders to restock more often.",
+        "first_join_message" => "Customize the message displayed when a player first joins.",
+        "welcome_message" => "Customize welcome messages shown when joining the server.",
+        "compact_help" => "Show a compact, paginated list of commands.",
+        _ => "Enable or disable this quality-of-life feature.",
+    }
+}
+
+fn option_info(module: &ModuleSpec, option: OptionSpec) -> String {
+    match option.key {
+        "itemsWithDurability" => "Items listed here keep normal wear even when Unbreakable Tools is on.".to_owned(),
+        "unlimited_max_level" => "Highest enchantment level accepted by upgraded enchantments (up to 255).".to_owned(),
+        "unlimited_max_anvil_cost" | "affordable_cost_cap" =>
+            "Maximum experience cost allowed for anvil operations.".to_owned(),
+        "maximumDecayTicks" | "minimumDecayTicks" =>
+            "Controls when connected leaves begin disappearing after log removal.".to_owned(),
+        "persistentLeavesBehavior" =>
+            "Choose whether persistent leaves may decay: IGNORE, NORMAL or ALL.".to_owned(),
+        "maxAmountOfLogsBrokenPerHarvest" =>
+            "Maximum connected logs broken in a single tree harvest.".to_owned(),
+        "maxOresPerVein" =>
+            "Maximum connected ores mined in one operation.".to_owned(),
+        _ => match option.kind {
+            OptionKind::Toggle { .. } =>
+                format!("Turn {} on or off for {}.", option.label, module.label),
+            OptionKind::Range { min, max, .. } =>
+                format!("Set {} for {} ({} to {}).", option.label, module.label, min, max),
+            OptionKind::Choice { values, .. } =>
+                format!("Choose {} for {}: {}.", option.label, module.label, values.join(", ")),
+            OptionKind::Text { .. } =>
+                format!("Edit the {} text used by {}.", option.label, module.label),
+        },
+    }
+}
+
 #[derive(Clone, Copy)]
 enum Action {
     Expand(usize),
@@ -384,12 +475,18 @@ struct Label {
     color: u32,
 }
 
+struct Hint {
+    rect: [f32; 4],
+    text: String,
+}
+
 struct Screen {
     widgets: Widgets,
     footer: Widgets,
     actions: Vec<(WidgetId, Action)>,
     numbers: Vec<(WidgetId, OptionSpec)>,
     labels: Vec<Label>,
+    hints: Vec<Hint>,
     expanded: Option<usize>,
     size: [f32; 2],
     viewport: [f32; 4],
@@ -419,6 +516,20 @@ impl Screen {
 
     fn label(&mut self, text: impl Into<String>, x: f32, y: f32, color: u32) {
         self.labels.push(Label { text: text.into(), at: [x, y], color });
+    }
+
+    fn hint(&mut self, rect: [f32; 4], text: impl Into<String>) {
+        if self.visible(rect[1], rect[3]) {
+            self.hints.push(Hint { rect, text: text.into() });
+        }
+    }
+
+    fn hovered(&self, mouse: [f32; 2]) -> Option<&str> {
+        if !self.inside(mouse) { return None; }
+        self.hints.iter().find(|hint| {
+            let [x, y, w, h] = hint.rect;
+            mouse[0] >= x && mouse[0] < x + w && mouse[1] >= y && mouse[1] < y + h
+        }).map(|hint| hint.text.as_str())
     }
 
     fn button(&mut self, rect: [f32; 4], name: &str, enabled: bool, action: Action) {
@@ -540,63 +651,63 @@ impl Screen {
         let module = &MODULES[index];
         let open = self.expanded == Some(index);
         let active = on(host, module.key);
-        self.button([x, y, w - 94., 20.], " ", true, Action::Expand(index));
+        // A module without options is itself a switch, not a submenu.
+        let simple = module.options.is_empty();
+        self.button([x, y, w - 94., 20.], " ", true,
+            if simple { Action::Switch(module.key, false) } else { Action::Expand(index) });
         if self.visible(y, 20.) {
-            self.label(format!("{} {}", if open { "v" } else { ">" }, module.label),
-                x + 8., y + 6., 0xFFFF_FFFF);
+            let text = if simple { module.label.to_owned() } else {
+                format!("{} {}", if open { "v" } else { ">" }, module.label)
+            };
+            self.label(text, x + 8., y + 6., 0xFFFF_FFFF);
+            self.hint([x, y, w - 6., 20.], module_info(module.key));
         }
         self.button([x + w - 88., y, 82., 20.], if active { "ON" } else { "OFF" }, true,
             Action::Switch(module.key, false));
         let mut next = y + ROW_H;
-        if open {
-            if module.options.is_empty() {
-                if self.visible(next, 16.) {
-                    self.label("No Additional Options", x + 15., next + 3., 0xFFAA_AAAA);
-                }
-                next += ROW_H;
-            } else {
-                for opt in module.options {
-                    if self.visible(next, 20.) {
-                        self.label(opt.label, x + 15., next + 6., 0xFFE0_E0E0);
-                        match opt.kind {
-                            OptionKind::Toggle { default } => {
-                                let enabled = flag(host, opt.key, default);
-                                self.button([x + w - 88., next, 82., 20.],
-                                    if enabled { "ON" } else { "OFF" }, active,
-                                    Action::Switch(opt.key, default));
-                            }
-                            OptionKind::Range { default, min, max, .. } => {
-                                let value = self.option_amount(host, opt.key, default, min, max);
-                                self.button([x + w - 114., next, 23., 20.], "-", active && value > min,
-                                    Action::Adjust(*opt, -1));
-                                let printed = if opt.key == "persistentLeavesBehavior" {
-                                    match value as usize {
-                                        0 => "IGNORE".to_owned(),
-                                        1 => "NORMAL".to_owned(),
-                                        _ => "ALL".to_owned(),
-                                    }
-                                } else { format!("{value:.0}") };
-                                if opt.key == "persistentLeavesBehavior" {
-                                    self.label(printed, x + w - 84., next + 6., 0xFFFF_FFFF);
-                                } else {
-                                    self.number([x + w - 88., next, 56., 20.], *opt, value, active);
+        if open && !simple {
+            for opt in module.options {
+                if self.visible(next, 20.) {
+                    self.label(opt.label, x + 15., next + 6., 0xFFE0_E0E0);
+                    self.hint([x + 10., next, w - 16., 20.], option_info(module, *opt));
+                    match opt.kind {
+                        OptionKind::Toggle { default } => {
+                            let enabled = flag(host, opt.key, default);
+                            self.button([x + w - 88., next, 82., 20.],
+                                if enabled { "ON" } else { "OFF" }, active,
+                                Action::Switch(opt.key, default));
+                        }
+                        OptionKind::Range { default, min, max, .. } => {
+                            let value = self.option_amount(host, opt.key, default, min, max);
+                            self.button([x + w - 114., next, 23., 20.], "-", active && value > min,
+                                Action::Adjust(*opt, -1));
+                            let printed = if opt.key == "persistentLeavesBehavior" {
+                                match value as usize {
+                                    0 => "IGNORE".to_owned(),
+                                    1 => "NORMAL".to_owned(),
+                                    _ => "ALL".to_owned(),
                                 }
-                                self.button([x + w - 29., next, 23., 20.], "+", active && value < max,
-                                    Action::Adjust(*opt, 1));
+                            } else { format!("{value:.0}") };
+                            if opt.key == "persistentLeavesBehavior" {
+                                self.label(printed, x + w - 84., next + 6., 0xFFFF_FFFF);
+                            } else {
+                                self.number([x + w - 88., next, 56., 20.], *opt, value, active);
                             }
-                            OptionKind::Choice { default, values } => {
-                                let current = saved_value(host, opt.key).unwrap_or_else(|| default.to_owned());
-                                let current = if values.contains(&current.as_str()) { current } else { default.to_owned() };
-                                self.button([x + w - 151., next, 145., 20.], &current, active, Action::Cycle(*opt));
-                            }
-                            OptionKind::Text { default, max } => {
-                                let current = saved_value(host, opt.key).unwrap_or_else(|| default.to_owned());
-                                self.string([x + w - 196., next, 190., 20.], *opt, &current, max, active);
-                            }
+                            self.button([x + w - 29., next, 23., 20.], "+", active && value < max,
+                                Action::Adjust(*opt, 1));
+                        }
+                        OptionKind::Choice { default, values } => {
+                            let current = saved_value(host, opt.key).unwrap_or_else(|| default.to_owned());
+                            let current = if values.contains(&current.as_str()) { current } else { default.to_owned() };
+                            self.button([x + w - 151., next, 145., 20.], &current, active, Action::Cycle(*opt));
+                        }
+                        OptionKind::Text { default, max } => {
+                            let current = saved_value(host, opt.key).unwrap_or_else(|| default.to_owned());
+                            self.string([x + w - 196., next, 190., 20.], *opt, &current, max, active);
                         }
                     }
-                    next += ROW_H;
                 }
+                next += ROW_H;
             }
         }
         next
@@ -613,13 +724,13 @@ impl Screen {
                 CATEGORY_H
             } else { 0. };
             header + ROW_H + if expanded == Some(index) {
-                ROW_H * module.options.len().max(1) as f32
+                ROW_H * module.options.len() as f32
             } else { 0. }
         }).sum::<f32>();
         let scroll = scroll.clamp(0., (total - viewport[3]).max(0.));
         let mut screen = Self {
             widgets: Widgets::new(), footer: Widgets::new(), actions: Vec::new(),
-            numbers: Vec::new(), labels: Vec::new(),
+            numbers: Vec::new(), labels: Vec::new(), hints: Vec::new(),
             expanded, size, viewport, scroll, total, drag_bar: false,
         };
         let mut y = top + PAD - scroll;
@@ -765,6 +876,9 @@ impl Gui {
         }
         // Keep the footer outside the scrolled and clipped area.
         let _ = screen.footer.draw(&mut *event.draw, host, event.screen.mouse);
+        if let Some(hint) = screen.hovered(event.screen.mouse) {
+            let _ = event.draw.gui_tooltip(&[Text::literal(hint)], event.screen.mouse);
+        }
     }
 
     fn input(&self, host: &dyn ClientHost, screen_id: &str, input: impl FnOnce(&mut Widgets) -> Outcome) -> Flow {

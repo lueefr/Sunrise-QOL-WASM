@@ -66,7 +66,8 @@ impl Paths {
                 if level.set_block(host, at, path, flags) == Ok(true) { made.push(at); }
             }
         }
-        if player.is_creative(host) != Some(true) {
+        // Extra path-building wear must respect Unbreakable Tools as well.
+        if player.is_creative(host) != Some(true) && !on(host, "what_durability") {
             if let Some(living) = host.living(player.entity()) {
                 let slot = if event.click.hand == Hand::Main { EquipmentSlot::MainHand } else { EquipmentSlot::OffHand };
                 let _ = living.hurt_and_break(host, slot, made.len() as i32);

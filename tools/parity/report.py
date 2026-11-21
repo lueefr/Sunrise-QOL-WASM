@@ -32,7 +32,7 @@ NAMES = {
     "inventory_mending": "Inventory Mending",
     "bottled_air": "Bottled Air",
     "nutritious_milk": "Nutritious Milk",
-    "what_durability": "What Durability",
+    "what_durability": "Unbreakable Tools",
     "gui_clock": "GUI Clock",
     "gui_compass": "GUI Compass",
     "vanilla_zoom": "Vanilla Zoom",
@@ -100,7 +100,9 @@ def inventory(root=ROOT):
             "ui_label": label,
             "parity_row": NAMES[key],
             "source_status": source_status,
-            "source_file_audited": NAMES[key] in reviewed,
+            "source_file_audited": NAMES[key] in reviewed or (
+                key == "what_durability" and "What Durability" in reviewed
+            ),
             "known_differences": differences,
             "certified_one_to_one": False,
             "gameplay_matrix_complete": False,

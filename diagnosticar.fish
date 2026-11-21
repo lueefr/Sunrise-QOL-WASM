@@ -1,7 +1,7 @@
 #!/usr/bin/env fish
 # Inspect the built WASM package and the standard-library member of the running game.
 set -l base (status dirname)
-set -l pacote "$base/target/sunrise-mod/horizon_qol_suite.smod"
+set -l pacote "$base/target/sunrise-mod/sunrise_qol.smod"
 if not test -f "$pacote"
     echo "Build the mod first with: fish instalar.fish" >&2
     exit 1

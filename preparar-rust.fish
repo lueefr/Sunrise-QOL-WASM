@@ -1,6 +1,11 @@
 #!/usr/bin/env fish
 # Install the pinned official Rust toolchain in a private directory, never via pacman.
-set -l root "$HOME/.local/share/horizon-qol-rust"
+set -l root "$HOME/.local/share/sunrise-qol-rust"
+# Keep an already downloaded Rust toolchain instead of installing it again.
+set -l oldroot "$HOME/.local/share/horizon-qol-rust"
+if test -d "$oldroot"; and not test -e "$root"
+    mv "$oldroot" "$root"; or exit 1
+end
 set -l cargohome "$root/cargo"
 set -l rusthome "$root/rustup"
 mkdir -p "$root"; or exit 1

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "dyed_bed",
+  "ingredients": [
+    "#minecraft:beds",
+    "minecraft:gray_dye"
+  ],
+  "result": {
+    "id": "minecraft:gray_bed"
+  },
+  "neoforge:conditions": [
+    {
+      "type": "sunrise_qol:wool_tweaks_enabled"
+    }
+  ]
+}

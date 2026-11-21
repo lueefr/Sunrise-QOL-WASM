@@ -24,7 +24,7 @@ class ProjectTests(unittest.TestCase):
     def test_manifest_ids_and_pin(self):
         cargo = tomllib.loads((ROOT / 'Cargo.toml').read_text())
         manifest = tomllib.loads((ROOT / 'sunrise-mod.toml').read_text())
-        self.assertEqual(manifest['id'], 'horizon_qol_suite')
+        self.assertEqual(manifest['id'], 'sunrise_qol')
         self.assertRegex(cargo['package']['metadata']['sunrise']['sdk'],
                          r'^[0-9a-f]{40}$')
         self.assertEqual(manifest['version'], cargo['package']['version'])
@@ -43,9 +43,27 @@ class ProjectTests(unittest.TestCase):
 
     def test_translations_are_valid(self):
         for language in ('en_us', 'pt_br'):
-            data = json.loads((ROOT / f'assets/horizon_qol_suite/lang/{language}.json').read_text())
+            data = json.loads((ROOT / f'assets/sunrise_qol/lang/{language}.json').read_text())
             self.assertIn('qol.module.vein_miner', data)
             self.assertIn('qol.module.hide_hands', data)
+
+    def test_namespaced_resources_and_recipe_conditions(self):
+        data = ROOT / "data" / "sunrise_qol" / "recipe"
+        recipes = sorted(data.rglob("*.json"))
+        self.assertEqual(len(recipes), 76)
+        for path in recipes:
+            with self.subTest(recipe=path.name):
+                record = json.loads(path.read_text())
+                conditions = record.get("neoforge:conditions", [])
+                self.assertTrue(conditions)
+                self.assertTrue(all(condition["type"].startswith("sunrise_qol:")
+                                    for condition in conditions))
+        self.assertFalse((ROOT / "data" / "horizon_qol_suite").exists())
+        self.assertFalse((ROOT / "assets" / "horizon_qol_suite").exists())
+        code = (ROOT / "src/wool_recipes.rs").read_text()
+        self.assertIn('"sunrise_qol:{key}_enabled"', code)
+        self.assertIn('"sunrise_qol:wool_tweaks_enabled"', code)
+        self.assertNotIn('"horizon_qol_suite:', code)
 
     def test_grief_uses_entity_lifecycle(self):
         grief = (ROOT / 'src/grief.rs').read_text()
@@ -108,7 +126,7 @@ class ProjectTests(unittest.TestCase):
         gui = (ROOT / 'src/gui.rs').read_text()
         hooks = (ROOT / 'src/lib.rs').read_text()
         for statement in (
-            '"open_ui", "qol.config.open", ["qol.config.open.value"], 0',
+            '"open_ui", "qol.config.open", ["qol.config.open.value", "qol.config.open.value"], 0',
             'SettingSpec::choice(',
         ):
             self.assertIn(statement, settings)
@@ -121,6 +139,29 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('host.observed_screen_id()', gui)
         self.assertNotIn('Config(i)', gui)
         self.assertNotIn('mouse Config coordinates', gui)
+
+    def test_reopen_and_tooltips(self):
+        settings = (ROOT / 'src/settings.rs').read_text()
+        gui = (ROOT / 'src/gui.rs').read_text()
+        self.assertIn('["qol.config.open.value", "qol.config.open.value"]', settings)
+        self.assertIn('self.overlay.store(true, Ordering::Relaxed)', gui)
+        self.assertIn('fn module_info(key: &str)', gui)
+        self.assertIn('fn option_info(module: &ModuleSpec, option: OptionSpec)', gui)
+        self.assertIn('self.hint([x, y, w - 6., 20.], module_info(module.key))', gui)
+        self.assertIn('option_info(module, *opt)', gui)
+        self.assertIn('screen.hovered(event.screen.mouse)', gui)
+        self.assertIn('event.draw.gui_tooltip(&[Text::literal(hint)]', gui)
+        self.assertLess(gui.index('let _ = event.draw.pop_clip()'),
+                        gui.index('event.draw.gui_tooltip('))
+
+    def test_simple_module_label_and_button_both_switch(self):
+        gui = (ROOT / 'src/gui.rs').read_text()
+        self.assertIn('let simple = module.options.is_empty();', gui)
+        self.assertIn('if simple { Action::Switch(module.key, false) } else { Action::Expand(index) }', gui)
+        self.assertIn('if simple { module.label.to_owned() } else', gui)
+        self.assertIn('if open && !simple {', gui)
+        self.assertIn('if active { "ON" } else { "OFF" }', gui)
+        self.assertNotIn('No Additional Options', gui)
 
     def test_overlay_hides_native_options_rendering(self):
         gui = (ROOT / 'src/gui.rs').read_text()
@@ -185,7 +226,7 @@ class ProjectTests(unittest.TestCase):
             (previous / 'open_ui').write_text('0')
             (previous / 'junk').write_text('unsafe')
             self.assertEqual(migrate(game, ROOT), 3)
-            target = game / 'config' / 'horizon_qol_suite'
+            target = game / 'config' / 'sunrise_qol'
             self.assertEqual((target / 'vein_miner').read_text(), 'true')
             self.assertEqual((target / 'amountofleavesbrokenpertick').read_text(), '7')
             self.assertFalse((target / 'junk').exists())
@@ -193,6 +234,75 @@ class ProjectTests(unittest.TestCase):
             (target / 'vein_miner').write_text('false')
             self.assertEqual(migrate(game, ROOT), 0)
             self.assertEqual((target / 'vein_miner').read_text(), 'false')
+
+    def test_private_identity_migration_keeps_new_values(self):
+        import tempfile
+        from migrate_settings import migrate
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            old = game / "config" / "horizon_qol_suite"
+            new = game / "config" / "sunrise_qol"
+            native = game / "sunrise-mods" / ".sunrise-mod-data" / "horizon_qol_suite"
+            old.mkdir(parents=True)
+            new.mkdir(parents=True)
+            native.mkdir(parents=True)
+            (old / "vein_miner").write_text("true")
+            (old / "leaf_decay").write_text("true")
+            (old / "enablefastleafdecay").write_text("false")
+            (old / "itemsWithDurability").write_text("minecraft:bow")
+            (native / "vein_miner").write_text("false")
+            (native / "tree_harvester").write_text("true")
+            (new / "leaf_decay").write_text("false")
+            (new / "right_click_harvest").write_text("true")
+            self.assertEqual(migrate(game, ROOT), 5)
+            self.assertEqual((new / "enablefastleafdecay").read_text(), "false")
+            self.assertEqual((new / "itemsWithDurability").read_text(), "minecraft:bow")
+            self.assertEqual((new / "vein_miner").read_text(), "true")
+            self.assertEqual((new / "leaf_decay").read_text(), "false")
+            self.assertEqual((new / "tree_harvester").read_text(), "true")
+            self.assertEqual((new / "accelerateleafdecay").read_text(), "false")
+            self.assertEqual((new / "right_click_harvest").read_text(), "true")
+            self.assertEqual(migrate(game, ROOT), 0)
+            self.assertTrue((old / "vein_miner").exists())
+
+    def test_install_activation_retires_only_the_old_mod(self):
+        import tempfile
+        from migrate_settings import activate
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            mods = game / "sunrise-mods"
+            mods.mkdir()
+            old = mods / "horizon_qol_suite.smod"
+            new = mods / "sunrise_qol.smod"
+            old.write_bytes(b"previous package")
+            new.write_bytes(b"new package")
+            config = game / "sunrise-mods.txt"
+            config.write_text("mod.horizon_qol_suite:true\nmod.other_mod:false\n"
+                              "mod.sunrise_qol:false\n")
+            self.assertTrue(activate(game))
+            self.assertFalse(old.exists())
+            self.assertEqual((mods / "horizon_qol_suite.smod.bak").read_bytes(),
+                             b"previous package")
+            self.assertEqual(new.read_bytes(), b"new package")
+            self.assertEqual(config.read_text(),
+                             "mod.other_mod:false\nmod.sunrise_qol:true\n")
+            self.assertEqual((game / "sunrise-mods.txt.bak").read_text(),
+                             "mod.horizon_qol_suite:true\nmod.other_mod:false\n"
+                             "mod.sunrise_qol:false\n")
+            self.assertFalse(activate(game))
+            self.assertEqual(len(list(mods.glob("horizon_qol_suite.smod.bak*"))), 1)
+
+    def test_activation_refuses_missing_new_package(self):
+        import tempfile
+        from migrate_settings import activate
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            mods = game / "sunrise-mods"
+            mods.mkdir()
+            (mods / "horizon_qol_suite.smod").write_bytes(b"old")
+            with self.assertRaises(ValueError):
+                activate(game)
+            self.assertTrue((mods / "horizon_qol_suite.smod").exists())
 
     def test_new_modules_have_executable_hooks(self):
         gui = (ROOT / 'src/gui.rs').read_text()
@@ -263,7 +373,7 @@ class ProjectTests(unittest.TestCase):
     def test_outstanding_modules_documented(self):
         docs = (ROOT / 'docs/PARITY.md').read_text()
         for feature in ('Full Brightness Toggle', 'Superflat World No Slimes',
-                        'Tax Free Levels', 'What Durability', 'Unlimited Enchantments'):
+                        'Tax Free Levels', 'Unbreakable Tools', 'Unlimited Enchantments'):
             self.assertIn(feature, docs)
         self.assertIn('NOT implemented', docs)
         self.assertIn('gameplay certification remains incomplete', docs)
@@ -272,10 +382,10 @@ class ProjectTests(unittest.TestCase):
         source = (ROOT / 'src/gui.rs').read_text()
         self.assertIn('let title = "Quality of Life Settings"', source)
         self.assertIn('Text::literal("Done")', source)
-        self.assertIn('No Additional Options', source)
+        self.assertNotIn('No Additional Options', source)
         self.assertNotRegex(source, r'Configura(?:ções|coes)|Conclu[ií]do|Folhas|[ÁáÉéÍíÓóÚúÇçÃãÕõÂâÊêÔô]')
-        en = json.loads((ROOT / 'assets/horizon_qol_suite/lang/en_us.json').read_text())
-        pt = json.loads((ROOT / 'assets/horizon_qol_suite/lang/pt_br.json').read_text())
+        en = json.loads((ROOT / 'assets/sunrise_qol/lang/en_us.json').read_text())
+        pt = json.loads((ROOT / 'assets/sunrise_qol/lang/pt_br.json').read_text())
         self.assertEqual(en, pt)
         self.assertEqual(en['qol.config.open'], 'Open settings')
         self.assertEqual(en['qol.config.open.value'], 'Open')
@@ -296,11 +406,28 @@ if __name__ == '__main__':
 class DurabilityRegressionTests(unittest.TestCase):
     def test_original_allowlist_semantics_and_tag_coverage(self):
         src = (ROOT / 'src/durability.rs').read_text()
-        self.assertIn('if keeps_durability(host, item) { Flow::Continue } else { Flow::Cancel }', src)
+        self.assertIn('if keeps_durability(host, event.stack.item()) { return Flow::Continue; }', src)
+        self.assertIn('event.amount = 0;', src)
         self.assertIn('fn is_allowed(', src)
         self.assertIn('host.tags().is_in_tag(item, key)', src)
-        self.assertIn('r.item_part_tag(tag, Protect { item: None })', src)
+        self.assertIn('r.item_part_tag(tag, Protect)', src)
         self.assertIn('fn allowlist_keeps_wear_for_ids_and_tags()', src)
+
+    def test_copper_armor_and_spears_are_protected(self):
+        src = (ROOT / 'src/durability.rs').read_text()
+        self.assertIn('"wooden", "stone", "copper", "iron"', src)
+        self.assertIn('"sword", "spear", "pickaxe", "axe", "shovel", "hoe"', src)
+        self.assertIn('"leather", "chainmail", "copper", "iron"', src)
+        self.assertIn('event.amount = 0;', src)
+        self.assertIn('Flow::Cancel', src)
+        self.assertIn('on(host, "what_durability")', src)
+
+    def test_extra_qol_tool_wear_respects_unbreakable(self):
+        for path in ("src/paths.rs", "src/hoe.rs", "src/right_harvest.rs"):
+            with self.subTest(path=path):
+                source = (ROOT / path).read_text()
+                self.assertIn('!on(host, "what_durability")', source)
+                self.assertIn('living.hurt_and_break(', source)
 
     def test_anvil_cost_changes_only_after_upgrading(self):
         src = (ROOT / 'src/unlimited.rs').read_text()

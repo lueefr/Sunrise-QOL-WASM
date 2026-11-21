@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    "#minecraft:wool"
+  ],
+  "result": {
+    "id": "minecraft:string",
+    "count": 4
+  },
+  "neoforge:conditions": [
+    {
+      "type": "sunrise_qol:wool_tweaks_enabled"
+    }
+  ]
+}

@@ -115,7 +115,7 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        package=target/sunrise-mod/horizon_qol_suite.smod
+        package=target/sunrise-mod/sunrise_qol.smod
         test -s "$package"
         unzip -tq "$package"
         unzip -Z1 "$package" | grep -Fxq 'mod.wasm'
@@ -145,7 +145,7 @@ runs:
 
     - name: Verify guest ABI and bundled assets
       shell: bash
-      run: python3 tools/sandbox/check.py target/sunrise-mod/horizon_qol_suite.smod target/sunrise-wasm-std.wasm
+      run: python3 tools/sandbox/check.py target/sunrise-mod/sunrise_qol.smod target/sunrise-wasm-std.wasm
 
     # A cached SDK-specific executable loads new .smod packages directly.
     # Rebuild Wasmtime only once per SDK revision and smoke-test source.

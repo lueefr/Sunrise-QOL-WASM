@@ -37,7 +37,7 @@ installer to stop before replacing the installed mod.
 | Shulker Drops Two | Partial | Every shell loot stack is now set to exactly the configured count and optional missing shell is added; late-spawned item entities are not intercepted |
 | Respawning Shulkers | Partial | Captures and restores original entity NBT, health 30, new UUID and scheduled respawn; engine entity recreation, unloaded chunks and shutdown differ |
 | Enchantment Level Indicator | Partial | Tooltip max-level suffix, with saved NBT and registered max-level lookup; modded tooltip layouts unverified |
-| What Durability | Partial | damage_item parts for 67 common vanilla IDs plus tagged items; prevents future wear by default and preserves normal wear for IDs or #tags in itemsWithDurability; cannot rewrite already present damage or intercept arbitrary untagged third-party items |
+| Unbreakable Tools | Partial | damage_item parts for 83 common vanilla IDs (including copper equipment and spears) plus tagged items; prevents future wear by default and preserves normal wear for IDs or #tags in itemsWithDurability; cannot rewrite already present damage or intercept arbitrary untagged third-party items |
 | Always a Wither Skull | Partial | The post-death callback schedules a delayed ±1-block item-entity check; skulls younger than 10 ticks suppress a replacement, and an absent skull spawns exactly one. Removed artificial 1024-record and 64-task-per-tick caps so mass deaths are not silently dropped. The original mixin fires at the start of custom death loot, so exact execution phase and entity-drop ordering still require real-game verification |
 | Friendly Griefing | Initial | Entity lifecycle and griefing predicate hooks; incomplete mob-specific rules |
 | GUI Clock | Initial | Minecraft clock time only; real computer clock and original advanced options not implemented |
@@ -92,7 +92,7 @@ installer to stop before replacing the installed mod.
 - **Tax Free Levels:** its original mixins change how XP costs are computed for anvil
   and enchanting payments, a source-specific path not exposed in the relevant public
   WASM events. Only cheap renaming and anvil preview cost cap are present.
-- **What Durability:** registration-time ItemParts cover 67 named vanilla items and standard
+- **Unbreakable Tools:** registration-time ItemParts cover 83 named vanilla items and standard
   equipment tags. Registered items lose no future durability by default,
   whereas the `itemsWithDurability` allowlist (item IDs and #tags) preserves
   normal wear. Arbitrary untagged modded items and already-worn stacks need

@@ -8,7 +8,7 @@ use sunrise_core::geometry::Vec3;
 use std::sync::Arc;
 
 fn config(host: &dyn Host, active: bool) {
-    let path = ConfigPath::new("horizon_qol_suite/keep_soil_tilled").unwrap();
+    let path = ConfigPath::new("sunrise_qol/keep_soil_tilled").unwrap();
     host.config_files().write(&path, if active { b"true" } else { b"false" })
         .expect("write authoritative gameplay settings");
 }
@@ -66,7 +66,7 @@ fn real_game() {
     let package = sunrise_mod_package::manifest::Package::read(path)
         .expect("valid QOL package");
     let manifest = package.manifest;
-    assert_eq!(manifest.id, "horizon_qol_suite");
+    assert_eq!(manifest.id, "sunrise_qol");
     let info = mod_api::PackageInfo::new(
         manifest.id.clone(), manifest.version.to_string(),
         mod_api::PackageKind::Code, mod_api::Side::Both,

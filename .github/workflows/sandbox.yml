@@ -15,6 +15,10 @@ on:
       - 'licenses/**'
       - 'Cargo.toml'
       - 'sunrise-mod.toml'
+      - 'instalar.fish'
+      - 'preparar-rust.fish'
+      - 'diagnosticar.fish'
+      - 'tools/migrate_settings.py'
       - 'tools/sandbox/**'
       - 'tools/sdk_sync.py'
       - 'tools/sdk_cache_prune.py'
@@ -52,5 +56,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sunrise-qol-validated
-          path: target/sunrise-mod/horizon_qol_suite.smod
+          path: target/sunrise-mod/sunrise_qol.smod
           if-no-files-found: error

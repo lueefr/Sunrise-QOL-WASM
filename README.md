@@ -6,6 +6,20 @@ Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's 
 
 > **Development status — not a stable release.** Successful Rust/WASM builds do not certify in-game behavior or feature parity. The release pipeline now also checks WASM imports and loads the actual .smod with Sunrise's runtime, but multiplayer correctness, GUI behavior and complete-world gameplay still require game-level tests. Do not assume a module works merely because it appears in the configuration interface.
 
+## Menu and durability fixes
+
+The in-game Quality of Life menu can now be reopened repeatedly from
+Options > Mods > Sunrise QOL > Config > Open settings. Every menu entry displays
+a hover description. Modules without additional settings act as direct
+switches when clicking their names while retaining the ON/OFF button.
+
+**Unbreakable Tools** retains the saved `what_durability` key for compatibility.
+The damage hook now explicitly stops wear and includes vanilla copper tools,
+armor and spears. Items listed in the legacy `itemsWithDurability` allowlist
+are intentionally excluded from protection. As with other server-side modules,
+the feature needs to be installed and enabled on the server to work in
+multiplayer; a client-only toggle cannot change a remote server's rules.
+
 ## Automatic Sunrise SDK updates
 
 GitHub Actions checks the official Sunrise `nightly` release on every build and every
@@ -141,7 +155,7 @@ Based on [JamCoreModding/right-click-harvest](https://github.com/JamCoreModding/
 
 ## Settings and controls
 
-The intended interface is entirely **English**, with one scrolling list of module sections, ON/OFF buttons, and options under each module. Modules default to **OFF** unless previously saved settings exist. Configuration values are stored privately under `config/horizon_qol_suite/`.
+The intended interface is entirely **English**, with one scrolling list of module sections, ON/OFF buttons, and options under each module. Modules default to **OFF** unless previously saved settings exist. Configuration values are stored privately under `config/sunrise_qol/`.
 
 - In a world, press **F8**.
 - Alternatively, navigate to **Options → Mods → Sunrise QOL → Config → Open settings → Open**.
@@ -160,7 +174,7 @@ fish preparar-rust.fish
 fish instalar.fish
 ```
 
-The installer compiles **the mod only**, checks the `.smod` structure and its Rust imports against the running Sunrise WASM standard library, migrates old settings without overwriting existing values, backs up any previously installed mod, and installs `horizon_qol_suite.smod` into the Sunrise game data directory. It refuses to replace an installed package if the link-compatibility check fails. Restart Sunrise after installation.
+The installer compiles **the mod only**, checks the `.smod` structure and its Rust imports against the running Sunrise WASM standard library, migrates old settings without overwriting existing values, backs up any previously installed mod, and installs `sunrise_qol.smod` into the Sunrise game data directory. It refuses to replace an installed package if the link-compatibility check fails. Restart Sunrise after installation.
 
 To inspect the package and run static regression tests:
 
@@ -189,4 +203,15 @@ The original First Join Message and Welcome Message options are now exposed in t
 
 ### Wool Tweaks recipes
 
-Enable **Wool Tweaks** in the QOL menu, then run `/reload` as the server operator to load its 49 recipes. Run `/reload` again after disabling it and after opening a world. Interaction dyeing follows the switch immediately. Recipe inputs, outputs and shapes match the original; recipe IDs use `horizon_qol_suite:wool_tweaks/`. This reload requirement differs from the original standalone mod. The same enable-then-`/reload` procedure applies to **Furnace Recycle** and **Village Bell Recipe**, also after entering a world.
+Enable **Wool Tweaks** in the QOL menu, then run `/reload` as the server operator to load its 49 recipes. Run `/reload` again after disabling it and after opening a world. Interaction dyeing follows the switch immediately. Recipe inputs, outputs and shapes match the original; recipe IDs use `sunrise_qol:wool_tweaks/`. This reload requirement differs from the original standalone mod. The same enable-then-`/reload` procedure applies to **Furnace Recycle** and **Village Bell Recipe**, also after entering a world.
+
+## Migrating the old mod identifier
+
+The internal mod ID, asset namespace and recipe IDs are now `sunrise_qol`.
+Run `fish instalar.fish` to migrate existing values from
+`config/horizon_qol_suite/` and earlier registered Sunrise settings into
+`config/sunrise_qol/` without overwriting existing values.
+The installer enables `mod.sunrise_qol:true` in `sunrise-mods.txt` and moves
+`horizon_qol_suite.smod` to a non-loadable `.bak` backup. Old data is retained.
+The recipe namespace changes; previously unlocked old recipe-book IDs are not
+migrated automatically.

@@ -22,7 +22,7 @@ def call(*command):
 def cmd(command):
     return call('command', command)
 
-setting = Path(args.game_dir) / 'config/horizon_qol_suite/wool_tweaks'
+setting = Path(args.game_dir) / 'config/sunrise_qol/wool_tweaks'
 if call('ui')['screen'] != 'playing':
     raise RuntimeError('Resume the disposable world and close every menu first')
 cmd('fill -5 90 -5 12 90 12 minecraft:stone')

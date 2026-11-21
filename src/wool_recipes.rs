@@ -30,11 +30,11 @@ impl LoadCondition for Enabled {
 
 pub fn register(event: &mut RegisterLoadConditionsEvent<'_>) {
     for (key, enabled) in [("furnace_recycle", &FURNACE), ("village_bell_recipe", &BELL)] {
-        if let Ok(id) = Identifier::parse(&format!("horizon_qol_suite:{key}_enabled")) {
+        if let Ok(id) = Identifier::parse(&format!("sunrise_qol:{key}_enabled")) {
             let _ = event.conditions.register(id, OptionalRecipe(enabled));
         }
     }
-    if let Ok(id) = Identifier::parse("horizon_qol_suite:wool_tweaks_enabled") {
+    if let Ok(id) = Identifier::parse("sunrise_qol:wool_tweaks_enabled") {
         // The collector retains and reports registration refusals at load end.
         let _ = event.conditions.register(id, Enabled);
     }

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "wool",
+  "ingredients": [
+    "#minecraft:wool",
+    "minecraft:gray_dye"
+  ],
+  "result": {
+    "id": "minecraft:gray_wool"
+  },
+  "neoforge:conditions": [
+    {
+      "type": "sunrise_qol:wool_tweaks_enabled"
+    }
+  ]
+}

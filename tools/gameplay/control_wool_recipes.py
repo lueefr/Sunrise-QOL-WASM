@@ -12,7 +12,7 @@ for key in ('ctl', 'socket', 'game-dir', 'package', 'output'):
     parser.add_argument('--' + key, required=True)
 args = parser.parse_args()
 base = [args.ctl, '--socket', args.socket]
-setting = Path(args.game_dir) / 'config/horizon_qol_suite/wool_tweaks'
+setting = Path(args.game_dir) / 'config/sunrise_qol/wool_tweaks'
 rows = []
 
 def call(*command):
@@ -83,14 +83,14 @@ try:
     cmd('gamemode survival')
     cmd('difficulty peaceful')
     reload(False)
-    answer = cmd('recipe give @s horizon_qol_suite:wool_tweaks/wool_to_string')
+    answer = cmd('recipe give @s sunrise_qol:wool_tweaks/wool_to_string')
     record('disabled_recipe_absent', not answer['success'] and any('Unknown recipe' in line for line in answer['chat']), response=answer)
     reload(True)
     cmd('recipe take @s *')
-    recipes = sorted((Path(__file__).resolve().parents[2] / 'data/horizon_qol_suite/recipe/wool_tweaks').glob('*.json'))
+    recipes = sorted((Path(__file__).resolve().parents[2] / 'data/sunrise_qol/recipe/wool_tweaks').glob('*.json'))
     admitted = []
     for path in recipes:
-        answer = cmd('recipe give @s horizon_qol_suite:wool_tweaks/' + path.stem)
+        answer = cmd('recipe give @s sunrise_qol:wool_tweaks/' + path.stem)
         if answer.get('success'):
             admitted.append(path.stem)
     record('all_49_recipes_admitted', len(admitted) == len(recipes) == 49, recipes=admitted)
@@ -122,7 +122,7 @@ try:
     call('close')
     until(lambda: call('ui')['screen'] == 'playing', 'closed table')
     reload(False)
-    answer = cmd('recipe give @s horizon_qol_suite:wool_tweaks/wool_to_string')
+    answer = cmd('recipe give @s sunrise_qol:wool_tweaks/wool_to_string')
     record('disabled_after_reload', not answer['success'] and any('Unknown recipe' in line for line in answer['chat']), response=answer)
 finally:
     setting.write_text('false')
