@@ -17,7 +17,7 @@ fn sunrise_qol_loads_and_initializes() {
         let path = Path::new(&package_path);
         let parsed = Package::read(path).expect("valid package manifest and hashes");
         let manifest = parsed.manifest;
-        assert_eq!(manifest.id, "horizon_qol_suite");
+        assert_eq!(manifest.id, "sunrise_qol");
         assert!(manifest.inject.is_empty(), "the mod must use the published API");
         let info = mod_api::PackageInfo::new(
             manifest.id.clone(),
