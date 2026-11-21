@@ -10,7 +10,7 @@
   "cookingtime": 200,
   "neoforge:conditions": [
     {
-      "type": "horizon_qol_suite:furnace_recycle_enabled"
+      "type": "sunrise_qol:furnace_recycle_enabled"
     }
   ]
 }
