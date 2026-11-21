@@ -3,7 +3,12 @@
 set -l base (status dirname)
 cd "$base"; or exit 1
 
-set -l rustroot "$HOME/.local/share/horizon-qol-rust"
+set -l rustroot "$HOME/.local/share/sunrise-qol-rust"
+# Preserve an installed Rust toolchain from the former folder name.
+set -l oldrust "$HOME/.local/share/horizon-qol-rust"
+if test -d "$oldrust"; and not test -e "$rustroot"
+    mv "$oldrust" "$rustroot"; or exit 1
+end
 set -l rustcargo "$rustroot/cargo"
 set -l rustuphome "$rustroot/rustup"
 if not test -x "$rustcargo/bin/rustup"
@@ -12,7 +17,7 @@ if not test -x "$rustcargo/bin/rustup"
     exit 1
 end
 
-set -l pacote target/sunrise-mod/horizon_qol_suite.smod
+set -l pacote target/sunrise-mod/sunrise_qol.smod
 set -l std ""
 if set -q SUNRISE_WASM_STD; and test -f "$SUNRISE_WASM_STD"
     set std "$SUNRISE_WASM_STD"
@@ -78,17 +83,15 @@ end
 python3 tools/migrate_settings.py --game "$jogo"; or exit 1
 set -l pasta "$jogo/sunrise-mods"
 set -l config "$jogo/sunrise-mods.txt"
-set -l destino "$pasta/horizon_qol_suite.smod"
+set -l destino "$pasta/sunrise_qol.smod"
 mkdir -p "$pasta"; or exit 1
 if test -f "$destino"
     cp "$destino" "$destino.bak"; or exit 1
 end
 cp "$pacote" "$destino"; or exit 1
-if test -f "$config"
-    cp "$config" "$config.bak"; or exit 1
-    sed -i '/^mod\.horizon_qol_suite:/d' "$config"; or exit 1
-end
-printf '%s\n' 'mod.horizon_qol_suite:true' >> "$config"; or exit 1
+# Switch the registered identity only after validating and installing the new package.
+# Keep the old .smod as a non-loadable backup instead of loading both identities.
+python3 tools/migrate_settings.py --game "$jogo" --activate; or exit 1
 
 echo "Installed package: $destino"
 echo 'Restart Sunrise. Open Options > Mods > Sunrise QOL > Config > Open Settings, or press F8 in a world.'
