@@ -667,47 +667,47 @@ impl Screen {
         let mut next = y + ROW_H;
         if open && !simple {
             for opt in module.options {
-                    if self.visible(next, 20.) {
-                        self.label(opt.label, x + 15., next + 6., 0xFFE0_E0E0);
-                        self.hint([x + 10., next, w - 16., 20.], option_info(module, *opt));
-                        match opt.kind {
-                            OptionKind::Toggle { default } => {
-                                let enabled = flag(host, opt.key, default);
-                                self.button([x + w - 88., next, 82., 20.],
-                                    if enabled { "ON" } else { "OFF" }, active,
-                                    Action::Switch(opt.key, default));
-                            }
-                            OptionKind::Range { default, min, max, .. } => {
-                                let value = self.option_amount(host, opt.key, default, min, max);
-                                self.button([x + w - 114., next, 23., 20.], "-", active && value > min,
-                                    Action::Adjust(*opt, -1));
-                                let printed = if opt.key == "persistentLeavesBehavior" {
-                                    match value as usize {
-                                        0 => "IGNORE".to_owned(),
-                                        1 => "NORMAL".to_owned(),
-                                        _ => "ALL".to_owned(),
-                                    }
-                                } else { format!("{value:.0}") };
-                                if opt.key == "persistentLeavesBehavior" {
-                                    self.label(printed, x + w - 84., next + 6., 0xFFFF_FFFF);
-                                } else {
-                                    self.number([x + w - 88., next, 56., 20.], *opt, value, active);
+                if self.visible(next, 20.) {
+                    self.label(opt.label, x + 15., next + 6., 0xFFE0_E0E0);
+                    self.hint([x + 10., next, w - 16., 20.], option_info(module, *opt));
+                    match opt.kind {
+                        OptionKind::Toggle { default } => {
+                            let enabled = flag(host, opt.key, default);
+                            self.button([x + w - 88., next, 82., 20.],
+                                if enabled { "ON" } else { "OFF" }, active,
+                                Action::Switch(opt.key, default));
+                        }
+                        OptionKind::Range { default, min, max, .. } => {
+                            let value = self.option_amount(host, opt.key, default, min, max);
+                            self.button([x + w - 114., next, 23., 20.], "-", active && value > min,
+                                Action::Adjust(*opt, -1));
+                            let printed = if opt.key == "persistentLeavesBehavior" {
+                                match value as usize {
+                                    0 => "IGNORE".to_owned(),
+                                    1 => "NORMAL".to_owned(),
+                                    _ => "ALL".to_owned(),
                                 }
-                                self.button([x + w - 29., next, 23., 20.], "+", active && value < max,
-                                    Action::Adjust(*opt, 1));
+                            } else { format!("{value:.0}") };
+                            if opt.key == "persistentLeavesBehavior" {
+                                self.label(printed, x + w - 84., next + 6., 0xFFFF_FFFF);
+                            } else {
+                                self.number([x + w - 88., next, 56., 20.], *opt, value, active);
                             }
-                            OptionKind::Choice { default, values } => {
-                                let current = saved_value(host, opt.key).unwrap_or_else(|| default.to_owned());
-                                let current = if values.contains(&current.as_str()) { current } else { default.to_owned() };
-                                self.button([x + w - 151., next, 145., 20.], &current, active, Action::Cycle(*opt));
-                            }
-                            OptionKind::Text { default, max } => {
-                                let current = saved_value(host, opt.key).unwrap_or_else(|| default.to_owned());
-                                self.string([x + w - 196., next, 190., 20.], *opt, &current, max, active);
-                            }
+                            self.button([x + w - 29., next, 23., 20.], "+", active && value < max,
+                                Action::Adjust(*opt, 1));
+                        }
+                        OptionKind::Choice { default, values } => {
+                            let current = saved_value(host, opt.key).unwrap_or_else(|| default.to_owned());
+                            let current = if values.contains(&current.as_str()) { current } else { default.to_owned() };
+                            self.button([x + w - 151., next, 145., 20.], &current, active, Action::Cycle(*opt));
+                        }
+                        OptionKind::Text { default, max } => {
+                            let current = saved_value(host, opt.key).unwrap_or_else(|| default.to_owned());
+                            self.string([x + w - 196., next, 190., 20.], *opt, &current, max, active);
                         }
                     }
-                    next += ROW_H;
+                }
+                next += ROW_H;
             }
         }
         next
