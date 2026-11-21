@@ -66,7 +66,7 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [x] Slow-falling effects and Feather Falling boots prevent player farmland trampling *(equipment/effect snapshot each tick; mobs pending)*
 - [x] Drinking milk restores configurable hunger and saturation *(finished-consumption hook; gameplay validation pending)*
 - [x] Connected ore veins can be harvested together *(partial)*
-- [ ] Paths can be created across a selected route
+- [x] Paths can be created across a selected route *(Quick Paths: sneak-shovel start, normal shovel end, click end again to undo; maximum 128 blocks)*
 - [ ] Some utility blocks can be accessed without placing them
 - [ ] Fishing lines can be recast automatically after a catch
 - [x] Mature crops can be harvested with right click and automatically replanted *(Right Click Harvest; basic vanilla crops, sugar cane, cactus and age-based modded crops on farmland; Fortune through original loot tables, configurable hoe requirement, tiered radius, hunger and XP; API/gameplay parity pending)*

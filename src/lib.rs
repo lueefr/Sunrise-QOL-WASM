@@ -51,6 +51,7 @@ mod refill;
 mod sleep;
 mod mushrooms;
 mod move_vehicles;
+mod paths;
 
 use mod_api::{
     AnvilUpdateEvent, BlockChangedEvent, LevelHost, ClientHost, EntityJoinLevelEvent, EntityLeaveLevelEvent,
@@ -74,6 +75,7 @@ pub struct SunriseQol {
     plant_protection: plant_protection::Protection,
     refill: refill::Refill,
     vehicles: move_vehicles::Vehicles,
+    paths: paths::Paths,
     mining: mining::Mining,
     decay: decay::Decay,
     villagers: grief::Villagers,
@@ -201,6 +203,7 @@ impl Hooks for SunriseQol {
             HostSide::Server(host) => host,
         };
         wool::click(host, event);
+        if self.paths.click(host, event) == Flow::Cancel { return Flow::Cancel; }
         self.refill.arm(host, event.click.hand, event.click.stack);
         if sleep::click(host, event) == Flow::Cancel { return Flow::Cancel; }
         if mushrooms::click(host, event) == Flow::Cancel { return Flow::Cancel; }
@@ -357,6 +360,7 @@ impl Hooks for SunriseQol {
         self.plant_protection.reset();
         self.refill.reset();
         self.vehicles.reset();
+        self.paths.reset();
         messages::reset();
     }
 

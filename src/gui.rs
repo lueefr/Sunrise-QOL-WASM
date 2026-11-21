@@ -336,6 +336,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "furnace_recycle", label: "Furnace Recycle", options: &[], category: Category::Gathering },
     ModuleSpec { key: "kelp_fertilizer", label: "Kelp Fertilizer", options: &[], category: Category::Gathering },
     ModuleSpec { key: "surface_mushrooms", label: "Surface Mushrooms", options: &[], category: Category::Gathering },
+    ModuleSpec { key: "quick_paths", label: "Quick Paths", options: &[], category: Category::Gathering },
     ModuleSpec { key: "wool_tweaks", label: "Wool Tweaks", options: &[], category: Category::Gathering },
     ModuleSpec { key: "hoe_tweaks", label: "Hoe Tweaks", options: HOE, category: Category::Gathering },
     ModuleSpec { key: "right_click_harvest", label: "Right Click Harvest", options: RIGHT_HARVEST, category: Category::Gathering },

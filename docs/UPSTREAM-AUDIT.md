@@ -40,3 +40,5 @@ See [PARITY.md](PARITY.md) for the full module-by-module backlog.
 ## Functional ports (equivalence scope)
 
 The user relaxed literal parity to equivalent behavior. Independent implementations now cover Furnace Recycle (26 recipe contracts in validation/furnace-recipe-contracts.json), Village Bell Recipe, Kelp Fertilizer, Thorny Bush Protection, No Feather Trample, Stack Refill, Sleep Sooner, Surface Mushrooms, Move Boats and Move Minecarts. Reference branches are Serilum 26.3.0; relevant event/mixin paths were read, not incorporated. Exact API differences remain in PARITY.md. The original code is not copied.
+
+Quick Paths independently implements start/end selection, staircase surface routing, per-block shovel wear and undo after reading [PathEvent](https://github.com/Serilum/Quick-Paths/blob/26.3.0/Common/src/main/java/com/serilum/quickpaths/events/PathEvent.java). The adaptation bounds horizontal distance to 128, omits plant destruction and timed undo expiration, and leaves selection terrain untouched until completion.

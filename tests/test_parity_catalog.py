@@ -13,9 +13,9 @@ spec.loader.exec_module(parity)
 class ParityCatalogTests(unittest.TestCase):
     def test_every_registered_module_has_limitations(self):
         report = parity.inventory()
-        self.assertEqual(report["module_count"], 55)
-        self.assertEqual(len(report["modules"]), 55)
-        self.assertEqual(len({row["key"] for row in report["modules"]}), 55)
+        self.assertEqual(report["module_count"], 56)
+        self.assertEqual(len(report["modules"]), 56)
+        self.assertEqual(len({row["key"] for row in report["modules"]}), 56)
         self.assertTrue(all(row["known_differences"] for row in report["modules"]))
         self.assertEqual(report["fully_certified"], 0)
         self.assertTrue(all(not row["certified_one_to_one"] for row in report["modules"]))

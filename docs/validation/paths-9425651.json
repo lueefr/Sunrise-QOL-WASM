@@ -1,0 +1,52 @@
+{
+  "scenarios": [
+    {
+      "case": "disabled_only_vanilla_clicked_block",
+      "passed": true,
+      "blocks": [
+        "minecraft:dirt_path",
+        "minecraft:grass_block",
+        "minecraft:grass_block",
+        "minecraft:grass_block"
+      ]
+    },
+    {
+      "case": "start_selection_keeps_ground",
+      "passed": true,
+      "blocks": [
+        "minecraft:grass_block",
+        "minecraft:grass_block",
+        "minecraft:grass_block",
+        "minecraft:grass_block"
+      ]
+    },
+    {
+      "case": "route_creates_four_paths",
+      "passed": true,
+      "blocks": [
+        "minecraft:dirt_path",
+        "minecraft:dirt_path",
+        "minecraft:dirt_path",
+        "minecraft:dirt_path"
+      ]
+    },
+    {
+      "case": "route_costs_four_durability",
+      "passed": true,
+      "item": [
+        "Player84087 has the following entity data: {components: {\"minecraft:damage\": 4}, count: 1, id: \"minecraft:diamond_shovel\"}"
+      ]
+    },
+    {
+      "case": "endpoint_undo_restores_grass",
+      "passed": true,
+      "blocks": [
+        "minecraft:grass_block",
+        "minecraft:grass_block",
+        "minecraft:grass_block",
+        "minecraft:grass_block"
+      ]
+    }
+  ],
+  "package_sha256": "e43fa36969e79e92aa1a307717cccd812687cedf80e2acf07cc23552f1516707"
+}

@@ -78,6 +78,8 @@ installer to stop before replacing the installed mod.
 
 | Move Minecarts | Functional port | Sneak-right-click to carry the original entity two blocks ahead at eye height; stand then crouch to release. Moves the same entity without recreating it; cargo/passenger support depends on the runtime. Releases on disable, death, dimension change or rider entry. Uses public teleport each tick instead of direct position writes; remote prediction unverified. Server commands `/qolcarry boat`, `/qolcarry minecart`, `/qolcarry drop` work around missing client hit targets. |
 
+| Quick Paths | Functional port | Sneak-shovel selects a start; normal shovel click chooses the end; endpoint click restores created paths to grass. Staircase route up to 128 horizontal blocks, searches surface within ten vertical blocks, skips blocked columns and charges tool durability per converted block. Selection does not alter ground until completion; no five-minute undo expiry or plant clearance; runtime restart clears selections. |
+
 ## Outstanding 1:1 blockers
 
 - **Full Brightness Toggle:** the pinned public Sunrise WASM client API exposes neither
