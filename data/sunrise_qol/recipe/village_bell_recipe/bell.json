@@ -16,7 +16,7 @@
   },
   "neoforge:conditions": [
     {
-      "type": "horizon_qol_suite:village_bell_recipe_enabled"
+      "type": "sunrise_qol:village_bell_recipe_enabled"
     }
   ]
 }
