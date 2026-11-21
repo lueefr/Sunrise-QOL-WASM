@@ -324,7 +324,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "inventory_mending", label: "XP Item Repair", options: MENDING, category: Category::Inventory },
     ModuleSpec { key: "bottled_air", label: "Bottled Air", options: BOTTLED_AIR, category: Category::Inventory },
     ModuleSpec { key: "nutritious_milk", label: "Nutritious Milk", options: NUTRITIOUS_MILK, category: Category::Inventory },
-    ModuleSpec { key: "what_durability", label: "Durability Control", options: &[], category: Category::Inventory },
+    ModuleSpec { key: "what_durability", label: "Unbreakable Tools", options: &[], category: Category::Inventory },
     ModuleSpec { key: "gui_clock", label: "World Clock", options: CLOCK, category: Category::Hud },
     ModuleSpec { key: "gui_compass", label: "Navigation Compass", options: COMPASS, category: Category::Hud },
     ModuleSpec { key: "vanilla_zoom", label: "Camera Zoom", options: ZOOM, category: Category::Hud },
