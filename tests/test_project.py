@@ -263,7 +263,7 @@ class ProjectTests(unittest.TestCase):
     def test_outstanding_modules_documented(self):
         docs = (ROOT / 'docs/PARITY.md').read_text()
         for feature in ('Full Brightness Toggle', 'Superflat World No Slimes',
-                        'Tax Free Levels', 'What Durability', 'Unlimited Enchantments'):
+                        'Tax Free Levels', 'Unbreakable Tools', 'Unlimited Enchantments'):
             self.assertIn(feature, docs)
         self.assertIn('NOT implemented', docs)
         self.assertIn('gameplay certification remains incomplete', docs)
@@ -272,7 +272,7 @@ class ProjectTests(unittest.TestCase):
         source = (ROOT / 'src/gui.rs').read_text()
         self.assertIn('let title = "Quality of Life Settings"', source)
         self.assertIn('Text::literal("Done")', source)
-        self.assertIn('No Additional Options', source)
+        self.assertNotIn('No Additional Options', source)
         self.assertNotRegex(source, r'Configura(?:ções|coes)|Conclu[ií]do|Folhas|[ÁáÉéÍíÓóÚúÇçÃãÕõÂâÊêÔô]')
         en = json.loads((ROOT / 'assets/horizon_qol_suite/lang/en_us.json').read_text())
         pt = json.loads((ROOT / 'assets/horizon_qol_suite/lang/pt_br.json').read_text())
@@ -296,10 +296,11 @@ if __name__ == '__main__':
 class DurabilityRegressionTests(unittest.TestCase):
     def test_original_allowlist_semantics_and_tag_coverage(self):
         src = (ROOT / 'src/durability.rs').read_text()
-        self.assertIn('if keeps_durability(host, item) { Flow::Continue } else { Flow::Cancel }', src)
+        self.assertIn('if keeps_durability(host, event.stack.item()) { return Flow::Continue; }', src)
+        self.assertIn('event.amount = 0;', src)
         self.assertIn('fn is_allowed(', src)
         self.assertIn('host.tags().is_in_tag(item, key)', src)
-        self.assertIn('r.item_part_tag(tag, Protect { item: None })', src)
+        self.assertIn('r.item_part_tag(tag, Protect)', src)
         self.assertIn('fn allowlist_keeps_wear_for_ids_and_tags()', src)
 
     def test_anvil_cost_changes_only_after_upgrading(self):
