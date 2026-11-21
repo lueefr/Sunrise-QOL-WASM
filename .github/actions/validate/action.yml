@@ -1,0 +1,136 @@
+name: Build and validate Sunrise WASM
+description: Compile a signed-nightly .smod, check its ABI and load it in the actual Sunrise Wasmtime runtime.
+
+inputs:
+  sdk-revision:
+    description: Full SHA resolved from the official published Sunrise nightly SDK.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Validate source
+      shell: bash
+      run: python3 -m unittest discover -s tests -p 'test*.py'
+
+    - name: Install pinned Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: '1.99.1'
+        components: rust-src
+        targets: wasm32-unknown-unknown
+
+    - name: Restore signed Sunrise build tool
+      id: tool-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: ~/.cargo/bin/cargo-sunrise-mod
+        key: ${{ runner.os }}-${{ runner.arch }}-sunrise-cli-${{ inputs.sdk-revision }}-v2
+
+    - name: Install signed Sunrise build tool
+      if: steps.tool-cache.outputs.cache-hit != 'true'
+      shell: bash
+      env:
+        SDK_REVISION: ${{ inputs.sdk-revision }}
+      run: bash tools/install_sdk_tool.sh "$SDK_REVISION"
+
+    - name: Verify Sunrise build tool
+      shell: bash
+      run: test -x "$HOME/.cargo/bin/cargo-sunrise-mod"
+
+    - name: Cache signed Sunrise build tool
+      if: steps.tool-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ~/.cargo/bin/cargo-sunrise-mod
+        key: ${{ steps.tool-cache.outputs.cache-primary-key }}
+
+    # Caches are keyed by the nightly SHA. An unchanged SDK never downloads again.
+    - name: Restore official Sunrise SDK
+      id: sdk-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: .sunrise/sdk
+        key: ${{ runner.os }}-${{ runner.arch }}-sunrise-sdk-${{ inputs.sdk-revision }}-v2
+
+    - name: Download and verify new SDK
+      if: steps.sdk-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: cargo sunrise-mod hooks "__sdk_cache_init__"
+
+    - name: Verify SDK files
+      shell: bash
+      run: test -s .sunrise/sdk/api/crates/sunrise-mod-api/Cargo.toml
+
+    - name: Cache official Sunrise SDK
+      if: steps.sdk-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: .sunrise/sdk
+        key: ${{ steps.sdk-cache.outputs.cache-primary-key }}
+
+    - name: Restore compiled Rust dependencies
+      uses: Swatinem/rust-cache@v2
+      with:
+        prefix-key: sunrise-qol-wasm-v2
+        cache-bin: 'false'
+        cache-on-failure: 'true'
+        workspaces: |
+          . -> target
+
+    - name: Verify Rust library
+      shell: bash
+      run: cargo test --lib
+
+    - name: Compile .smod
+      shell: bash
+      run: cargo sunrise-mod build --wasm
+
+    - name: Validate .smod archive
+      shell: bash
+      run: |
+        set -euo pipefail
+        package=target/sunrise-mod/horizon_qol_suite.smod
+        test -s "$package"
+        unzip -tq "$package"
+        unzip -Z1 "$package" | grep -Fxq 'mod.wasm'
+
+    - name: Restore WASM standard
+      id: std-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: target/sunrise-wasm-std.wasm
+        key: ${{ runner.os }}-${{ runner.arch }}-sunrise-std-${{ inputs.sdk-revision }}-rust1.99.1-v1
+
+    - name: Compile matching WASM standard
+      if: steps.std-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: cargo sunrise-mod wasm-std target/sunrise-wasm-std.wasm
+
+    - name: Verify WASM standard
+      shell: bash
+      run: test -s target/sunrise-wasm-std.wasm
+
+    - name: Cache WASM standard
+      if: steps.std-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: target/sunrise-wasm-std.wasm
+        key: ${{ steps.std-cache.outputs.cache-primary-key }}
+
+    - name: Verify guest ABI and bundled assets
+      shell: bash
+      run: python3 tools/sandbox/check.py target/sunrise-mod/horizon_qol_suite.smod target/sunrise-wasm-std.wasm
+
+    - name: Restore Sunrise loader cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          target/sunrise-sandbox
+          .sunrise/runtime-source
+        key: ${{ runner.os }}-${{ runner.arch }}-sunrise-runtime-${{ inputs.sdk-revision }}-rust1.99.1-v2
+
+    # Headless Wasmtime load and registration; no real game or gameplay scenarios.
+    - name: Smoke test actual Sunrise loader
+      shell: bash
+      run: bash tools/sandbox/run.sh

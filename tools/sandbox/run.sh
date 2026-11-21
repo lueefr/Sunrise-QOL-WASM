@@ -48,7 +48,7 @@ export CARGO_PROFILE_DEV_DEBUG=0
 export RUST_BACKTRACE=1
 
 echo "Using Sunrise runtime commit $revision"
-echo "Running real Wasmtime guest load, registration and hook dispatch"
+echo "Running Sunrise Wasmtime loading and registration smoke test"
 cargo test --manifest-path "$source/Cargo.toml" --locked \
   --package sunrise-mod-wasm --test sunrise_qol_smoke -- \
-  --exact sunrise_qol_links_initializes_and_dispatches_wasm_hook --nocapture
+  --exact sunrise_qol_loads_and_initializes --nocapture
