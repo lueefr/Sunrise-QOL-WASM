@@ -314,6 +314,7 @@ const SLEEP: &[OptionSpec] = &[range("sleep_start", "Earliest Sleep Time (ticks)
 
 const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "unlimited_enchantments", label: "Enchantment Levels", options: UNLIMITED, category: Category::Enchanting },
+    ModuleSpec { key: "underwater_enchanting", label: "Underwater Enchanting", options: &[], category: Category::Enchanting },
     ModuleSpec { key: "enchant_command", label: "Extended Enchant Command", options: &[], category: Category::Enchanting },
     ModuleSpec { key: "affordable_anvil", label: "Anvil Costs", options: ANVIL, category: Category::Enchanting },
     ModuleSpec { key: "tax_free_levels", label: "XP Cost Rules", options: TAXFREE, category: Category::Enchanting },

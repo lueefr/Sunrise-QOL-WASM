@@ -52,6 +52,7 @@ mod sleep;
 mod mushrooms;
 mod move_vehicles;
 mod paths;
+mod underwater_enchanting;
 
 use mod_api::{
     AnvilUpdateEvent, BlockChangedEvent, LevelHost, ClientHost, EntityJoinLevelEvent, EntityLeaveLevelEvent,
@@ -281,6 +282,10 @@ impl Hooks for SunriseQol {
 
     fn anvil_update(&self, side: HostSide<'_>, event: &mut AnvilUpdateEvent<'_>) -> Flow {
         anvil::on_update(side, event)
+    }
+
+    fn enchantment_level_set(&self, host: &mut dyn ServerHost, event: &mut mod_api::EnchantmentLevelSetEvent<'_>) {
+        underwater_enchanting::offer(host, event);
     }
 
     fn living_entity_use_item_finish(&self, side: HostSide<'_>, event: &mut LivingEntityUseItemFinishEvent<'_>) {

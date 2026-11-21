@@ -7,6 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 NAMES = {
+    "underwater_enchanting": "Underwater Enchanting",
     "quick_paths": "Quick Paths",
     "move_boats": "Move Boats",
     "move_minecarts": "Move Minecarts",

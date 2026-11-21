@@ -80,6 +80,8 @@ installer to stop before replacing the installed mod.
 
 | Quick Paths | Functional port | Sneak-shovel selects a start; normal shovel click chooses the end; endpoint click restores created paths to grass. Staircase route up to 128 horizontal blocks, searches surface within ten vertical blocks, skips blocked columns and charges tool durability per converted block. Selection does not alter ground until completion; no five-minute undo expiry or plant clearance; runtime restart clears selections. |
 
+| Underwater Enchanting | Functional port | Vanilla bookshelf offsets accept air or water between shelf and table. Recomputes offer cost ranges through the pre-roll level hook; native enchantment matching, costs and consumption remain vanilla. Level RNG replaces player enchantment-seed RNG for cost draws; particles and modded power providers remain vanilla. |
+
 ## Outstanding 1:1 blockers
 
 - **Full Brightness Toggle:** the pinned public Sunrise WASM client API exposes neither

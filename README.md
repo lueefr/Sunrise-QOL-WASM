@@ -80,7 +80,7 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [x] Mushrooms can be planted under bright surface conditions *(solid surface right-click; vanilla later survival checks)*
 - [x] Leggings protect players from sweet berry bush damage *(any nonempty leg slot; snapshot each tick)*
 - [x] Entire trees can be felled with accelerated leaf decay and replanting *(partial)*
-- [ ] Enchanting tables can function underwater with surrounding bookshelves
+- [x] Enchanting tables can function underwater with surrounding bookshelves *(offer levels restored when water separates vanilla bookshelves from the table)*
 - [x] Village bells receive a crafting recipe *(enable and /reload)*
 - [x] Wool, carpets and beds can be dyed in the world and through crafting; one wool can become four strings *(Wool Tweaks; reload-dependent recipe admission, custom subclasses and multiplayer parity remain partial)*
 - [ ] Death drops can be protected inside a chest with equipment displayed
@@ -133,7 +133,7 @@ The native Config page contains only the opener; the suite settings appear in a 
 
 ## Building and installing from source
 
-**Requirements:** a checked-out *complete source tree*, Arch Linux or another supported Linux installation, Fish shell for the included installer, Python 3, `unzip`, Rust 1.99.1, and the compatible Sunrise WASM build tool. The project pins the Sunrise API build to `2d8126336e579777eabf9b2fd8b3d476236a04f2`. Use a Sunrise game build with a matching WASM standard library.
+**Requirements:** a checked-out *complete source tree*, Arch Linux or another supported Linux installation, Fish shell for the included installer, Python 3, `unzip`, Rust 1.99.1, and the compatible Sunrise WASM build tool. The project pins the Sunrise API build to `94256510f74e6843754e0a93fd9e4da7e45b1056`. Use a Sunrise game build with a matching WASM standard library.
 
 The source archive includes an isolated Rust setup script for Fish:
 
