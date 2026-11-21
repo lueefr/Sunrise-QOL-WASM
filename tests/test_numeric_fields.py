@@ -12,7 +12,8 @@ class NumericFieldTests(unittest.TestCase):
 
     def test_ranges_use_native_edit_box(self):
         self.assertIn("TextField::new(rect, 16)", self.gui)
-        self.assertIn("field.set_value(&format!(\"{value:.0}\"))", self.gui)
+        self.assertIn("field.set_value(&shown)", self.gui)
+        self.assertIn('range("cropBlockBreakSpeedModifier", "Melon/Pumpkin Break Speed", 8., 0., 20., 0.1)', self.gui)
         self.assertIn("self.widgets.add_text_field(field)", self.gui)
         self.assertIn("self.number([x + w - 88., next, 56., 20.], *opt, value, active)", self.gui)
         self.assertIn('self.button([x + w - 114., next, 23., 20.], "-"', self.gui)
@@ -27,8 +28,9 @@ class NumericFieldTests(unittest.TestCase):
         self.assertIn("screen.widgets.set_focus(host, None)", self.gui)
         self.assertIn("fn valid_number(value: &str, min: f64, max: f64)", self.gui)
         self.assertIn("number.is_finite() && number >= min && number <= max", self.gui)
-        self.assertIn("value.round().clamp(min, max)", self.gui)
-        self.assertIn("save(host, option.key, &format!(\"{bounded:.0}\"))", self.gui)
+        self.assertIn("if step.fract() == 0. { value.round() } else { value }", self.gui)
+        self.assertIn(".clamp(min, max)", self.gui)
+        self.assertIn("save(host, option.key, &format!(\"{bounded}\"))", self.gui)
 
     def test_pending_input_is_handled_before_rebuild_or_close(self):
         self.assertGreaterEqual(self.gui.count("screen.commit_focused(host)"), 5)

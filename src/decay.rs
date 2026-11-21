@@ -183,6 +183,8 @@ impl Decay {
     pub fn tick(&self, host: &mut dyn ServerHost, event: &mut ServerTickEvent<'_>) {
         if !matches!(event.phase, ServerTickPhase::ServerTickEnd { world_running: true, .. }) { return; }
         let now = self.ticks.fetch_add(1, Ordering::Relaxed) + 1;
+        // Tree Harvester already removes logs through normal server block events.
+        // Leaf Decay is the only component which queues and processes the leaves.
         if !on(host, "leaf_decay") || !flag(host, "accelerateLeafDecay", true) {
             self.reset_queue();
             return;

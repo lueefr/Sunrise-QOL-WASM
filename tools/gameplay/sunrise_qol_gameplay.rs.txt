@@ -1,0 +1,121 @@
+//! Source-derived behavioral assertions using the real Sunrise Game with the built WASM mod.
+#![cfg(test)]
+//! This differs from the existing synthetic-host Wasmtime smoke tests.
+use super::*;
+use mod_api::{ConfigPath, Host};
+use sunrise_client::{command::args::GameMode, items::ItemStack, motion::PlayerMotion};
+use sunrise_core::geometry::Vec3;
+use std::sync::Arc;
+
+fn config(host: &dyn Host, active: bool) {
+    let path = ConfigPath::new("horizon_qol_suite/keep_soil_tilled").unwrap();
+    host.config_files().write(&path, if active { b"true" } else { b"false" })
+        .expect("write authoritative gameplay settings");
+}
+
+fn place(game: &mut Game<'_>, pos: [i32; 3], id: &str) {
+    let state = game.pack.assets.registry.default_state(id).unwrap();
+    game.world.set(pos[0], pos[1], pos[2], state).expect("world block placement");
+}
+
+fn block(game: &Game<'_>, pos: [i32; 3]) -> String {
+    let state = game.world.block(pos[0], pos[1], pos[2]);
+    game.res.facts().get(state).name.to_string()
+}
+
+fn player(game: &mut Game<'_>) -> mod_api::PlayerRef {
+    game.options.dedicated = Some(Vec::new());
+    let _ = game.block_ticks.add_empty_chunk(
+        sunrise_core::position::ChunkPos::new(0, 0));
+    game.world.chunks.insert((0, 0),
+        Arc::new(sunrise_client::chunk::Chunk::empty(0, 0)));
+    game.player = Some(PlayerMotion::new(game.motion,
+        Vec3::new(4.5, 64.0, 4.5)).unwrap());
+    game.lan_acting_uuid = Some(123);
+    game.lan_acting_entity = Some(20);
+    game.lan_acting_name = Some("QOLParity".into());
+    game.lan_acting_permission = Some(0);
+    game.set_mode(GameMode::Survival);
+    game.inventory[game.selected] = Some(ItemStack::new("minecraft:diamond_axe", 1));
+    let epoch = game.native_lifecycle.epoch().unwrap();
+    mod_api::__private::game::player_ref(
+        mod_api::EntityRef::new(epoch, 20), 123)
+}
+
+fn scenario(game: &mut Game<'_>, actor: mod_api::PlayerRef,
+            active: bool, near: bool, crop: &str, x: i32) -> String {
+    let fruit = [x, 64, 4];
+    let soil = [x, 63, 4];
+    let neighbor = [x - 1, 63, 4];
+    config(game, active);
+    place(game, soil, "minecraft:dirt");
+    place(game, neighbor, if near { "minecraft:farmland" }
+        else { "minecraft:dirt" });
+    place(game, fruit, crop);
+    assert!(game.player_destroy_block(actor, fruit, false),
+        "the real game must complete the player's block break");
+    assert_eq!(block(game, fruit), "minecraft:air",
+        "player break must remove the target block");
+    block(game, soil)
+}
+
+fn real_game() {
+    let smod = std::env::var("SUNRISE_QOL_SMOD").expect("actual built QOL package");
+    let standard = std::env::var("SUNRISE_WASM_STD").expect("matching WASM std");
+    let path = std::path::Path::new(&smod);
+    let package = sunrise_mod_package::manifest::Package::read(path)
+        .expect("valid QOL package");
+    let manifest = package.manifest;
+    assert_eq!(manifest.id, "horizon_qol_suite");
+    let info = mod_api::PackageInfo::new(
+        manifest.id.clone(), manifest.version.to_string(),
+        mod_api::PackageKind::Code, mod_api::Side::Both,
+        vec![manifest.id.clone()], vec![]);
+    mod_platform::__private::initialize().expect("platform API initialization");
+    let loaded = sunrise_mod_wasm::load(
+        &std::fs::read(standard).unwrap(),
+        vec![sunrise_mod_wasm::WasmPackage {
+            manifest,
+            module: sunrise_mod_package::manifest::Package::read_wasm(path)
+                .expect("packaged WASM"),
+        }]);
+    assert!(loaded.refused.is_empty(), "real WASM refused: {:?}", loaded.refused);
+    assert_eq!(loaded.mods.len(), 1, "exactly one QOL WASM guest");
+    loaded.initialize(&[info]).expect("guest initialization");
+    let _registration = mod_api::__private::PhaseOwner::scope(
+        mod_api::__private::ModPhase::Registration);
+    let mods: mod_api::Mods = loaded.mods.into();
+    super::api_values::install_parts(&mods).expect("register real guest parts");
+    mod_platform::testing::with_mods(mods, || {
+        mod_api::__private::mark_game_thread();
+        let _world = mod_api::__private::PhaseOwner::scope(
+            mod_api::__private::ModPhase::World);
+        super::native_entity_refs::tests::with_game(|game| {
+            let actor = player(game);
+            assert_eq!(scenario(game, actor, false, true, "minecraft:melon", 6),
+                "minecraft:dirt", "OFF: soil must remain dirt");
+            eprintln!("QOL_GAMEPLAY|soil.disabled|PASS");
+
+            assert_eq!(scenario(game, actor, true, true, "minecraft:melon", 8),
+                "minecraft:farmland", "ON: melon with farmland repairs the soil");
+            eprintln!("QOL_GAMEPLAY|soil.harvest_melon|PASS");
+
+            assert_eq!(scenario(game, actor, true, true, "minecraft:pumpkin", 10),
+                "minecraft:farmland", "ON: pumpkin with farmland repairs the soil");
+            eprintln!("QOL_GAMEPLAY|soil.harvest_pumpkin|PASS");
+
+            assert_eq!(scenario(game, actor, true, false, "minecraft:melon", 12),
+                "minecraft:dirt", "ON: no nearby farmland means no repair");
+            eprintln!("QOL_GAMEPLAY|soil.no_farmland|PASS");
+
+            assert_eq!(scenario(game, actor, true, true, "minecraft:stone", 14),
+                "minecraft:dirt", "ON: unrelated blocks must not repair soil");
+            eprintln!("QOL_GAMEPLAY|soil.other_block|PASS");
+        });
+    });
+}
+
+#[test]
+fn sunrise_qol_real_game_soil_parity() {
+    sunrise_guest_stack::run_on_guest_stack(real_game);
+}

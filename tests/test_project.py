@@ -1,5 +1,6 @@
 from pathlib import Path
 import json
+import hashlib
 import re
 import sys
 import tomllib
@@ -64,13 +65,13 @@ class ProjectTests(unittest.TestCase):
         hooks = (ROOT / 'src/lib.rs').read_text()
         settings = (ROOT / 'src/settings.rs').read_text()
         modules = re.findall(r'ModuleSpec \{ key: "([^"]+)", label:', gui)
-        options = re.findall(r'(?:toggle|range|choice)\("([^"]+)", "', gui)
-        self.assertEqual(len(modules), 38)
-        self.assertEqual(len(options), 89)
+        options = re.findall(r'(?:toggle|range|choice|text)\("([^"]+)", "', gui)
+        self.assertEqual(len(modules), 44)
+        self.assertEqual(len(options), 123)
         self.assertIn('let _ = save(host, key,', gui)
         self.assertIn('let _ = save(host, option.key,', gui)
         self.assertNotIn('host.set_setting(', gui)
-        self.assertEqual(len(set(modules) | set(options)), 127)
+        self.assertEqual(len(set(modules) | set(options)), 167)
         for hook in ('input_key', 'client_tick_pre', 'screen_render_post',
                      'screen_mouse_button_pressed_pre', 'screen_mouse_button_released_pre',
                      'screen_mouse_dragged_pre', 'screen_key_pressed_pre',
@@ -146,6 +147,15 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('fn leaf_match(', src)
         self.assertIn('fn log_match(', src)
         self.assertIn('fn supported(', src)
+        self.assertIn('if !on(host, "leaf_decay") || !flag(host, "accelerateLeafDecay", true)', src)
+        self.assertIn('amount(host, "minimumDecayTicks", 5., 0., 1200.)', src)
+        self.assertIn('amount(host, "maximumDecayTicks", 20., 0., 1200.)', src)
+        self.assertIn('amount(host, "amountOfLeavesBrokenPerTick", 5., 1., 64.)', src)
+        self.assertNotIn('treeLeavesPerTick', src)
+        self.assertNotIn('enableFastLeafDecay', src)
+        self.assertNotIn('treeLeavesPerTick', gui)
+        self.assertNotIn('toggle("enableFastLeafDecay"', gui)
+        self.assertIn('player.destroy_block(host, p, false)', mining)
         self.assertIn('MAX_TASKS', src)
         self.assertIn('"persistent"', src)
         self.assertIn('"distance"', src)
@@ -164,7 +174,7 @@ class ProjectTests(unittest.TestCase):
     def test_migration_preserves_legacy_settings(self):
         import tempfile
         from migrate_settings import keys, migrate
-        self.assertEqual(len(keys(ROOT)), 127)
+        self.assertEqual(len(keys(ROOT)), 167)
         with tempfile.TemporaryDirectory() as temp:
             game = Path(temp)
             previous = game / 'sunrise-mods' / '.sunrise-mod-data' / 'horizon_qol_suite'
@@ -240,7 +250,7 @@ class ProjectTests(unittest.TestCase):
         gui = (ROOT / 'src/gui.rs').read_text()
         src = (ROOT / 'src/lib.rs').read_text()
         matrix = (ROOT / 'docs/PARITY.md').read_text()
-        self.assertEqual(gui.count('ModuleSpec { key:'), 38)
+        self.assertEqual(gui.count('ModuleSpec { key:'), 44)
         self.assertNotIn('key: "full_brightness_toggle"', gui)
         self.assertIn('No public WASM API', matrix)
         self.assertIn('superflat::on_join(host, event)', src)
@@ -256,7 +266,7 @@ class ProjectTests(unittest.TestCase):
                         'Tax Free Levels', 'What Durability', 'Unlimited Enchantments'):
             self.assertIn(feature, docs)
         self.assertIn('NOT implemented', docs)
-        self.assertIn('not been compiled', docs)
+        self.assertIn('gameplay certification remains incomplete', docs)
 
     def test_english_only_ui(self):
         source = (ROOT / 'src/gui.rs').read_text()
@@ -298,7 +308,136 @@ class DurabilityRegressionTests(unittest.TestCase):
         self.assertLess(src.index('if !changed { return; }'), src.index('let max_cost = amount('))
         self.assertIn('event.update.output = Some(stack);', src)
 
+    def test_soil_and_hay_implement_real_game_hooks(self):
+        hooks = (ROOT / 'src/lib.rs').read_text()
+        gui = (ROOT / 'src/gui.rs').read_text()
+        soil = (ROOT / 'src/soil.rs').read_text()
+        hay = (ROOT / 'src/soft_hay.rs').read_text()
+        self.assertIn('soil::harvested(host, event);', hooks)
+        self.assertIn('soft_hay::register(r);', hooks)
+        self.assertIn('soft_hay::refresh(host);', hooks)
+        self.assertIn('fn fall_on(&self, _: &mut dyn LevelRandomHost', hay)
+        self.assertIn('registrar.block_part(key, SoftHay)', hay)
+        self.assertIn('event.damage_multiplier = 0.', hay)
+        self.assertIn('level.set_block(host, below, farmland', soil)
+        self.assertIn('minecraft:melon', soil)
+        self.assertIn('minecraft:pumpkin', soil)
+        self.assertIn('key: "keep_soil_tilled"', gui)
+        self.assertIn('key: "softer_hay_bales"', gui)
+
+    def test_nutritious_milk_is_activated_only_after_consumption(self):
+        hooks = (ROOT / 'src/lib.rs').read_text()
+        milk = (ROOT / 'src/milk.rs').read_text()
+        gui = (ROOT / 'src/gui.rs').read_text()
+        self.assertIn('fn living_entity_use_item_finish(', hooks)
+        self.assertIn('milk::finished(side, event)', hooks)
+        self.assertIn('let HostSide::Server(host) = side else { return; };', milk)
+        self.assertIn('event.stack.item().id(host)', milk)
+        self.assertIn('player.set_food_level(host,', milk)
+        self.assertIn('player.set_saturation(host,', milk)
+        self.assertIn('key: "nutritious_milk"', gui)
+        self.assertIn('hungerLevelIncrease', gui)
+        self.assertIn('saturationLevelIncrease', gui)
+
+    def test_zombie_door_protection_uses_actual_goal_api(self):
+        hooks = (ROOT / 'src/lib.rs').read_text()
+        zombie = (ROOT / 'src/zombie.rs').read_text()
+        gui = (ROOT / 'src/gui.rs').read_text()
+        self.assertIn('zombie::joined(host, event);', hooks)
+        self.assertIn('mob.remove_goal(host, "BreakDoor")', zombie)
+        self.assertNotIn('mob.set_can_open_doors(host, false)', zombie)
+        self.assertIn('key: "zombie_proof_doors"', gui)
+
+    def test_exact_original_harvest_tags(self):
+        # Git blob IDs from JamCoreModding/right-click-harvest (MIT).
+        original_blobs = {
+            'block/blacklist.json': '27b94f91030e05503db9f3d6da625e4d041bd3ea',
+            'block/hoe_never_required.json': '0512ed8b0b2615998c2491ba9cb9bbb2601611f1',
+            'block/radius_harvest_blacklist.json': '7f2a23f642ffe72a7d11d0255576091631ffdbb5',
+            'item/low_tier_hoes.json': '848f378cee4d7c546408234710645f1e655d4bff',
+            'item/mid_tier_hoes.json': '320dc441260333a7a416991fc94ab471f40e63d1',
+            'item/high_tier_hoes.json': '76e37a23e87fe7eb9eff1ea35ba723a7eb2cb260',
+        }
+        for filename, expected in original_blobs.items():
+            data = (ROOT / 'data/rightclickharvest/tags' / filename).read_bytes()
+            sha = hashlib.sha1(b'blob ' + str(len(data)).encode() + bytes([0]) + data).hexdigest()
+            self.assertEqual(sha, expected, f'{filename} must match upstream byte for byte')
+
+    def test_upstream_harvest_tags_and_component_support(self):
+        original = ROOT / 'data/rightclickharvest/tags'
+        for kind in ('block', 'item'):
+            self.assertTrue((original / kind).is_dir())
+        for filename in ('blacklist', 'hoe_never_required', 'radius_harvest_blacklist'):
+            data = json.loads((original / 'block' / f'{filename}.json').read_text())
+            self.assertTrue(data['values'])
+        for filename, expected in (
+            ('low_tier_hoes', 'minecraft:iron_hoe'),
+            ('mid_tier_hoes', 'minecraft:diamond_hoe'),
+            ('high_tier_hoes', 'minecraft:netherite_hoe'),
+        ):
+            data = json.loads((original / 'item' / f'{filename}.json').read_text())
+            names = [v['id'] if isinstance(v, dict) else v for v in data['values']]
+            self.assertIn(expected, names)
+        self.assertIn('Copyright 2026 Jamalam',
+                      (ROOT / 'licenses/right-click-harvest.MIT').read_text())
+        source = (ROOT / 'src/right_harvest.rs').read_text()
+        self.assertIn('ComponentId::new("minecraft:block_transformer")', source)
+        self.assertIn('Tag::String(value)', source)
+        self.assertIn('level.with_random(host,', source)
+        self.assertIn('wear_needed(kind, before_damage, current)', source)
+
+    def test_right_click_harvest_hook_and_original_options(self):
+        hooks = (ROOT / 'src/lib.rs').read_text()
+        module = (ROOT / 'src/right_harvest.rs').read_text()
+        gui = (ROOT / 'src/gui.rs').read_text()
+        self.assertIn('right_harvest::click(host, event)', hooks)
+        self.assertIn('right_harvest::client_click(host, event)', hooks)
+        self.assertIn('SoundPlay::at(sound, SoundSource::Players, origin)', module)
+        self.assertIn('fn starts_radius(', module)
+        self.assertIn('fn harvest_positions(', module)
+        self.assertIn('level.world_border(host)', module)
+        self.assertIn('player.entity().position(host)', module)
+        self.assertIn('player.has_infinite_materials(host)', module)
+        self.assertIn('let _ = pay_xp(host, player, cost)', module)
+        self.assertIn('let _ = level.award_experience(host, x, y, z, points)', module)
+        self.assertNotIn('if !creative {\n        match xp', module)
+        self.assertNotIn('id == "minecraft:netherite_hoe"', module)
+        self.assertNotIn('matches!(id.as_str(), "farmersdelight:tomatoes"', module)
+        self.assertIn('starts_radius(crop, blocked, hoe, radius)', module)
+        self.assertIn('minecraft:item.nether_wart.plant', module)
+        self.assertIn('minecraft:item.crop.plant', module)
+        self.assertIn('host.chat_line(Text::literal(', module)
+        self.assertIn('rchHoeWarned', module)
+        self.assertIn('key: "right_click_harvest"', gui)
+        for key in ('rchRequireHoe', 'rchHarvestInRadius',
+                    'rchHungerLevel', 'rchExperienceType'):
+            self.assertIn(f'"{key}"', gui)
+        self.assertIn('level.block_drops(host, pos, held, Some(player.entity()))', module)
+        self.assertIn('subtract_replant(host, &id, state.block(), &mut drops)', module)
+        self.assertIn('host.block_item(block)', module)
+        self.assertIn('host.item_block(stack.item()) == Some(block)', module)
+        self.assertIn('level.destroy_block(host, position, true, held, false)', module)
+        self.assertIn('player.destroy_block(host, position, false)', module)
+        self.assertNotIn('id.contains("seed")', module)
+        self.assertIn('BlockUpdateFlags::NEIGHBORS | BlockUpdateFlags::CLIENTS', module)
+        self.assertIn('InteractionResult::SuccessServer', module)
+        self.assertIn('rightclickharvest:radius_harvest_blacklist', module)
+        self.assertIn('player.is_secondary_use_active(host)', module)
+
+    def test_trading_original_level_guard(self):
+        src = (ROOT / 'src/trading.rs').read_text()
+        gui = (ROOT / 'src/gui.rs').read_text()
+        self.assertIn('host.merchant(entity)', src)
+        self.assertIn('merchant.level(host)', src)
+        self.assertIn('minimumVillagerLevel', src)
+        self.assertIn('range("minimumVillagerLevel", "Minimum Villager Level", 1., 1., 5., 1.)', gui)
+
     def test_totem_reverts_item_if_health_write_fails(self):
         src = (ROOT / 'src/totem.rs').read_text()
         self.assertIn('if !living.set_health(host, 1.) {', src)
-        self.assertIn('player.set_inventory_slot(host, slot, Some(stack))', src)
+        self.assertIn('player.set_inventory_slot(host, slot, Some(original))', src)
+        self.assertIn('ItemResource::of(&stack).value(host, &component)', src)
+        self.assertIn('minecraft:death_protection', src)
+        self.assertIn('DeathEffect::Clear', src)
+        self.assertIn('DeathEffect::Apply', src)
+        self.assertNotIn('stack.item().id(host) == "minecraft:totem_of_undying"', src)

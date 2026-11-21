@@ -1,7 +1,7 @@
 //! Shulkers are queued only after confirmed deaths, never after canceled deaths.
 //! Each tick handles a bounded number of spawns; no level is loaded implicitly.
 use crate::settings::{amount, flag, on};
-use mod_api::{LivingDeathEvent, LivingDeathPostEvent, ServerHost, ServerTickEvent, ServerTickPhase, SpawnReason};
+use mod_api::{Compound, LivingDeathEvent, LivingDeathPostEvent, ServerHost, ServerTickEvent, ServerTickPhase, SpawnReason, Tag};
 use std::collections::VecDeque;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -15,6 +15,7 @@ struct Death {
     id: u32,
     dimension: String,
     position: [f64; 3],
+    nbt: Option<Compound>,
     time: u64,
 }
 
@@ -22,6 +23,7 @@ struct Death {
 struct Respawn {
     dimension: String,
     position: [f64; 3],
+    nbt: Option<Compound>,
     due: u64,
     retries: u8,
 }
@@ -43,12 +45,15 @@ impl Shulkers {
                 && tags.iter().any(|tag| tag == "collective.fromspawner") { return; }
         }
         let (Some(level), Some(position)) = (entity.level(host), entity.position(host)) else { return; };
-        let Ok(id) = u32::try_from(event.entity) else { return; };
+        let id = event.entity;
         let Some(dimension) = level.dimension().id(host) else { return; };
         let mut deaths = match self.deaths.lock() { Ok(guard) => guard, Err(_) => return };
         if deaths.len() >= MAX_PENDING { deaths.pop_front(); }
+        // The upstream restores the dead shulker's data onto the new entity,
+        // rather than spawning a fresh shulker with default color/name/state.
+        let nbt = entity.nbt(host);
         deaths.push_back(Death {
-            id, dimension, position,
+            id, dimension, position, nbt,
             time: self.time.load(Ordering::Relaxed),
         });
     }
@@ -64,7 +69,7 @@ impl Shulkers {
         if let Ok(mut queue) = self.queue.lock() {
             if queue.len() >= MAX_PENDING { queue.pop_front(); }
             queue.push_back(Respawn {
-                dimension: death.dimension, position: death.position,
+                dimension: death.dimension, position: death.position, nbt: death.nbt,
                 due: self.time.load(Ordering::Relaxed).saturating_add(delay), retries: 0,
             });
         }
@@ -89,7 +94,17 @@ impl Shulkers {
             });
             let Some(mut task) = task else { break; };
             let spawned = host.level(&task.dimension).is_some_and(|level| {
-                level.spawn_mob(host, "minecraft:shulker", task.position, SpawnReason::Natural).is_some()
+                // Preserve color, custom name and other persistent shulker data,
+                // but never reuse the dead entity's UUID or zero health.
+                let restored = task.nbt.clone().and_then(|mut nbt| {
+                    for key in ["UUID", "UUIDMost", "UUIDLeast", "DeathTime", "HurtTime"] {
+                        nbt.remove(&key.into());
+                    }
+                    nbt.insert("Health".into(), Tag::Float(30_f32.to_bits()));
+                    host.summon(&task.dimension, "minecraft:shulker", task.position, nbt)
+                });
+                restored.is_some() || level.spawn_mob(host, "minecraft:shulker",
+                    task.position, SpawnReason::Natural).is_some()
             });
             if !spawned && task.retries < MAX_RETRIES {
                 task.retries += 1;

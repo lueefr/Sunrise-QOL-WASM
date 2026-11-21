@@ -3,6 +3,8 @@
 //! never represented as a working toggle.
 mod anvil;
 mod drops;
+mod wither_skull;
+mod dragon_drops;
 mod decay;
 mod doors;
 mod automatic_doors;
@@ -35,12 +37,18 @@ mod enchant_command;
 mod extended_bonemeal;
 mod followers;
 mod trading;
+mod soil;
+mod soft_hay;
+mod milk;
+mod zombie;
+mod right_harvest;
+mod hoe;
 
 use mod_api::{
     AnvilUpdateEvent, BlockChangedEvent, LevelHost, ClientHost, EntityJoinLevelEvent, EntityLeaveLevelEvent,
     EntityMobGriefingEvent, Flow, Hooks, Host, HostSide,
     LootDropsEvent, PlayerDestroyedBlockEvent, PlayerLoggedInEvent, Registrar,
-    RegistrationContext, RenderHandEvent, ServerHost, ServerStoppedEvent, ServerTickEvent,
+    RegistrationContext, RenderHandEvent, ServerHost, ServerStartedEvent, ServerStoppedEvent, ServerTickEvent,
     TradeWithVillagerEvent, InputKeyEvent, ClientTickPreEvent, ScreenRenderPostEvent,
     ScreenMouseButtonPressedPreEvent, ScreenMouseButtonReleasedPreEvent,
     ScreenMouseDraggedPreEvent, ScreenKeyPressedPreEvent, ScreenCharTypedPreEvent,
@@ -49,6 +57,8 @@ use mod_api::{
     PlayerXpChangeEvent, ItemTooltipEvent, MobSpawnPositionCheckEvent,
     PlayerCommandEvent, PlayerCommandsSentEvent, EntityInteractEvent, InteractionResult,
     BonemealEvent, TeleportCommandEvent, PlayerTeleportedEvent,
+    PlayerBreakSpeedEvent,
+    LivingEntityUseItemFinishEvent, VanillaGameEventEvent, HitHost, LivingDamagePostEvent,
 };
 
 #[derive(Default)]
@@ -68,6 +78,8 @@ pub struct SunriseQol {
     compass: compass::Compass,
     clock: clock::Clock,
     shulkers: shulkers::Shulkers,
+    wither_skulls: wither_skull::WitherSkulls,
+    dragon_drops: dragon_drops::DragonDrops,
 }
 
 #[mod_api::sunrise_mod]
@@ -76,6 +88,7 @@ impl Hooks for SunriseQol {
         settings::register(r);
         zoom::register(r);
         durability::register(r);
+        soft_hay::register(r);
     }
 
     fn setting_changed(&self, host: &mut dyn ClientHost, event: &mut SettingChangedEvent<'_>) {
@@ -127,6 +140,7 @@ impl Hooks for SunriseQol {
         self.mining.block(host, event);
         self.beacon.broken(host, event);
         self.conduit.broken(host, event);
+        soil::harvested(host, event);
     }
 
     fn block_changed(&self, level: &dyn LevelHost, event: &mut BlockChangedEvent) {
@@ -147,10 +161,19 @@ impl Hooks for SunriseQol {
         dismount::interact(host, event)
     }
 
+    fn player_break_speed(&self, side: HostSide<'_>, event: &mut PlayerBreakSpeedEvent) -> Flow {
+        hoe::speed(side, event)
+    }
+
     fn right_click_block(&self, side: HostSide<'_>, event: &mut RightClickBlockEvent<'_>) -> Flow {
-        let HostSide::Server(host) = side else { return Flow::Continue; };
+        let host = match side {
+            HostSide::Client(host) => return right_harvest::client_click(host, event),
+            HostSide::Server(host) => host,
+        };
+        if hoe::click(host, event) == Flow::Cancel { return Flow::Cancel; }
         if self.beacon.click(host, event) == Flow::Cancel { return Flow::Cancel; }
         if self.conduit.click(host, event) == Flow::Cancel { return Flow::Cancel; }
+        if right_harvest::click(host, event) == Flow::Cancel { return Flow::Cancel; }
         self.doors.clicked(HostSide::Server(host), event)
     }
 
@@ -193,11 +216,19 @@ impl Hooks for SunriseQol {
         conduit_drowned::check(host, event);
     }
 
+    fn server_started(&self, host: &mut dyn ServerHost, event: &mut ServerStartedEvent) {
+        messages::started(event);
+        soft_hay::refresh(host);
+    }
+
     fn server_tick(&self, host: &mut dyn ServerHost, event: &mut ServerTickEvent<'_>) {
+        soft_hay::refresh(host);
         self.decay.tick(host, event);
         self.doors.tick(host, event);
         self.automatic_doors.tick(host, event);
         self.shulkers.tick(host, event);
+        self.wither_skulls.tick(host, event);
+        self.dragon_drops.tick(event);
         self.enchant_command.tick(host, event);
     }
 
@@ -209,17 +240,27 @@ impl Hooks for SunriseQol {
         anvil::on_update(side, event)
     }
 
+    fn living_entity_use_item_finish(&self, side: HostSide<'_>, event: &mut LivingEntityUseItemFinishEvent<'_>) {
+        milk::finished(side, event);
+    }
+
     fn player_xp_change(&self, host: &mut dyn ServerHost, event: &mut PlayerXpChangeEvent<'_>) -> Flow {
         mending::on_xp(host, event)
     }
 
+    fn living_damage_post(&self, _: &mut dyn HitHost, event: &mut LivingDamagePostEvent<'_>) {
+        self.dragon_drops.damage(event);
+    }
+
     fn living_death(&self, host: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
         self.shulkers.death(host, event);
+        self.wither_skulls.dying(host, event);
         totem::on_death(host, event)
     }
 
     fn living_death_post(&self, host: &mut dyn ServerHost, event: &mut LivingDeathPostEvent<'_>) {
         self.shulkers.confirmed(host, event);
+        self.wither_skulls.confirmed(host, event);
     }
 
     fn player_logged_in(&self, host: &mut dyn ServerHost, event: &mut PlayerLoggedInEvent<'_>) {
@@ -232,11 +273,19 @@ impl Hooks for SunriseQol {
 
     fn entity_join_level(&self, host: &mut dyn ServerHost, event: &mut EntityJoinLevelEvent<'_>) -> Flow {
         if superflat::on_join(host, event) == Flow::Cancel { return Flow::Cancel; }
+        zombie::joined(host, event);
+        self.dragon_drops.joined(event);
         self.villagers.on_join(event)
     }
 
     fn entity_leave_level(&self, _: &mut dyn ServerHost, event: &mut EntityLeaveLevelEvent<'_>) {
         self.villagers.on_leave(event);
+        self.dragon_drops.left(event);
+    }
+
+    fn vanilla_game_event(&self, host: &mut dyn ServerHost, event: &mut VanillaGameEventEvent<'_>) -> Flow {
+        self.dragon_drops.died(host, event);
+        Flow::Continue
     }
 
     fn entity_mob_griefing(&self, host: &dyn Host, event: &mut EntityMobGriefingEvent) {
@@ -253,6 +302,10 @@ impl Hooks for SunriseQol {
         self.followers.reset();
         self.elytra.reset();
         self.shulkers.reset();
+        self.wither_skulls.reset();
+        self.dragon_drops.reset();
+        soft_hay::reset();
+        messages::reset();
     }
 
     fn render_hand(&self, host: &dyn ClientHost, event: &mut RenderHandEvent<'_, '_>) -> Flow {

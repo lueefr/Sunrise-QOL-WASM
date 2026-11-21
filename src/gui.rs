@@ -24,6 +24,7 @@ enum OptionKind {
     Toggle { default: bool },
     Range { default: f64, min: f64, max: f64, step: f64 },
     Choice { default: &'static str, values: &'static [&'static str] },
+    Text { default: &'static str, max: usize },
 }
 
 #[derive(Clone, Copy)]
@@ -81,6 +82,31 @@ const fn choice(key: &'static str, label: &'static str, default: &'static str,
     OptionSpec { key, label, kind: OptionKind::Choice { default, values } }
 }
 
+const fn text(key: &'static str, label: &'static str, default: &'static str, max: usize) -> OptionSpec {
+    OptionSpec { key, label, kind: OptionKind::Text { default, max } }
+}
+
+const FIRST_JOIN_OPTIONS: &[OptionSpec] = &[
+    text("firstJoinMessage", "First Join Text", "You wake up in an unfamiliar place.", 256),
+    range("firstJoinMessageTextFormattingColourIndex", "First Join Color (0-15)", 2., 0., 15., 1.),
+    text("serverBroadcastMessage", "First Join Broadcast Text", "", 256),
+    range("serverBroadcastMessageTextFormattingColourIndex", "Broadcast Color (0-15)", 3., 0., 15., 1.),
+];
+
+const WELCOME_OPTIONS: &[OptionSpec] = &[
+    toggle("onlyRunOnDedicatedServers", "Dedicated Servers Only", true),
+    toggle("sendEmptyLineBeforeFirstMessage", "Blank Line Before First", true),
+    text("messageOneText", "Welcome Message One", "Welcome to the server!", 256),
+    range("messageOneColourIndex", "Message One Color (0-15)", 2., 0., 15., 1.),
+    text("messageOneOptionalURL", "Message One URL", "", 512),
+    text("messageTwoText", "Welcome Message Two", "Downloaded from CurseForge! This is a clickable link.", 256),
+    range("messageTwoColourIndex", "Message Two Color (0-15)", 14., 0., 15., 1.),
+    text("messageTwoOptionalURL", "Message Two URL", "https://curseforge.com/members/serilum/projects", 512),
+    text("messageThreeText", "Welcome Message Three", "You should probably edit this in the config :)", 256),
+    range("messageThreeColourIndex", "Message Three Color (0-15)", 15., 0., 15., 1.),
+    text("messageThreeOptionalURL", "Message Three URL", "", 512),
+];
+
 const DOORS: &[OptionSpec] = &[
     toggle("recursive_doors", "Recursive Opening", true),
     range("door_radius", "Maximum Search Distance", 10., 1., 64., 1.),
@@ -131,12 +157,39 @@ const CLOCK: &[OptionSpec] = &[
     range("clock_blue", "Text Color: Blue", 255., 0., 255., 5.),
 ];
 
+const NUTRITIOUS_MILK: &[OptionSpec] = &[
+    range("hungerLevelIncrease", "Hunger Restored", 10., 0., 20., 1.),
+    range("saturationLevelIncrease", "Saturation Restored", 10., 0., 20., 0.1),
+];
+
+const HOE: &[OptionSpec] = &[
+    range("cropBlockBreakSpeedModifier", "Melon/Pumpkin Break Speed", 8., 0., 20., 0.1),
+    toggle("onlyUntillWithOtherHandEmpty", "Require Other Hand Empty", true),
+    toggle("mustCrouchToHaveBiggerHoeRange", "Crouch for Area Tilling", true),
+    range("woodenTierHoeRange", "Wood Hoe Radius", 0., 0., 32., 1.),
+    range("stoneTierHoeRange", "Stone Hoe Radius", 1., 0., 32., 1.),
+    range("goldTierHoeRange", "Gold Hoe Radius", 2., 0., 32., 1.),
+    range("ironTierHoeRange", "Iron Hoe Radius", 2., 0., 32., 1.),
+    range("diamondTierHoeRange", "Diamond Hoe Radius", 3., 0., 32., 1.),
+    range("netheriteTierHoeRange", "Netherite Hoe Radius", 4., 0., 32., 1.),
+];
+
+const RIGHT_HARVEST: &[OptionSpec] = &[
+    toggle("rchRequireHoe", "Require Hoe", false),
+    toggle("rchHarvestInRadius", "Harvest in Radius", true),
+    choice("rchHungerLevel", "Hunger Level", "None", &["None", "Low", "Normal", "High"]),
+    choice("rchExperienceType", "Experience Type", "None", &["None", "Cost", "Reward"]),
+];
+
 const MENDING: &[OptionSpec] = &[
     toggle("mending_hotbar_only", "Repair Hotbar Only", false),
 ];
 
 const BOTTLED_AIR: &[OptionSpec] = &[
     range("bottled_air_amount", "Oxygen Restored", 150., 0., 1000., 10.),
+    toggle("disableWaterConsumptionUnderwater", "Block Drinking Water Underwater", true),
+    toggle("holdFireTypeItemInOffhandToPreventWaterBottleCreation", "Fire-Item Offhand Effect", true),
+    range("chanceGlassBottleBreaksWithFireTypeInOffhand", "Fire Break Chance", 0.5, 0., 1., 0.05),
 ];
 
 const HELP: &[OptionSpec] = &[
@@ -245,6 +298,7 @@ const SHULKER: &[OptionSpec] = &[
 const TRADING: &[OptionSpec] = &[
     toggle("villagers", "Villagers", true),
     toggle("wandering_trader", "Wandering Trader", true),
+    range("minimumVillagerLevel", "Minimum Villager Level", 1., 1., 5., 1.),
     toggle("remove_demand", "Remove Demand", true),
 ];
 
@@ -266,6 +320,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "inventory_totem", label: "Inventory Totems", options: &[], category: Category::Inventory },
     ModuleSpec { key: "inventory_mending", label: "XP Item Repair", options: MENDING, category: Category::Inventory },
     ModuleSpec { key: "bottled_air", label: "Bottled Air", options: BOTTLED_AIR, category: Category::Inventory },
+    ModuleSpec { key: "nutritious_milk", label: "Nutritious Milk", options: NUTRITIOUS_MILK, category: Category::Inventory },
     ModuleSpec { key: "what_durability", label: "Durability Control", options: &[], category: Category::Inventory },
     ModuleSpec { key: "gui_clock", label: "World Clock", options: CLOCK, category: Category::Hud },
     ModuleSpec { key: "gui_compass", label: "Navigation Compass", options: COMPASS, category: Category::Hud },
@@ -275,10 +330,15 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "tree_harvester", label: "Tree Harvesting", options: TREE, category: Category::Gathering },
     ModuleSpec { key: "leaf_decay", label: "Leaf Decay", options: LEAF_DECAY, category: Category::Gathering },
     ModuleSpec { key: "extended_bonemeal", label: "Extended Bone Meal", options: BONEMEAL, category: Category::Gathering },
+    ModuleSpec { key: "hoe_tweaks", label: "Hoe Tweaks", options: HOE, category: Category::Gathering },
+    ModuleSpec { key: "right_click_harvest", label: "Right Click Harvest", options: RIGHT_HARVEST, category: Category::Gathering },
     ModuleSpec { key: "double_doors", label: "Paired Doors", options: DOORS, category: Category::World },
     ModuleSpec { key: "automatic_doors", label: "Automatic Doors", options: AUTO_DOORS, category: Category::World },
+    ModuleSpec { key: "zombie_proof_doors", label: "Zombie-Proof Doors", options: &[], category: Category::World },
     ModuleSpec { key: "beacon_placement", label: "Beacon Placement", options: BEACON, category: Category::World },
     ModuleSpec { key: "conduit_placement", label: "Conduit Placement", options: CONDUIT, category: Category::World },
+    ModuleSpec { key: "keep_soil_tilled", label: "Keep Soil Tilled", options: &[], category: Category::World },
+    ModuleSpec { key: "softer_hay_bales", label: "Softer Hay Bales", options: &[], category: Category::World },
     ModuleSpec { key: "spawner_control", label: "Spawner Control", options: &[], category: Category::World },
     ModuleSpec { key: "cycle_paintings", label: "Painting Cycling", options: &[], category: Category::World },
     ModuleSpec { key: "dismount_entity", label: "Passenger Removal", options: DISMOUNT, category: Category::World },
@@ -292,8 +352,8 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "always_wither_skull", label: "Wither Skull Drops", options: &[], category: Category::Creatures },
     ModuleSpec { key: "dragon_drops_elytra", label: "Dragon Drops", options: &[], category: Category::Creatures },
     ModuleSpec { key: "infinite_trading", label: "Trade Restocking", options: TRADING, category: Category::Trading },
-    ModuleSpec { key: "first_join_message", label: "First Join Message", options: &[], category: Category::Messages },
-    ModuleSpec { key: "welcome_message", label: "Welcome Messages", options: &[], category: Category::Messages },
+    ModuleSpec { key: "first_join_message", label: "First Join Message", options: FIRST_JOIN_OPTIONS, category: Category::Messages },
+    ModuleSpec { key: "welcome_message", label: "Welcome Messages", options: WELCOME_OPTIONS, category: Category::Messages },
     ModuleSpec { key: "compact_help", label: "Command Help", options: HELP, category: Category::Messages },
 ];
 #[derive(Clone, Copy)]
@@ -360,7 +420,21 @@ impl Screen {
     fn number(&mut self, rect: [f32; 4], option: OptionSpec, value: f64, active: bool) {
         if !self.visible(rect[1], rect[3]) { return; }
         let mut field = TextField::new(rect, 16);
-        field.set_value(&format!("{value:.0}"));
+        let shown = if matches!(option.kind, OptionKind::Range { step, .. } if step.fract() != 0.) {
+            format!("{value}")
+        } else { format!("{value:.0}") };
+        field.set_value(&shown);
+        field.message = option.label.to_owned();
+        field.active = active;
+        let id = self.widgets.add_text_field(field);
+        self.numbers.push((id, option));
+    }
+
+    fn string(&mut self, rect: [f32; 4], option: OptionSpec, value: &str,
+              max: usize, active: bool) {
+        if !self.visible(rect[1], rect[3]) { return; }
+        let mut field = TextField::new(rect, max);
+        field.set_value(value);
         field.message = option.label.to_owned();
         field.active = active;
         let id = self.widgets.add_text_field(field);
@@ -390,14 +464,22 @@ impl Screen {
         let Some((_, option)) = self.numbers.iter().find(|(key, _)| *key == id).copied() else {
             return;
         };
-        let OptionKind::Range { default, min, max, .. } = option.kind else { return; };
+        if let OptionKind::Text { max, .. } = option.kind {
+            if let Some(draft) = self.widgets.text_field(id).map(|field| field.value().to_owned()) {
+                if draft.chars().count() <= max && !draft.contains('\0') {
+                    let _ = save(host, option.key, &draft);
+                }
+            }
+            return;
+        }
+        let OptionKind::Range { default, min, max, step } = option.kind else { return; };
         let old = self.option_amount(host, option.key, default, min, max);
         let draft = self.widgets.text_field(id).map(|field| field.value().trim().to_owned());
         let value = draft.as_deref().and_then(|value| value.parse::<f64>().ok())
             .filter(|value| value.is_finite());
         let shown = if let Some(value) = value {
-            let bounded = value.round().clamp(min, max);
-            if bounded == old || save(host, option.key, &format!("{bounded:.0}")) {
+            let bounded = (if step.fract() == 0. { value.round() } else { value }).clamp(min, max);
+            if bounded == old || save(host, option.key, &format!("{bounded}")) {
                 bounded
             } else {
                 old
@@ -406,7 +488,8 @@ impl Screen {
             old
         };
         if let Some(field) = self.widgets.text_field_mut(id) {
-            field.set_value(&format!("{shown:.0}"));
+            if step.fract() == 0. { field.set_value(&format!("{shown:.0}")); }
+            else { field.set_value(&format!("{shown}")); }
             field.text_color = 0xFFE0_E0E0;
         }
     }
@@ -491,6 +574,10 @@ impl Screen {
                                 let current = saved_value(host, opt.key).unwrap_or_else(|| default.to_owned());
                                 let current = if values.contains(&current.as_str()) { current } else { default.to_owned() };
                                 self.button([x + w - 151., next, 145., 20.], &current, active, Action::Cycle(*opt));
+                            }
+                            OptionKind::Text { default, max } => {
+                                let current = saved_value(host, opt.key).unwrap_or_else(|| default.to_owned());
+                                self.string([x + w - 196., next, 190., 20.], *opt, &current, max, active);
                             }
                         }
                     }

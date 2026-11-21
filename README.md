@@ -46,34 +46,34 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [x] Beacon bases can be placed by using mineral blocks on a beacon *(initial support; only empty positions, in-game validation pending)*
 - [x] Conduits and their surrounding blocks become easier to place *(initial support; frame blocks placed only in water or empty spaces, in-game validation pending)*
 - [x] Mob spawners can be disabled with a torch arrangement *(initial support; five surrounding torches, in-game validation pending)*
-- [x] Glass bottles can temporarily restore underwater air *(initial oxygen restoration on bottle use; original potion/fire-item rules pending, gameplay validation pending)*
+- [x] Glass bottles can temporarily restore underwater air *(oxygen restoration, water-potion restrictions and fire-offhand handling; gameplay validation pending)*
 - [x] The help command gains clearer, paginated output *(initial support: configurable colors and clickable command/page links; detailed command syntax uses vanilla)*
 - [x] Active conduit effects suppress nearby drowned spawning *(initial support: read-only spawn veto near Conduit Power players; in-game validation pending)*
 - [x] Placed paintings can be cycled without breaking them *(initial support: same-size placeable variants from the server data pack; painting entity is replaced without drops; gameplay validation pending)*
 - [x] Passengers can be removed from mounted entities more conveniently *(initial support: sneak + right-click, protects player passengers by default)*
 - [x] Fireworks can launch Elytra flight directly from the ground *(experimental client sequence: upward lift, vanilla glide request and rocket use; runtime validation pending)*
 - [x] Commands can apply enchantments above vanilla level limits *(partial: operators can run /enchant @s <enchantment> 6–255 on supported vanilla gear; standard lower levels and other selectors remain vanilla)*
-- [x] Bone meal supports additional plants and faster growth *(initial support: crouching matures common crops; nether wart, cactus, sugar cane, and vine growth; server-side only, in-game validation pending)*
+- [x] Bone meal supports additional plants and faster growth *(one-stage nether wart, registered modded age-based crops, cactus, sugar cane and vines; dispenser and gameplay parity pending)*
 - [x] Tamed companions follow their owners during command teleportation *(partial: capped scan of nearby owned, non-sitting, unleaded vanilla pets during /tp; no damage immunity, allay, or mounted-player parity yet)*
 - [ ] Metal equipment can be smelted back into materials
-- [ ] Hoes gain faster farming actions and soil-tilling controls
+- [x] Hoes can till and undo-till soil using the original six material-tier radii, crouching behavior, and durability costs *(Hoe Tweaks; crop break-speed replacement is now wired through the Sunrise break-speed event; some bush-block types and in-game parity remain unverified)*
 - [x] Undying totems can activate from inventory slots *(partial)*
-- [ ] Farmland stays tilled after harvesting melon or pumpkin stems
+- [x] Farmland stays tilled after harvesting melons or pumpkins *(original 3×3 farmland check; gameplay validation pending)*
 - [ ] Kelp can be used as a fertilizer
 - [ ] Boats can be moved without breaking them
 - [ ] Minecarts can be repositioned without breaking them
 - [ ] Animals can be tempted again without a waiting period
 - [ ] Slow-falling effects prevent accidental farmland trampling
-- [ ] Drinking milk restores configurable hunger and saturation
+- [x] Drinking milk restores configurable hunger and saturation *(finished-consumption hook; gameplay validation pending)*
 - [x] Connected ore veins can be harvested together *(partial)*
 - [ ] Paths can be created across a selected route
 - [ ] Some utility blocks can be accessed without placing them
 - [ ] Fishing lines can be recast automatically after a catch
-- [ ] Harvested crops can be replanted using their drops
+- [x] Mature crops can be harvested with right click and automatically replanted *(Right Click Harvest; basic vanilla crops, sugar cane, cactus and age-based modded crops on farmland; Fortune through original loot tables, configurable hoe requirement, tiered radius, hunger and XP; API/gameplay parity pending)*
 - [x] Shulkers can return after a configurable respawn delay *(partial)*
 - [ ] Connected scaffolding drops are collected near the broken block
 - [ ] Allowed sleeping times can be adjusted
-- [ ] Landing on hay bales can eliminate fall damage
+- [x] Landing on hay bales can eliminate fall damage *(registered hay landing hook for players; gameplay validation pending)*
 - [ ] Used-up hand stacks refill from inventory automatically
 - [ ] Lapis lazuli can stay in an enchanting table for reuse
 - [x] Slime spawning can be disabled in superflat worlds *(partial; requires manual world confirmation)*
@@ -84,7 +84,7 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [ ] Village bells receive a crafting recipe
 - [ ] Wool crafting, dyeing, and string conversion become more flexible
 - [ ] Death drops can be protected inside a chest with equipment displayed
-- [ ] Zombies can be prevented from breaking doors
+- [x] Zombies can be prevented from breaking doors *(removes BreakDoor goal when zombies join; existing-mob and multiplayer tests pending)*
 
 ### Additional quality-of-life features
 
@@ -112,6 +112,14 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [ ] Toggle full-bright world lighting without changing the game's normal gamma limits.
 
 Original upstream references for this batch: [Cycle Paintings](https://github.com/Serilum/Cycle-Paintings), [Dismount Entity](https://github.com/Serilum/Dismount-Entity) and [Easy Elytra Takeoff](https://github.com/Serilum/Easy-Elytra-Takeoff). The next three features reference [Extended Bone Meal](https://github.com/Serilum/Extended-Bone-Meal), [Followers Teleport Too](https://github.com/Serilum/Followers-Teleport-Too), and the existing Unlimited Enchantments implementation.
+
+### Right Click Harvest
+
+Based on [JamCoreModding/right-click-harvest](https://github.com/JamCoreModding/right-click-harvest) (MIT). The independent Sunrise WASM implementation supports mature age-based crops, cocoa/nether wart, cactus and sugar cane. When the player right-clicks a **mature, non-radius-blacklisted crop**, the configured hoe tiers harvest a 5-block cross (low), 3×3 square (mid) or 13-block diamond (high); the clicked block is handled last. Immature crops, cactus and sugar cane do not start an area harvest. Drops are rolled through Sunrise's real block loot API (including the held tool and its Fortune effects) and one replant item is removed from normal crop drops. The options **Require Hoe** (OFF), **Harvest in Radius** (ON), **Hunger Level** (None/Low/Normal/High) and **Experience Type** (None/Cost/Reward) default to the original values. The whole module is OFF by default.
+
+**Progress on parity:** all six original block/item tag datasets are bundled in the `.smod` (see `data/rightclickharvest/tags/`), including tiered modded hoes and the upstream crop blacklist. Client-side planting sounds and the one-time hoe warning are implemented. Hoes are checked using the vanilla tag, bundled tier tags, and the block-transformer component. Modded age-bearing crops are no longer restricted to vanilla farmland. XP is now sampled with Sunrise's authoritative level RNG instead of an independent counter. The original source's license is preserved in `licenses/right-click-harvest.MIT`.
+
+**Remaining blockers for exact 1:1:** Sunrise's public WASM API does not currently expose the player's own random stream, a cancellable preflight break/place check for a right-click crop without destroying it, the crop block's vanilla clone-item lookup, or a way to publish the original JamLib/Fabric post-harvest callback to other mods. Some modded blocks also lack a CropBlock subtype query. The packaged runtime test does not substitute for live gameplay validation.
 
 ## Settings and controls
 
@@ -150,3 +158,10 @@ python3 -m unittest discover -s tests -p 'test*.py' -v
 Sunrise QOL is an independent, incomplete port/reimplementation of Serilum's quality-of-life mod bundle for Sunrise, based on earlier Horizon QoL work. The original mod collection is by [Serilum](https://github.com/Serilum). Additional reference projects include [Unlimited Enchantments](https://github.com/SayNooty/Unlimited-Enchantments), [Tax Free Levels](https://github.com/Fourmisain/TaxFreeLevels), [Enchantment Level Language Patch](https://github.com/teddyxlandlee/enchlevel-langpatch), [Leaves Be Gone](https://github.com/Fuzss/leaves-be-gone), [Leaves Us In Peace](https://gitlab.com/supersaiyansubtlety/leaves_us_in_peace), and [Grind Enchantments](https://code.mschae23.de/mschae23/grind-enchantments). The automatic-door behavior references [Automatic Doors](https://github.com/Serilum/Automatic-Doors). Beacon placement references [Better Beacon Placement](https://github.com/Serilum/Better-Beacon-Placement). Conduit placement references [Better Conduit Placement](https://github.com/Serilum/Better-Conduit-Placement). Spawner control references [Better Spawner Control](https://github.com/Serilum/Better-Spawner-Control). Bottled air references [Bottled Air](https://github.com/Serilum/Bottled-Air). Command help references [Compact Help Command](https://github.com/Serilum/Compact-Help-Command). Drowned prevention references [Conduits Prevent Drowned](https://github.com/Serilum/Conduits-Prevent-Drowned).
 
 Original projects retain their own licensing and attribution requirements. Do not assume that an implementation, test, or API hook proves 1:1 compatibility.
+
+
+### In-game gameplay parity gate
+
+A passing WASM build and synthetic-host smoke test **do not** imply 1:1 gameplay parity. The PR and release workflows now also run the built mod against the real Sunrise `Game` world and player-break path; both the resulting block states and positive/negative cases are checked. The first suite tests Keep My Soil Tilled. Coverage and untested modules are recorded in `gameplay-evidence.json`. The release is blocked if this real-engine gate fails; other modules are not represented as verified until they gain equivalent cases. See [in-game validation](docs/GAMEPLAY-VALIDATION.md).
+
+The original First Join Message and Welcome Message options are now exposed in the suite UI: editable text and clickable HTTP(S) URLs, message colors, a per-world first-join broadcast, and dedicated-server gating. The Dismount Entity module also follows upstream success semantics without a passenger count cap. These are **source-level improvements**, not certified 1:1 gameplay parity.

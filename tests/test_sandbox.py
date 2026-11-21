@@ -7,7 +7,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools" / "sandbox"))
-from check import verify
+from check import verify, verify_harvest_tags, HARVEST_TAGS
 
 
 def integer(number):
@@ -53,6 +53,23 @@ class SandboxTests(unittest.TestCase):
         with ZipFile(self.package, "w") as archive:
             archive.writestr("mod.wasm", source)
 
+    def test_original_harvest_tags_are_in_the_package(self):
+        prefix = "data/rightclickharvest/tags/"
+        with ZipFile(self.package, "w") as archive:
+            archive.writestr("mod.wasm", exports("_Rtag"))
+            for name in HARVEST_TAGS:
+                path = ROOT / (prefix + name)
+                archive.write(path, prefix + name)
+        report = verify_harvest_tags(self.package)
+        self.assertTrue(report["harvest_tags_passed"], report)
+        self.assertEqual(report["harvest_tag_files"], 6)
+        with ZipFile(self.package, "a") as archive:
+            archive.writestr(prefix + "item/low_tier_hoes.json", b'{}')
+        # A duplicate zip member or modified source must not pass silently.
+        changed = verify_harvest_tags(self.package)
+        self.assertFalse(changed["harvest_tags_passed"])
+        self.assertIn(prefix + "item/low_tier_hoes.json", changed["modified_harvest_tags"])
+
     def test_matching_rust_symbol(self):
         self.guest(imports("_Rexample"))
         self.std.write_bytes(exports("_Rexample"))
@@ -92,7 +109,9 @@ class SandboxTests(unittest.TestCase):
         self.assertIn("check_villager_griefing(&mut world);", fixture)
         # Gameplay coverage must execute guest hooks and inspect their responses.
         self.assertIn("check_superflat_slimes(&mut world);", fixture)
-        self.assertIn("check_infinite_trading(&mut world);", fixture)
+        self.assertIn("check_infinite_trading(&mut trading_world);", fixture)
+        self.assertIn("struct TradingWorld", fixture)
+        self.assertIn("impl mod_api::prelude::EntitiesHost for TradingWorld", fixture)
         self.assertIn("check_affordable_anvil(&mut world);", fixture)
         self.assertIn("mod_api::dispatch_trade_with_villager(", fixture)
         self.assertIn("mod_api::dispatch_anvil_update(", fixture)
@@ -100,17 +119,20 @@ class SandboxTests(unittest.TestCase):
         self.assertIn('assert!(!offer.out_of_stock()', fixture)
         self.assertIn('anvil_update(world, 75, false, None)', fixture)
         self.assertIn('anvil_update(world, 75, true, Some("Renamed"))', fixture)
-        # Assert material item drop counts from actual guest dispatch, not toggles alone.
+        # Assert ordinary loot stays untouched; the original death hooks now run later in the world.
         self.assertIn("check_wither_skull(&mut loot_world);", fixture)
         self.assertIn("check_dragon_elytra(&mut loot_world);", fixture)
         self.assertIn("check_shulker_shells(&mut loot_world);", fixture)
         self.assertIn("mod_api::dispatch_loot_drops(world, &context, drops, &mut |candidate|", fixture)
         self.assertIn("impl mod_api::prelude::ItemsHost for LootWorld", fixture)
         self.assertIn('assert_eq!(&applied, drops, "the committed loot', fixture)
-        self.assertIn('count(&drops, "minecraft:wither_skeleton_skull"), 1', fixture)
-        self.assertIn('count(&drops, "minecraft:elytra"), 1', fixture)
+        self.assertIn('count(&drops, "minecraft:wither_skeleton_skull"), 0', fixture)
+        self.assertIn('count(&drops, "minecraft:elytra"), 0', fixture)
+        self.assertIn('pending actual death-world check', fixture)
+        self.assertIn('the actual dragon bypasses mob loot', fixture)
         self.assertIn('count(&drops, "minecraft:shulker_shell"), 4', fixture)
-        self.assertIn('count(&larger, "minecraft:shulker_shell"), 9', fixture)
+        self.assertIn('count(&larger, "minecraft:shulker_shell"), 4', fixture)
+        self.assertIn('count(&multiple, "minecraft:shulker_shell"), 8', fixture)
         self.assertIn('set_toggle(world, "always_drop", true)', fixture)
         # Tooltips are rendered by the real guest's client hook.
         self.assertIn("check_langpatch(&mut tooltip_world);", fixture)

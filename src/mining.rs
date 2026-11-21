@@ -24,13 +24,30 @@ fn kind(host: &dyn ServerHost, level: LevelRef, p: [i32; 3]) -> Option<String> {
 }
 
 fn log(id: &str) -> bool {
-    id.ends_with("_log") || id.ends_with("_wood") || id.ends_with("_stem")
+    !id.split_once(':').map_or(id, |(_, path)| path).starts_with("stripped_")
+        && (id.ends_with("_log") || id.ends_with("_wood") || id.ends_with("_stem")
         || id.ends_with("_hyphae") || id == "minecraft:mangrove_roots"
-        || id == "minecraft:mutated_mangrove_roots"
+        || id == "minecraft:mutated_mangrove_roots")
 }
 
 fn mushroom(id: &str) -> bool {
     id == "minecraft:mushroom_stem"
+}
+
+fn nether_tree(id: &str) -> bool {
+    !mushroom(id) && (id.ends_with("_stem") || id.ends_with("_hyphae"))
+}
+
+fn tree_enabled(id: &str, nether: bool, mushrooms: bool) -> bool {
+    if mushroom(id) { mushrooms } else { !nether_tree(id) || nether }
+}
+
+fn tool_allowed(tool: Option<&str>, tree: bool, require_axe: bool) -> bool {
+    if tree {
+        !require_axe || tool.is_some_and(|id| id.ends_with("_axe"))
+    } else {
+        tool.is_some_and(|id| id.ends_with("_pickaxe"))
+    }
 }
 
 fn family(id: &str) -> &str {
@@ -42,7 +59,10 @@ fn family(id: &str) -> &str {
 }
 
 fn same_tree(first: &str, second: &str) -> bool {
+    if !log(first) || !log(second) { return false; }
     if first == second { return true; }
+    let mangrove = |id: &str| matches!(id, "minecraft:mangrove_roots" | "minecraft:mangrove_log");
+    if mangrove(first) && mangrove(second) { return true; }
     if mushroom(first) || mushroom(second) { return false; }
     log(first) && log(second) && family(first) == family(second)
 }
@@ -51,10 +71,14 @@ fn ore(id: &str) -> bool {
     id.ends_with("_ore") || id == "minecraft:ancient_debris"
 }
 
-fn leaf(id: &str) -> bool {
-    id.ends_with("_leaves") || matches!(id,
-        "minecraft:nether_wart_block" | "minecraft:warped_wart_block"
-        | "minecraft:red_mushroom_block" | "minecraft:brown_mushroom_block")
+fn leaf_of(log: &str, id: &str) -> bool {
+    if mushroom(log) {
+        matches!(id, "minecraft:red_mushroom_block" | "minecraft:brown_mushroom_block")
+    } else if nether_tree(log) {
+        matches!(id, "minecraft:nether_wart_block" | "minecraft:warped_wart_block" | "minecraft:shroomlight")
+    } else {
+        id.ends_with("_leaves")
+    }
 }
 
 fn push_visit(seen: &mut Vec<[i32; 3]>, p: [i32; 3]) -> bool {
@@ -99,14 +123,14 @@ fn connected(
     found
 }
 
-fn has_canopy(host: &dyn ServerHost, level: LevelRef, logs: &[[i32; 3]]) -> bool {
+fn has_canopy(host: &dyn ServerHost, level: LevelRef, source: &str, logs: &[[i32; 3]]) -> bool {
     // A natural-looking canopy is required before any additional log is broken.
     for center in logs.iter().rev().take(64) {
         for dx in -2..=2 {
             for dz in -2..=2 {
                 for dy in 0..=3 {
                     let p = [center[0] + dx, center[1] + dy, center[2] + dz];
-                    if kind(host, level, p).as_deref().is_some_and(leaf)
+                    if kind(host, level, p).as_deref().is_some_and(|leaf| leaf_of(source, leaf))
                         && level.block_property(host, p, "persistent").as_deref() != Some("true") {
                         return true;
                     }
@@ -136,22 +160,18 @@ impl Mining {
         if vein && sneaking == flag(host, "oreHarvestWithoutSneak", false) { return; }
         let Some(level) = player.level(host) else { return; };
         let Some(slot) = player.selected_slot(host) else { return; };
-        let Some(tool) = player.inventory_slots(host).unwrap_or_default().into_iter()
+        let tool = player.inventory_slots(host).unwrap_or_default().into_iter()
             .find(|(index, _)| *index as usize == slot)
-            .map(|(_, stack)| stack.item().id(host)) else { return; };
+            .map(|(_, stack)| stack.item().id(host));
+        if !tool_allowed(tool.as_deref(), tree, flag(host, "mustHoldAxeForTreeHarvest", true)) {
+            return;
+        }
         if tree {
-            if flag(host, "mustHoldAxeForTreeHarvest", true) && !tool.ends_with("_axe") {
-                return;
-            }
-            if !flag(host, "enableNetherTrees", true)
-                && (source.ends_with("_stem") || source.ends_with("_hyphae")) {
-                return;
-            }
-            if !flag(host, "enableHugeMushrooms", true) && mushroom(&source) {
+            if !tree_enabled(&source, flag(host, "enableNetherTrees", true),
+                             flag(host, "enableHugeMushrooms", true)) {
                 return;
             }
         }
-        if vein && !tool.ends_with("_pickaxe") { return; }
         let limit = if tree {
             amount(host, "maxAmountOfLogsBrokenPerHarvest", 256., 1., MAX_BLOCKS as f64)
         } else {
@@ -161,7 +181,7 @@ impl Mining {
         let mut logs = connected(host, level, event.pos, &source, tree, fuzzy, limit);
         if tree {
             logs.push(event.pos);
-            if flag(host, "ignorePlayerMadeTrees", true) && !has_canopy(host, level, &logs) {
+            if flag(host, "ignorePlayerMadeTrees", true) && !has_canopy(host, level, &source, &logs) {
                 return;
             }
             logs.pop();
@@ -186,6 +206,37 @@ mod tests {
         assert!(ore("minecraft:deepslate_diamond_ore"));
         assert!(ore("minecraft:ancient_debris"));
         assert!(!ore("minecraft:stone"));
+        assert!(!log("minecraft:stripped_oak_log"));
+        assert!(!same_tree("minecraft:stripped_oak_log", "minecraft:stripped_oak_log"));
+        assert!(same_tree("minecraft:mangrove_roots", "minecraft:mangrove_log"));
+    }
+
+    #[test]
+    fn mushroom_switch_is_independent_of_nether_tree_switch() {
+        assert!(tree_enabled("minecraft:mushroom_stem", false, true));
+        assert!(!tree_enabled("minecraft:mushroom_stem", true, false));
+        assert!(!tree_enabled("minecraft:crimson_stem", false, true));
+        assert!(tree_enabled("minecraft:oak_log", false, false));
+    }
+
+    #[test]
+    fn optional_axe_allows_empty_hand_but_vein_mining_still_requires_pickaxe() {
+        assert!(tool_allowed(None, true, false));
+        assert!(!tool_allowed(None, true, true));
+        assert!(tool_allowed(Some("minecraft:diamond_axe"), true, true));
+        assert!(!tool_allowed(Some("minecraft:diamond_pickaxe"), true, true));
+        assert!(!tool_allowed(None, false, false));
+        assert!(tool_allowed(Some("minecraft:diamond_pickaxe"), false, false));
+    }
+
+    #[test]
+    fn unrelated_ceiling_is_not_a_tree_canopy() {
+        assert!(!leaf_of("minecraft:oak_log", "minecraft:nether_wart_block"));
+        assert!(!leaf_of("minecraft:oak_log", "minecraft:red_mushroom_block"));
+        assert!(leaf_of("minecraft:oak_log", "minecraft:oak_leaves"));
+        assert!(leaf_of("minecraft:crimson_stem", "minecraft:shroomlight"));
+        assert!(leaf_of("minecraft:mushroom_stem", "minecraft:brown_mushroom_block"));
+        assert!(!leaf_of("minecraft:mushroom_stem", "minecraft:oak_leaves"));
     }
 
     #[test]

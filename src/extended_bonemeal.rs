@@ -20,6 +20,21 @@ fn next_age(state: &str, max: u32, instant: bool) -> Option<String> {
     changed.then(|| format!("{name}[{}]", next.join(",")))
 }
 
+fn modded_age(host: &dyn ServerHost, id: &str, state: &str, valid: bool) -> Option<u32> {
+    // BonemealableBlock subclasses are not exposed through the WASM host.
+    // Only accept registered non-vanilla targets the game deems bonemealable.
+    if !valid || id.starts_with("minecraft:") || !state.contains("age=") {
+        return None;
+    }
+    // The source asks the crop to grow. The public API can safely probe
+    // registered state values but cannot call arbitrary growCrop methods.
+    for age in (0..=31).rev() {
+        let Some(next) = next_age(state, age, true) else { continue; };
+        if host.block_state_id(&next).is_some() { return Some(age); }
+    }
+    None
+}
+
 fn empty(host: &dyn ServerHost, level: mod_api::LevelRef, pos: [i32; 3]) -> bool {
     level.block(host, pos).is_some_and(|v| matches!(
         v.id(host).as_str(), "minecraft:air" | "minecraft:cave_air" | "minecraft:void_air"
@@ -84,7 +99,9 @@ pub fn apply(side: HostSide<'_>, event: &mut BonemealEvent<'_>) -> Flow {
         "minecraft:wheat" | "minecraft:carrots" | "minecraft:potatoes" => Some(7),
         "minecraft:beetroots" | "minecraft:nether_wart" | "minecraft:sweet_berry_bush" => Some(3),
         "minecraft:cocoa" => Some(2),
-        _ => None,
+        _ => state.as_deref().and_then(|text| {
+            modded_age(host, &id, text, event.valid_bonemeal_target)
+        }),
     };
     let grown = if let Some(max) = age_max {
         if id == "minecraft:nether_wart" && !flag(host, "bonemeal_nether_wart", true) {
@@ -92,7 +109,9 @@ pub fn apply(side: HostSide<'_>, event: &mut BonemealEvent<'_>) -> Flow {
         } else if id != "minecraft:nether_wart" && (!sneaking || !flag(host, "bonemeal_instant", true)) {
             false
         } else {
-            let instant = sneaking && flag(host, "bonemeal_instant", true);
+            // The source grows nether wart by one age even while crouching.
+            let instant = id != "minecraft:nether_wart"
+                && sneaking && flag(host, "bonemeal_instant", true);
             state.and_then(|text| next_age(&text, max, instant))
                 .and_then(|text| host.block_state_id(&text))
                 .is_some_and(|next| level.set_block(host, pos, next, flags()) == Ok(true))
@@ -125,6 +144,7 @@ mod tests {
     #[test]
     fn age_limit_and_other_properties_are_preserved() {
         assert_eq!(next_age("minecraft:nether_wart[age=0]", 3, false), Some("minecraft:nether_wart[age=1]".into()));
+        assert_eq!(next_age("minecraft:nether_wart[age=2]", 3, false), Some("minecraft:nether_wart[age=3]".into()));
         assert_eq!(next_age("minecraft:wheat[age=2]", 7, true), Some("minecraft:wheat[age=7]".into()));
         assert_eq!(next_age("minecraft:wheat[age=7]", 7, false), None);
         assert_eq!(next_age("minecraft:cocoa[age=1,facing=north]", 2, false), Some("minecraft:cocoa[age=2,facing=north]".into()));

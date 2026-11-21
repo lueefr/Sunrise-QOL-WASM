@@ -3,19 +3,50 @@
 use crate::settings::{flag, on};
 use mod_api::{EntityInteractEvent, InteractionResult, ServerHost};
 
+fn has_passengers(count: usize) -> bool {
+    count != 0
+}
+
+fn dismountable(kind: &str, allow_players: bool) -> bool {
+    allow_players || kind != "minecraft:player"
+}
+
 pub fn interact(host: &mut dyn ServerHost, event: &mut EntityInteractEvent<'_>) -> Option<InteractionResult> {
     if !on(host, "dismount_entity") { return None; }
     let player = host.players().acting_player()?;
     if player.is_secondary_use_active(host) != Some(true) { return None; }
     let vehicle = host.entity(u32::try_from(event.entity).ok()?)?;
     let passengers = vehicle.passengers(host)?;
+    if !has_passengers(passengers.len()) { return None; }
     let allow_players = flag(host, "dismount_players", false);
-    let mut changed = false;
-    for passenger in passengers.into_iter().take(8) {
-        if !allow_players && passenger.kind(host).is_some_and(|kind| kind.id(host) == "minecraft:player") {
+    for passenger in passengers {
+        if !dismountable(&passenger.kind(host).map(|kind| kind.id(host)).unwrap_or_default(), allow_players) {
             continue;
         }
-        if passenger.stop_riding(host) { changed = true; }
+        let _ = passenger.stop_riding(host);
     }
-    changed.then_some(InteractionResult::SuccessServer)
+    // Upstream consumes the interaction whenever the target had passengers,
+    // including when player passengers were protected by configuration.
+    Some(InteractionResult::SuccessServer)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn player_passengers_remain_protected_by_default() {
+        assert!(!dismountable("minecraft:player", false));
+        assert!(dismountable("minecraft:player", true));
+        assert!(dismountable("minecraft:villager", false));
+        assert!(dismountable("minecraft:item", false));
+    }
+
+    #[test]
+    fn original_consumes_any_nonempty_passenger_list() {
+        assert!(!has_passengers(0));
+        assert!(has_passengers(1));
+        assert!(has_passengers(9));
+        assert!(has_passengers(128));
+    }
 }

@@ -14,11 +14,11 @@ class BottledAirTests(unittest.TestCase):
 
     def test_server_air_checks(self):
         self.assertIn('if !on(host, "bottled_air")', self.src)
-        self.assertIn('event.click.stack.item().id(host) != "minecraft:glass_bottle"', self.src)
+        self.assertIn('held.item().id(host) != "minecraft:glass_bottle"', self.src)
         self.assertIn("entity.is_in_water(host) != Some(true)", self.src)
         self.assertIn("entity.air_supply(host)", self.src)
         self.assertIn("entity.max_air_supply(host)", self.src)
-        self.assertIn("entity.set_air_supply(host, next)", self.src)
+        self.assertIn("entity.set_air_supply(host, current.saturating_add(restored).min(max))", self.src)
         self.assertIn("current.saturating_add(restored).min(max)", self.src)
         self.assertIn("bottled_air::use_bottle(HostSide::Server(host), event)", self.hooks)
         self.assertIn("Flow::Continue", self.src)

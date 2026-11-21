@@ -1,5 +1,5 @@
-//! Double Doors responds to completed block-state changes on the server.
-//! Its bounded queue avoids writing blocks during Level.setBlock notifications.
+//! Double Doors synchronizes manual clicks in the interaction callback.
+//! Non-player changes use a bounded deferred queue because block_changed is read-only.
 use crate::settings::{amount, flag, on};
 use mod_api::{
     BlockChangedEvent, BlockUpdateFlags, Flow, Hand, HostSide, LevelHost,
@@ -83,20 +83,61 @@ impl Drop for WriteGuard<'_> {
 }
 
 impl Doors {
-    // Sneaking bypasses paired door opening, as in Double Doors' click handler.
+    // Ignore the click's later block_changed notice: it is already handled here.
+    // The same marker also lets sneaking preserve vanilla's single-door behavior.
+    fn bypass_click(&self, dim: &str, pos: [i32; 3]) {
+        if let Ok(mut bypass) = self.bypass.lock() {
+            if bypass.len() >= 192 { bypass.clear(); }
+            for dy in [-1, 0, 1] {
+                if let Some(y) = pos[1].checked_add(dy) {
+                    bypass.push((dim.to_owned(), [pos[0], y, pos[2]]));
+                }
+            }
+        }
+    }
+
+    // right_click_block fires before vanilla handles the door. Update the
+    // matching neighbors now, not one server tick after the first door opens.
+    // The clicked door is left to vanilla so normal sounds and interaction
+    // semantics are preserved. Other state changes still use the fallback queue.
     pub fn clicked(&self, side: HostSide<'_>, event: &mut RightClickBlockEvent<'_>) -> Flow {
         let HostSide::Server(host) = side else { return Flow::Continue; };
         if !on(host, "double_doors") || event.click.hand != Hand::Main { return Flow::Continue; }
         let Some(player) = host.players().acting_player() else { return Flow::Continue; };
-        if player.is_secondary_use_active(host) != Some(true) { return Flow::Continue; }
         let dim = event.click.dimension.key().id().to_owned();
         let pos = event.click.pos;
-        if let Ok(mut bypass) = self.bypass.lock() {
-            if bypass.len() >= 64 { bypass.remove(0); }
-            for dy in [-1, 0, 1] {
-                bypass.push((dim.clone(), neighbor(pos, 0, dy, 0)));
-            }
+        if player.is_secondary_use_active(host) == Some(true) {
+            self.bypass_click(&dim, pos);
+            return Flow::Continue;
         }
+        let Some(level) = host.level(&dim) else { return Flow::Continue; };
+        if !level.in_place(host) { return Flow::Continue; }
+        let Some(state) = level.block_state(host, pos) else { return Flow::Continue; };
+        let Some(text) = host.block_state_string(state) else { return Flow::Continue; };
+        let name = text.split_once('[').map_or(text.as_str(), |(name, _)| name);
+        let Some(class) = kind(name) else { return Flow::Continue; };
+        // Vanilla cannot open iron doors by hand. Avoid simulating a click
+        // that the underlying block would reject.
+        if class == Kind::Door && name == "minecraft:iron_door" {
+            return Flow::Continue;
+        }
+        if class == Kind::Gate && !flag(host, "gates", false) { return Flow::Continue; }
+        if class == Kind::Trapdoor && !flag(host, "trapdoors", false) {
+            return Flow::Continue;
+        }
+        let open = match prop(&text, "open") {
+            Some("true") => false,
+            Some("false") => true,
+            _ => return Flow::Continue,
+        };
+        let pos = base(&text, pos, class);
+        let task = Change { dimension: dim.clone(), pos, name: name.to_owned(), open };
+        if self.writing.swap(true, Ordering::AcqRel) { return Flow::Continue; }
+        {
+            let _guard = WriteGuard(&self.writing);
+            self.process(host, task, true);
+        }
+        self.bypass_click(&dim, pos);
         Flow::Continue
     }
 
@@ -154,7 +195,7 @@ impl Doors {
         }
     }
 
-    fn process(&self, host: &mut dyn ServerHost, task: Change) {
+    fn process(&self, host: &mut dyn ServerHost, task: Change, before_click: bool) {
         if !on(host, "double_doors") { return; }
         let Some(class) = kind(&task.name) else { return; };
         if class == Kind::Gate && !flag(host, "gates", false) { return; }
@@ -163,7 +204,10 @@ impl Doors {
         if !level.in_place(host) { return; }
         let Some(state) = level.block_state(host, task.pos) else { return; };
         let Some(text) = host.block_state_string(state) else { return; };
-        if !text.starts_with(&task.name) || prop(&text, "open") != Some(if task.open { "true" } else { "false" }) {
+        // Before vanilla uses the clicked block its state is still the inverse
+        // of the requested target. Deferred block_changed jobs see the final state.
+        let expected = if task.open != before_click { "true" } else { "false" };
+        if !text.starts_with(&task.name) || prop(&text, "open") != Some(expected) {
             return;
         }
         let recursive = flag(host, "recursive_doors", true);
@@ -214,7 +258,7 @@ impl Doors {
             let Some(task) = self.pending.lock().ok().and_then(|mut q| q.pop_front()) else { break; };
             if self.writing.swap(true, Ordering::AcqRel) { break; }
             let _guard = WriteGuard(&self.writing);
-            self.process(host, task);
+            self.process(host, task, false);
         }
     }
 

@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/sandbox.yml'
       - 'tools/sandbox/**'
+      - 'tools/gameplay/**'
       - 'tools/sdk_sync.py'
       - 'tools/install_sdk_tool.sh'
   pull_request:
@@ -14,6 +15,7 @@ on:
     paths:
       - '.github/workflows/sandbox.yml'
       - 'tools/sandbox/**'
+      - 'tools/gameplay/**'
       - 'src/**'
       - 'tests/**'
       - 'tools/sdk_sync.py'
@@ -30,8 +32,8 @@ concurrency:
 
 jobs:
   sandbox:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 50
+    runs-on: ${{ vars.SUNRISE_QOL_GAMEPLAY_RUNNER || 'ubuntu-24.04' }}
+    timeout-minutes: 110
     steps:
       - name: Check out mod source
         uses: actions/checkout@v4
@@ -47,6 +49,9 @@ jobs:
 
       - name: Validate source and sandbox assertions
         run: python3 -m unittest discover -s tests -v
+
+      - name: Export 44-module source parity coverage
+        run: python3 tools/parity/report.py --output target/parity-coverage.json
 
       - name: Install pinned Rust
         uses: dtolnay/rust-toolchain@stable
@@ -101,6 +106,9 @@ jobs:
           workspaces: |
             . -> target
 
+      - name: Test Rust parity helpers on native host
+        run: cargo test --lib
+
       - name: Build actual QOL WASM package
         run: cargo sunrise-mod build --wasm
 
@@ -127,6 +135,39 @@ jobs:
         timeout-minutes: 30
         shell: bash
         run: bash tools/sandbox/run.sh
+
+      - name: Real Sunrise Game state gameplay tests
+        env:
+          SUNRISE_TEST_RESOURCES: ${{ vars.SUNRISE_TEST_RESOURCES }}
+        timeout-minutes: 70
+        shell: bash
+        run: bash tools/gameplay/run.sh
+
+      - name: Upload built mod for manual game testing (unverified)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sunrise-qol-unverified-build
+          path: target/sunrise-mod/horizon_qol_suite.smod
+          if-no-files-found: ignore
+
+      - name: Upload complete parity matrix
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sunrise-qol-parity-matrix
+          path: target/parity-coverage.json
+          if-no-files-found: warn
+
+      - name: Upload real-game evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sunrise-qol-real-gameplay
+          path: |
+            target/gameplay-evidence.json
+            target/gameplay-run.log
+          if-no-files-found: warn
 
       - name: Attach ABI report
         if: always()
