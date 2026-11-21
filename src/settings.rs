@@ -1,7 +1,7 @@
 //! Settings backed by Sunrise's own per-mod storage, never by global mutable maps.
 use mod_api::{Host, Registrar, SettingSpec};
 
-pub const ID: &str = "horizon_qol_suite";
+pub const ID: &str = "sunrise_qol";
 
 pub fn storage_key(key: &str) -> &str {
     match key {
