@@ -6,6 +6,20 @@ Sunrise QOL is primarily an **incomplete port and reimplementation of Serilum's 
 
 > **Development status — not a stable release.** Successful Rust/WASM builds do not certify in-game behavior or feature parity. The release pipeline now also checks WASM imports and loads the actual .smod with Sunrise's runtime, but multiplayer correctness, GUI behavior and complete-world gameplay still require game-level tests. Do not assume a module works merely because it appears in the configuration interface.
 
+## Menu and durability fixes
+
+The in-game Quality of Life menu can now be reopened repeatedly from
+Options > Mods > Sunrise QOL > Config > Open settings. Every menu entry displays
+a hover description. Modules without additional settings act as direct
+switches when clicking their names while retaining the ON/OFF button.
+
+**Unbreakable Tools** retains the saved `what_durability` key for compatibility.
+The damage hook now explicitly stops wear and includes vanilla copper tools,
+armor and spears. Items listed in the legacy `itemsWithDurability` allowlist
+are intentionally excluded from protection. As with other server-side modules,
+the feature needs to be installed and enabled on the server to work in
+multiplayer; a client-only toggle cannot change a remote server's rules.
+
 ## Automatic Sunrise SDK updates
 
 GitHub Actions checks the official Sunrise `nightly` release on every build and every
