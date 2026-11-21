@@ -13,12 +13,15 @@ six hours. It only selects a commit whose corresponding published `sdk-<sha>`
 release exists with the Linux API and integrity metadata. The build tool comes
 from the **same Sunrise revision**, rather than a separately pinned old commit.
 
-The official SDK, signed build tool, shared WASM standard, Rust dependencies
-and Sunrise loader are cached by the exact published nightly revision. When
+The official SDK, signed build tool, shared WASM standard and precompiled Sunrise
+loader are cached by the exact published nightly revision. Rust 1.99.1 and its
+WASM target, source component and build dependencies also have caches. When
 the SDK is unchanged, the next build reuses its cache without downloading it.
 When there is a new nightly, the workflow downloads and verifies the new SDK,
-compiles and initializes the mod, and caches the new revision. Old SDK caches
-are deleted after successful publication.
+compiles and initializes the mod, and caches the new revision. The native
+Sunrise runtime is only compiled on an SDK/test cache miss; repeated builds
+run the cached loader executable directly. Old SDK caches are deleted after
+successful publication.
 
 Failed builds leave the prior release and repository pin unchanged.
 A nightly without its matching published SDK is rejected. Passing ABI checks
@@ -27,7 +30,7 @@ does not guarantee actual in-game compatibility.
 ## Fast CI and Sunrise loader check
 
 Pull requests and releases share the same validation action. It runs source
-unit tests, compiles the `.smod` package, checks ZIP integrity and Rust ABI,
+Python regression tests, compiles the `.smod` package, checks ZIP integrity and Rust ABI,
 then loads and initializes the built mod in Sunrise's real Wasmtime runtime.
 
 **CI does not launch Minecraft or execute gameplay scenarios.** Loading and
