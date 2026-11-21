@@ -33,18 +33,18 @@ class ModuleLabelTests(unittest.TestCase):
 
     def test_locales(self):
         for lang in ("en_us", "pt_br"):
-            values = json.loads((ROOT / f"assets/horizon_qol_suite/lang/{lang}.json").read_text())
+            values = json.loads((ROOT / f"assets/sunrise_qol/lang/{lang}.json").read_text())
             for key, label in EXPECTED.items():
                 i18n = f"qol.module.{key}"
                 if i18n in values:
                     self.assertEqual(values[i18n], label)
-                legacy = f"horizon_qol_suite.option.{key}"
+                legacy = f"sunrise_qol.option.{key}"
                 if legacy in values:
                     self.assertEqual(values[legacy], label + ": ON/OFF")
 
     def test_legacy_ids_not_renamed(self):
         source = (ROOT / "src/gui.rs").read_text()
-        self.assertIn('const SCREEN_ID: &str = "horizon_qol_suite"', source)
+        self.assertIn('const SCREEN_ID: &str = "sunrise_qol"', source)
         for key in EXPECTED:
             self.assertIn(f'ModuleSpec {{ key: "{key}",', source)
         self.assertIn('"unlimited_max_level"', source)
