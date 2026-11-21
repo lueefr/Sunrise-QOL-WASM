@@ -47,6 +47,24 @@ class ProjectTests(unittest.TestCase):
             self.assertIn('qol.module.vein_miner', data)
             self.assertIn('qol.module.hide_hands', data)
 
+    def test_namespaced_resources_and_recipe_conditions(self):
+        data = ROOT / "data" / "sunrise_qol" / "recipe"
+        recipes = sorted(data.rglob("*.json"))
+        self.assertEqual(len(recipes), 76)
+        for path in recipes:
+            with self.subTest(recipe=path.name):
+                record = json.loads(path.read_text())
+                conditions = record.get("neoforge:conditions", [])
+                self.assertTrue(conditions)
+                self.assertTrue(all(condition["type"].startswith("sunrise_qol:")
+                                    for condition in conditions))
+        self.assertFalse((ROOT / "data" / "horizon_qol_suite").exists())
+        self.assertFalse((ROOT / "assets" / "horizon_qol_suite").exists())
+        code = (ROOT / "src/wool_recipes.rs").read_text()
+        self.assertIn('"sunrise_qol:{key}_enabled"', code)
+        self.assertIn('"sunrise_qol:wool_tweaks_enabled"', code)
+        self.assertNotIn('"horizon_qol_suite:', code)
+
     def test_grief_uses_entity_lifecycle(self):
         grief = (ROOT / 'src/grief.rs').read_text()
         hooks = (ROOT / 'src/lib.rs').read_text()
