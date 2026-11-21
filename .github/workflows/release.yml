@@ -60,41 +60,103 @@ jobs:
         id: version
         run: python3 tools/release.py plan --github-output "$GITHUB_OUTPUT"
 
-      - name: Update manifests and release notes
-        if: steps.version.outputs.changed == 'true'
+# Reuse the previous tag if an interrupted run left its release incomplete.
+      - name: Plan release publication
+        id: publish
+        shell: bash
         env:
-          VERSION: ${{ steps.version.outputs.version }}
-          SDK_REVISION: ${{ steps.sdk.outputs.revision }}
+          GH_TOKEN: ${{ github.token }}
+          CHANGED: ${{ steps.version.outputs.changed }}
+          NEXT_TAG: ${{ steps.version.outputs.tag }}
+          NEXT_VERSION: ${{ steps.version.outputs.version }}
+          PREVIOUS_TAG: ${{ steps.version.outputs.previous_tag }}
         run: |
-          python3 tools/release.py notes "$VERSION" --output release-notes.md
+          set -euo pipefail
+          if [[ "$CHANGED" == "true" ]]; then
+            {
+              echo "build=true"
+              echo "resume=false"
+              echo "version=$NEXT_VERSION"
+              echo "tag=$NEXT_TAG"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [[ -z "$PREVIOUS_TAG" ]]; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          version="$(printf '%s' "$PREVIOUS_TAG" | sed 's/^v//')"
+          package="Sunrise-QOL-$version.smod"
+          if gh release view "$PREVIOUS_TAG" --json assets \
+             --jq '.assets[].name' > "$RUNNER_TEMP/release-assets.txt" 2>/dev/null; then
+            if grep -Fxq "$package" "$RUNNER_TEMP/release-assets.txt" &&
+               grep -Fxq 'SHA256SUMS.txt' "$RUNNER_TEMP/release-assets.txt"; then
+              echo "Release $PREVIOUS_TAG is complete."
+              echo "build=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+          git merge-base --is-ancestor "$PREVIOUS_TAG" HEAD
+          {
+            echo "build=true"
+            echo "resume=true"
+            echo "version=$version"
+            echo "tag=$PREVIOUS_TAG"
+          } >> "$GITHUB_OUTPUT"
+          echo "Resuming incomplete release $PREVIOUS_TAG."
+
+      - name: Update manifests and release notes
+        if: steps.publish.outputs.build == 'true'
+        shell: bash
+        env:
+          VERSION: ${{ steps.publish.outputs.version }}
+          SDK_REVISION: ${{ steps.sdk.outputs.revision }}
+          RESUME: ${{ steps.publish.outputs.resume }}
+        run: |
+          set -euo pipefail
+          if [[ "$RESUME" == "true" ]]; then
+            test "$(cat VERSION)" = "$VERSION"
+            printf '# Sunrise QOL v%s\n\nRecovered missing release assets.\n' \
+              "$VERSION" > release-notes.md
+          else
+            python3 tools/release.py notes "$VERSION" --output release-notes.md
+            python3 tools/release.py stamp "$VERSION"
+          fi
           printf '\nSunrise nightly SDK: %s\n' "$SDK_REVISION" >> release-notes.md
-          python3 tools/release.py stamp "$VERSION"
+
 
       # Shared validation avoids a duplicate pipeline and never starts the full game.
       - name: Compile and verify the mod in Sunrise
-        if: steps.version.outputs.changed == 'true'
+        if: steps.publish.outputs.build == 'true'
         uses: ./.github/actions/validate
         with:
           sdk-revision: ${{ steps.sdk.outputs.revision }}
 
       - name: Package release artifacts
-        if: steps.version.outputs.changed == 'true'
+        if: steps.publish.outputs.build == 'true'
         env:
-          VERSION: ${{ steps.version.outputs.version }}
+          VERSION: ${{ steps.publish.outputs.version }}
         run: |
           set -euo pipefail
           mkdir -p dist
           cp target/sunrise-mod/horizon_qol_suite.smod "dist/Sunrise-QOL-$VERSION.smod"
           (cd dist && sha256sum *.smod > SHA256SUMS.txt)
       - name: Commit version and tag only after a successful build
-        if: steps.version.outputs.changed == 'true'
+        if: steps.publish.outputs.build == 'true'
         id: release-push
         env:
-          VERSION: ${{ steps.version.outputs.version }}
-          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.publish.outputs.version }}
+          TAG: ${{ steps.publish.outputs.tag }}
+          RESUME: ${{ steps.publish.outputs.resume }}
         shell: bash
         run: |
           set -euo pipefail
+          if [[ "$RESUME" == "true" ]]; then
+            git ls-remote --exit-code origin "refs/tags/$TAG" > /dev/null
+            git merge-base --is-ancestor "$TAG" HEAD
+            echo "pushed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           # Never release an outdated checkout if main advanced during the build.
           git fetch --quiet origin main
           if [ "$(git rev-parse refs/remotes/origin/main)" != "$GITHUB_SHA" ]; then
@@ -123,29 +185,38 @@ jobs:
           echo "pushed=true" >> "$GITHUB_OUTPUT"
 
       - name: Publish release and changelog
-        if: steps.version.outputs.changed == 'true' && steps.release-push.outputs.pushed == 'true'
+        if: steps.publish.outputs.build == 'true' && steps.release-push.outputs.pushed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.version.outputs.tag }}
+          TAG: ${{ steps.publish.outputs.tag }}
+          VERSION: ${{ steps.publish.outputs.version }}
         shell: bash
         run: |
           set -euo pipefail
-          gh release create "$TAG" dist/*.smod dist/SHA256SUMS.txt \
-            --title "Sunrise QOL $TAG" \
-            --notes-file release-notes.md \
-            --verify-tag
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/*.smod dist/SHA256SUMS.txt --clobber
+          else
+            gh release create "$TAG" dist/*.smod dist/SHA256SUMS.txt \
+              --title "Sunrise QOL $TAG" \
+              --notes-file release-notes.md \
+              --verify-tag
+          fi
+          assets="$(gh release view "$TAG" --json assets --jq '.assets[].name')"
+          grep -Fxq "Sunrise-QOL-$VERSION.smod" <<< "$assets"
+          grep -Fxq 'SHA256SUMS.txt' <<< "$assets"
+          echo "Verified published release $TAG"
 
-# Cache entries are immutable: delete superseded revisions through the Actions API.
+      # Cache entries are immutable: delete superseded revisions through the Actions API.
       # Only the successfully published main run has cache-delete permission.
       - name: Remove caches from previous Sunrise SDKs
-        if: steps.sdk.outputs.updated == 'true' && steps.release-push.outputs.pushed == 'true'
+        if: steps.sdk.outputs.updated == 'true' && steps.release-push.outputs.pushed == 'true' && steps.publish.outputs.resume != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           SDK_REVISION: ${{ steps.sdk.outputs.revision }}
         run: python3 tools/sdk_cache_prune.py "$SDK_REVISION"
 
       - name: Retire incorrectly numbered v2.0.0 after v1.0.1 is published
-        if: steps.version.outputs.tag == 'v1.0.1' && steps.release-push.outputs.pushed == 'true'
+        if: steps.publish.outputs.tag == 'v1.0.1' && steps.release-push.outputs.pushed == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
