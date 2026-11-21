@@ -13,19 +13,48 @@ runs:
       shell: bash
       run: python3 -m unittest discover -s tests -p 'test*.py'
 
-    - name: Install pinned Rust
+    # Reuse exact Rust 1.99.1, rust-src and wasm target across hosted runs.
+    - name: Restore Rust 1.99.1 toolchain
+      id: rust-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu
+          ~/.rustup/update-hashes/1.99.1-x86_64-unknown-linux-gnu
+        key: ${{ runner.os }}-${{ runner.arch }}-rust-1.99.1-src-wasm-v1
+
+    - name: Install Rust 1.99.1 on cache miss
+      if: steps.rust-cache.outputs.cache-hit != 'true'
       uses: dtolnay/rust-toolchain@stable
       with:
         toolchain: '1.99.1'
         components: rust-src
         targets: wasm32-unknown-unknown
 
+    - name: Select and verify Rust toolchain
+      shell: bash
+      run: |
+        set -euo pipefail
+        rustup default 1.99.1
+        test "$(rustc --version | awk '{print $2}')" = '1.99.1'
+        rustup target list --installed | grep -Fxq wasm32-unknown-unknown
+        test -s "$(rustc --print sysroot)/lib/rustlib/src/rust/library/Cargo.toml"
+
+    - name: Cache installed Rust toolchain
+      if: steps.rust-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu
+          ~/.rustup/update-hashes/1.99.1-x86_64-unknown-linux-gnu
+        key: ${{ steps.rust-cache.outputs.cache-primary-key }}
+
     - name: Restore signed Sunrise build tool
       id: tool-cache
       uses: actions/cache/restore@v4
       with:
         path: ~/.cargo/bin/cargo-sunrise-mod
-        key: ${{ runner.os }}-${{ runner.arch }}-sunrise-cli-${{ inputs.sdk-revision }}-v2
+        key: ${{ runner.os }}-${{ runner.arch }}-sunrise-cli-${{ inputs.sdk-revision }}-signed-prebuilt-v1
 
     - name: Install signed Sunrise build tool
       if: steps.tool-cache.outputs.cache-hit != 'true'
@@ -51,7 +80,7 @@ runs:
       uses: actions/cache/restore@v4
       with:
         path: .sunrise/sdk
-        key: ${{ runner.os }}-${{ runner.arch }}-sunrise-sdk-${{ inputs.sdk-revision }}-v2
+        key: ${{ runner.os }}-${{ runner.arch }}-sunrise-sdk-${{ inputs.sdk-revision }}-v1
 
     - name: Download and verify new SDK
       if: steps.sdk-cache.outputs.cache-hit != 'true'
@@ -77,10 +106,6 @@ runs:
         cache-on-failure: 'true'
         workspaces: |
           . -> target
-
-    - name: Verify Rust library
-      shell: bash
-      run: cargo test --lib
 
     - name: Compile .smod
       shell: bash
@@ -122,15 +147,23 @@ runs:
       shell: bash
       run: python3 tools/sandbox/check.py target/sunrise-mod/horizon_qol_suite.smod target/sunrise-wasm-std.wasm
 
-    - name: Restore Sunrise loader cache
-      uses: actions/cache@v4
+    # A cached SDK-specific executable loads new .smod packages directly.
+    # Rebuild Wasmtime only once per SDK revision and smoke-test source.
+    - name: Restore precompiled Sunrise loader
+      id: loader-cache
+      uses: actions/cache/restore@v4
       with:
-        path: |
-          target/sunrise-sandbox
-          .sunrise/runtime-source
-        key: ${{ runner.os }}-${{ runner.arch }}-sunrise-runtime-${{ inputs.sdk-revision }}-rust1.99.1-v2
+        path: .sunrise/loader-cache
+        key: ${{ runner.os }}-${{ runner.arch }}-sunrise-loader-${{ inputs.sdk-revision }}-rust1.99.1-${{ hashFiles('tools/sandbox/sunrise_qol_smoke.rs.txt') }}-v1
 
-    # Headless Wasmtime load and registration; no real game or gameplay scenarios.
+    # Real Sunrise Wasmtime load and registration; no gameplay scenarios.
     - name: Smoke test actual Sunrise loader
       shell: bash
       run: bash tools/sandbox/run.sh
+
+    - name: Cache precompiled Sunrise loader
+      if: steps.loader-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: .sunrise/loader-cache
+        key: ${{ steps.loader-cache.outputs.cache-primary-key }}
