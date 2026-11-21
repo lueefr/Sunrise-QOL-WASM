@@ -415,7 +415,8 @@ fn harvest_at(host: &mut dyn ServerHost, level: LevelRef,
                 })
                 .map(|(_, stack)| stack.damage()))
         } else { None };
-        if wear_needed(kind, before_damage, current) > 0 {
+        // Harvesting never applies extra hoe wear while Unbreakable Tools is on.
+        if !on(host, "what_durability") && wear_needed(kind, before_damage, current) > 0 {
             if let Some(living) = host.living(player.entity()) {
                 let _ = living.hurt_and_break(host, EquipmentSlot::MainHand, 1);
             }
