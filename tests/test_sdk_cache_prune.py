@@ -19,12 +19,13 @@ class CachePruneTests(unittest.TestCase):
             {"id": 2, "key": f"Linux-X64-sunrise-cli-{OLD}-v1"},
             {"id": 3, "key": f"Linux-X64-sunrise-runtime-{OLD}-v1"},
             {"id": 4, "key": f"Linux-X64-sunrise-std-{OLD}-v1"},
+            {"id": 9, "key": f"Linux-X64-sunrise-loader-{OLD}-rust1.99.1-hash-v1"},
             {"id": 5, "key": f"Linux-X64-sunrise-sdk-{NEW}-v2"},
             {"id": 6, "key": f"Linux-X64-sunrise-runtime-{NEW}-v2"},
             {"id": 7, "key": "Linux-X64-not-our-cache"},
             {"id": 8, "key": f"Windows-X64-sunrise-sdk-{OLD}-v1"},
         ]
-        self.assertEqual(module.outdated(caches, NEW, "Linux-X64"), [1, 2, 3, 4])
+        self.assertEqual(module.outdated(caches, NEW, "Linux-X64"), [1, 2, 3, 4, 9])
 
     def test_no_update_keeps_everything(self):
         caches = [{"id": 5, "key": f"Linux-X64-sunrise-sdk-{NEW}-v2"}]
