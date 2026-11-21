@@ -119,6 +119,8 @@ pub fn register(r: &mut dyn Registrar) {
     // Only the opener belongs on Sunrise's native Config page.
     // Every module and option is now stored through the private config service.
     let _ = r.register_setting(SettingSpec::choice(
-        "open_ui", "qol.config.open", ["qol.config.open.value"], 0,
+        // Both choices render as Open, but alternate their saved indices.
+        // A one-entry choice stops producing setting_changed after the first use.
+        "open_ui", "qol.config.open", ["qol.config.open.value", "qol.config.open.value"], 0,
     ));
 }
