@@ -24,7 +24,7 @@ class ProjectTests(unittest.TestCase):
     def test_manifest_ids_and_pin(self):
         cargo = tomllib.loads((ROOT / 'Cargo.toml').read_text())
         manifest = tomllib.loads((ROOT / 'sunrise-mod.toml').read_text())
-        self.assertEqual(manifest['id'], 'horizon_qol_suite')
+        self.assertEqual(manifest['id'], 'sunrise_qol')
         self.assertRegex(cargo['package']['metadata']['sunrise']['sdk'],
                          r'^[0-9a-f]{40}$')
         self.assertEqual(manifest['version'], cargo['package']['version'])
@@ -43,7 +43,7 @@ class ProjectTests(unittest.TestCase):
 
     def test_translations_are_valid(self):
         for language in ('en_us', 'pt_br'):
-            data = json.loads((ROOT / f'assets/horizon_qol_suite/lang/{language}.json').read_text())
+            data = json.loads((ROOT / f'assets/sunrise_qol/lang/{language}.json').read_text())
             self.assertIn('qol.module.vein_miner', data)
             self.assertIn('qol.module.hide_hands', data)
 
@@ -208,7 +208,7 @@ class ProjectTests(unittest.TestCase):
             (previous / 'open_ui').write_text('0')
             (previous / 'junk').write_text('unsafe')
             self.assertEqual(migrate(game, ROOT), 3)
-            target = game / 'config' / 'horizon_qol_suite'
+            target = game / 'config' / 'sunrise_qol'
             self.assertEqual((target / 'vein_miner').read_text(), 'true')
             self.assertEqual((target / 'amountofleavesbrokenpertick').read_text(), '7')
             self.assertFalse((target / 'junk').exists())
@@ -216,6 +216,72 @@ class ProjectTests(unittest.TestCase):
             (target / 'vein_miner').write_text('false')
             self.assertEqual(migrate(game, ROOT), 0)
             self.assertEqual((target / 'vein_miner').read_text(), 'false')
+
+    def test_private_identity_migration_keeps_new_values(self):
+        import tempfile
+        from migrate_settings import migrate
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            old = game / "config" / "horizon_qol_suite"
+            new = game / "config" / "sunrise_qol"
+            native = game / "sunrise-mods" / ".sunrise-mod-data" / "horizon_qol_suite"
+            old.mkdir(parents=True)
+            new.mkdir(parents=True)
+            native.mkdir(parents=True)
+            (old / "vein_miner").write_text("true")
+            (old / "leaf_decay").write_text("true")
+            (old / "enablefastleafdecay").write_text("false")
+            (native / "vein_miner").write_text("false")
+            (native / "tree_harvester").write_text("true")
+            (new / "leaf_decay").write_text("false")
+            (new / "right_click_harvest").write_text("true")
+            self.assertEqual(migrate(game, ROOT), 4)
+            self.assertEqual((new / "vein_miner").read_text(), "true")
+            self.assertEqual((new / "leaf_decay").read_text(), "false")
+            self.assertEqual((new / "tree_harvester").read_text(), "true")
+            self.assertEqual((new / "accelerateleafdecay").read_text(), "false")
+            self.assertEqual((new / "right_click_harvest").read_text(), "true")
+            self.assertEqual(migrate(game, ROOT), 0)
+            self.assertTrue((old / "vein_miner").exists())
+
+    def test_install_activation_retires_only_the_old_mod(self):
+        import tempfile
+        from migrate_settings import activate
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            mods = game / "sunrise-mods"
+            mods.mkdir()
+            old = mods / "horizon_qol_suite.smod"
+            new = mods / "sunrise_qol.smod"
+            old.write_bytes(b"previous package")
+            new.write_bytes(b"new package")
+            config = game / "sunrise-mods.txt"
+            config.write_text("mod.horizon_qol_suite:true\nmod.other_mod:false\n"
+                              "mod.sunrise_qol:false\n")
+            self.assertTrue(activate(game))
+            self.assertFalse(old.exists())
+            self.assertEqual((mods / "horizon_qol_suite.smod.bak").read_bytes(),
+                             b"previous package")
+            self.assertEqual(new.read_bytes(), b"new package")
+            self.assertEqual(config.read_text(),
+                             "mod.other_mod:false\nmod.sunrise_qol:true\n")
+            self.assertEqual((game / "sunrise-mods.txt.bak").read_text(),
+                             "mod.horizon_qol_suite:true\nmod.other_mod:false\n"
+                             "mod.sunrise_qol:false\n")
+            self.assertFalse(activate(game))
+            self.assertEqual(len(list(mods.glob("horizon_qol_suite.smod.bak*"))), 1)
+
+    def test_activation_refuses_missing_new_package(self):
+        import tempfile
+        from migrate_settings import activate
+        with tempfile.TemporaryDirectory() as temp:
+            game = Path(temp)
+            mods = game / "sunrise-mods"
+            mods.mkdir()
+            (mods / "horizon_qol_suite.smod").write_bytes(b"old")
+            with self.assertRaises(ValueError):
+                activate(game)
+            self.assertTrue((mods / "horizon_qol_suite.smod").exists())
 
     def test_new_modules_have_executable_hooks(self):
         gui = (ROOT / 'src/gui.rs').read_text()
@@ -297,8 +363,8 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('Text::literal("Done")', source)
         self.assertNotIn('No Additional Options', source)
         self.assertNotRegex(source, r'Configura(?:ções|coes)|Conclu[ií]do|Folhas|[ÁáÉéÍíÓóÚúÇçÃãÕõÂâÊêÔô]')
-        en = json.loads((ROOT / 'assets/horizon_qol_suite/lang/en_us.json').read_text())
-        pt = json.loads((ROOT / 'assets/horizon_qol_suite/lang/pt_br.json').read_text())
+        en = json.loads((ROOT / 'assets/sunrise_qol/lang/en_us.json').read_text())
+        pt = json.loads((ROOT / 'assets/sunrise_qol/lang/pt_br.json').read_text())
         self.assertEqual(en, pt)
         self.assertEqual(en['qol.config.open'], 'Open settings')
         self.assertEqual(en['qol.config.open.value'], 'Open')
