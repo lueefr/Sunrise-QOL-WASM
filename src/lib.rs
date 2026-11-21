@@ -43,6 +43,7 @@ mod milk;
 mod zombie;
 mod right_harvest;
 mod hoe;
+mod wool;
 
 use mod_api::{
     AnvilUpdateEvent, BlockChangedEvent, LevelHost, ClientHost, EntityJoinLevelEvent, EntityLeaveLevelEvent,
@@ -170,6 +171,7 @@ impl Hooks for SunriseQol {
             HostSide::Client(host) => return right_harvest::client_click(host, event),
             HostSide::Server(host) => host,
         };
+        wool::click(host, event);
         if hoe::click(host, event) == Flow::Cancel { return Flow::Cancel; }
         if self.beacon.click(host, event) == Flow::Cancel { return Flow::Cancel; }
         if self.conduit.click(host, event) == Flow::Cancel { return Flow::Cancel; }

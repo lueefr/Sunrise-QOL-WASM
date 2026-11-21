@@ -50,7 +50,7 @@ jobs:
       - name: Validate source and sandbox assertions
         run: python3 -m unittest discover -s tests -v
 
-      - name: Export 44-module source parity coverage
+      - name: Export complete source parity coverage
         run: python3 tools/parity/report.py --output target/parity-coverage.json
 
       - name: Install pinned Rust

@@ -330,6 +330,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "tree_harvester", label: "Tree Harvesting", options: TREE, category: Category::Gathering },
     ModuleSpec { key: "leaf_decay", label: "Leaf Decay", options: LEAF_DECAY, category: Category::Gathering },
     ModuleSpec { key: "extended_bonemeal", label: "Extended Bone Meal", options: BONEMEAL, category: Category::Gathering },
+    ModuleSpec { key: "wool_tweaks", label: "Wool Dyeing", options: &[], category: Category::Gathering },
     ModuleSpec { key: "hoe_tweaks", label: "Hoe Tweaks", options: HOE, category: Category::Gathering },
     ModuleSpec { key: "right_click_harvest", label: "Right Click Harvest", options: RIGHT_HARVEST, category: Category::Gathering },
     ModuleSpec { key: "double_doors", label: "Paired Doors", options: DOORS, category: Category::World },

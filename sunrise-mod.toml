@@ -8,5 +8,5 @@ capabilities = ["registries"]
 namespaces = ["rightclickharvest"]
 
 [wasm]
-sha512 = "8bc5274bf76a1e8caa37c61100ee157fb660f20b8f7a309ba018dd8b79a41484bdb9d06c09ee7e07f493ac8bb51117a7709439d3a2b17445dacaab5628ecafa7"
+sha512 = "e99413c85fe56cadb1b7dc911e86d4659cd8b113c43fb81b3934ac0e99c65e1a1f6eb58330bd60caa85b92ddeb38feb7d5f85ce58eb904f9ad4794977e9147f3"
 toolchain = "1.99.1 58cf8f9c35b355199727627d07ae34a4e2846d67"

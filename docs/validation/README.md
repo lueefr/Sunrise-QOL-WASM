@@ -4,11 +4,11 @@ The reviewed package targets Sunrise SDK `94256510f74e6843754e0a93fd9e4da7e45b10
 
 Validated locally:
 
-- 66 native Rust helper tests and 107 Python source/configuration tests pass.
+- 68 native Rust helper tests and 107 Python source/configuration tests pass for the next-mod batch (PR #8 had 66 Rust tests).
 - `cargo-sunrise-mod check` accepts the compiled package.
 - `tools/wasm_link_check.py` finds no missing Rust imports in the matching WASM standard library.
 - The package loads in the real client with one WASM mod enabled.
-- Nine Automatic Doors scenarios pass in a disposable integrated-server world. The JSON records both door halves and the exact package SHA-256.
+- Nine Automatic Doors scenarios passed for the PR #8 package; its JSON records both door halves and that package SHA-256. Eight Wool Tweaks scenarios passed for the next-mod package, including disabled behavior, survival, creative, same-color no-op, carpet, unrelated blocks, moss carpet and offhand use. Each JSON identifies its own tested package hash.
 
 These observations do **not** establish full parity: they do not compare against the original Java mod running in the same fixtures, test multiplayer prediction, or cover all modules and options. The source audit and parity matrix retain their partial statuses. The existing CI Game suite also needs prepared game resources; local observations do not resolve its runner setup.
 
@@ -32,3 +32,7 @@ The probe changes blocks near `(0, 91, 0)`, player position/game mode and Automa
 `../registry/menu.png` is one unedited screenshot of the actual menu in the disposable client, with modules off. `../registry/horizon_qol_suite.png` is an original 512×512 PNG icon (under 256 KiB), rendered from the adjacent SVG. These are prepared assets, not evidence of a published sunrise-mods listing.
 
 Publication remains pending full parity, release validation and a license choice for this project's own code. The third-party MIT notice is not a license for the entire project.
+
+## Repeat the Wool Tweaks observations
+
+In the same kind of disposable developer world, run `tools/gameplay/control_wool.py` with the same five arguments as the door probe. It changes player inventory/game mode, difficulty, blocks near `(2, 91, 0)` and the private Wool Tweaks switch. The module is switched OFF on exit. Evidence is in `wool-9425651.json`; beds and recipe parity are explicitly excluded.

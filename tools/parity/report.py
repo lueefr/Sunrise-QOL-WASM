@@ -7,6 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 NAMES = {
+    "wool_tweaks": "Wool Tweaks",
     "unlimited_enchantments": "Unlimited Enchantments",
     "enchant_command": "Extended Enchant Command",
     "affordable_anvil": "Affordable Anvil",

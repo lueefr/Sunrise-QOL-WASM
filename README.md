@@ -37,7 +37,7 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 [standalone sandbox workflow](https://github.com/lueefr/Sunrise-QOL-WASM/actions/workflows/sandbox.yml).
 
 ## Features
-**Checklist legend:** `[x]` means a matching implementation is present in the source archive, even if partial; `[ ]` means the behavior has not been ported. **No checked item has been certified as 1:1 or verified in-game.** Some entries require new Sunrise hooks.
+**Checklist legend:** `[x]` means a matching implementation is present in the source archive, even if partial; `[ ]` means the behavior has not been ported. **No checked item has been certified as 1:1. Selected real-game observations are recorded in docs/validation/.** Some entries require new Sunrise hooks.
 
 ### Bundle-inspired quality-of-life features
 
@@ -82,7 +82,7 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [x] Entire trees can be felled with accelerated leaf decay and replanting *(partial)*
 - [ ] Enchanting tables can function underwater with surrounding bookshelves
 - [ ] Village bells receive a crafting recipe
-- [ ] Wool crafting, dyeing, and string conversion become more flexible
+- [x] Wool and colored carpets can be dyed in the world *(Wool Tweaks, initial: bed dyeing and crafting/string conversion remain pending)*
 - [ ] Death drops can be protected inside a chest with equipment displayed
 - [x] Zombies can be prevented from breaking doors *(removes BreakDoor goal when zombies join; existing-mob and multiplayer tests pending)*
 
