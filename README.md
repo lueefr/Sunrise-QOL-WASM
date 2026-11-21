@@ -40,6 +40,20 @@ multiplayer behavior. Those still require manual in-game verification.
 See [sandbox validation](docs/SANDBOX.md) and the
 [PR validation workflow](https://github.com/lueefr/Sunrise-QOL-WASM/actions/workflows/sandbox.yml).
 
+## Automatic release cycle
+
+Pull requests only validate the build. After changes are merged into `main`,
+the release workflow checks the official Sunrise nightly SDK, advances the
+existing decimal version sequence (`1.1.3 → 1.1.4 → ... → 1.1.9 → 1.2.0`),
+builds and smoke-loads the mod, then publishes a GitHub release with the
+versioned `.smod`, `SHA256SUMS.txt` and changelog. The versioning implementation
+remains in `tools/release.py`.
+
+A scheduled SDK update also publishes a new version after successful validation.
+If a run pushed a tag but failed to finish uploading release assets, the
+next cycle resumes **that same version** instead of skipping it or incrementing
+twice. Unchanged source and SDK do not create an empty release.
+
 ## Features
 **Checklist legend:** `[x]` means a matching implementation is present in the source archive, even if partial; `[ ]` means the behavior has not been ported. **No checked item has been certified as 1:1. Selected real-game observations are recorded in docs/validation/.** Some entries require new Sunrise hooks.
 
