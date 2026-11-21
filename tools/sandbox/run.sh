@@ -17,7 +17,7 @@ if [[ ! "$revision" =~ ^[[:xdigit:]]{40}$ ]]; then
   exit 1
 fi
 
-package="${1:-$root/target/sunrise-mod/horizon_qol_suite.smod}"
+package="${1:-$root/target/sunrise-mod/sunrise_qol.smod}"
 standard="${2:-$root/target/sunrise-wasm-std.wasm}"
 test -s "$package" || { echo "Missing .smod package: $package" >&2; exit 1; }
 test -s "$standard" || { echo "Missing pinned WASM std: $standard" >&2; exit 1; }
