@@ -13,7 +13,7 @@ use mod_api::{
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-const SCREEN_ID: &str = "horizon_qol_suite";
+const SCREEN_ID: &str = "sunrise_qol";
 const ROW_H: f32 = 25.0;
 const CATEGORY_H: f32 = 32.0;
 const PAD: f32 = 6.0;
