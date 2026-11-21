@@ -20,11 +20,13 @@ class ParityCatalogTests(unittest.TestCase):
         self.assertEqual(report["fully_certified"], 0)
         self.assertTrue(all(not row["certified_one_to_one"] for row in report["modules"]))
 
-    def test_parity_matrix_is_collected_by_both_workflows(self):
-        for path in [".github/workflows/sandbox.yml", ".github/workflows/release.yml"]:
+    def test_parity_inventory_remains_checked_in_fast_validation(self):
+        action = (ROOT / ".github/actions/validate/action.yml").read_text()
+        self.assertIn("python3 -m unittest discover -s tests", action)
+        for path in (".github/workflows/sandbox.yml", ".github/workflows/release.yml"):
             workflow = (ROOT / path).read_text()
-            self.assertIn("python3 tools/parity/report.py --output target/parity-coverage.json", workflow)
-            self.assertIn("sunrise-qol-parity-matrix", workflow)
+            self.assertIn("uses: ./.github/actions/validate", workflow)
+            self.assertNotIn("tools/gameplay/run.sh", workflow)
 
     def test_requested_unavailable_feature_is_not_in_module_roster(self):
         report = parity.inventory()

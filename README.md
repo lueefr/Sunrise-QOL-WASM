@@ -13,28 +13,46 @@ six hours. It only selects a commit whose corresponding published `sdk-<sha>`
 release exists with the Linux API and integrity metadata. The build tool comes
 from the **same Sunrise revision**, rather than a separately pinned old commit.
 
-If the nightly SDK changed, the pipeline temporarily repins `Cargo.toml`,
-builds the mod against that SDK, checks guest imports and executes the real
-Wasmtime sandbox. **Only after all checks pass** does the release job commit the
-new SDK pin, advance the version and publish the matching `.smod`. A failed
-update leaves the existing release and repository pin intact. An upstream
-nightly with no published matching SDK is rejected rather than silently
-producing a mod built against the old SDK. This validates ABI compatibility
-with the official nightly, but cannot guarantee compatibility with a custom
-or older local Sunrise build.
+The official SDK, signed build tool, shared WASM standard and precompiled Sunrise
+loader are cached by the exact published nightly revision. Rust 1.99.1 and its
+WASM target, source component and build dependencies also have caches. When
+the SDK is unchanged, the next build reuses its cache without downloading it.
+When there is a new nightly, the workflow downloads and verifies the new SDK,
+compiles and initializes the mod, and caches the new revision. The native
+Sunrise runtime is only compiled on an SDK/test cache miss; repeated builds
+run the cached loader executable directly. Old SDK caches are deleted after
+successful publication.
 
-## Runtime sandbox
+Failed builds leave the prior release and repository pin unchanged.
+A nightly without its matching published SDK is rejected. Passing ABI checks
+does not guarantee actual in-game compatibility.
 
-Before publishing a release, GitHub Actions builds the guest, checks its imports
-against the pinned shared WASM standard, then runs it through the **real Sunrise
-Wasmtime loader** at the exact SDK commit. The runtime test also executes in-memory command and entity-event scenarios:
-command pagination, enchantment limits, villager griefing, superflat slime veto,
-merchant offer resets, anvil XP-cost changes, concrete item-drop modifications for Wither Skeletons, Ender Dragons and Shulkers, client tooltip localization and enchantment cap indicators, first-person hand cancellation, zoom input/strength, welcome chat and first-join world-local markers. These are
-real guest-side behavior checks, but **not** a complete Minecraft world,
-multiplayer session or graphical test.
+## Fast CI and Sunrise loader check
 
-See [sandbox design and limitations](docs/SANDBOX.md) or run the
-[standalone sandbox workflow](https://github.com/lueefr/Sunrise-QOL-WASM/actions/workflows/sandbox.yml).
+Pull requests and releases share the same validation action. It runs source
+Python regression tests, compiles the `.smod` package, checks ZIP integrity and Rust ABI,
+then loads and initializes the built mod in Sunrise's real Wasmtime runtime.
+
+**CI does not launch Minecraft or execute gameplay scenarios.** Loading and
+initialization do not prove feature parity, graphical correctness or
+multiplayer behavior. Those still require manual in-game verification.
+
+See [sandbox validation](docs/SANDBOX.md) and the
+[PR validation workflow](https://github.com/lueefr/Sunrise-QOL-WASM/actions/workflows/sandbox.yml).
+
+## Automatic release cycle
+
+Pull requests only validate the build. After changes are merged into `main`,
+the release workflow checks the official Sunrise nightly SDK, advances the
+existing decimal version sequence (`1.1.3 → 1.1.4 → ... → 1.1.9 → 1.2.0`),
+builds and smoke-loads the mod, then publishes a GitHub release with the
+versioned `.smod`, `SHA256SUMS.txt` and changelog. The versioning implementation
+remains in `tools/release.py`.
+
+A scheduled SDK update also publishes a new version after successful validation.
+If a run pushed a tag but failed to finish uploading release assets, the
+next cycle resumes **that same version** instead of skipping it or incrementing
+twice. Unchanged source and SDK do not create an empty release.
 
 ## Features
 **Checklist legend:** `[x]` means a matching implementation is present in the source archive, even if partial; `[ ]` means the behavior has not been ported. **No checked item has been certified as 1:1. Selected real-game observations are recorded in docs/validation/.** Some entries require new Sunrise hooks.
@@ -133,7 +151,7 @@ The native Config page contains only the opener; the suite settings appear in a 
 
 ## Building and installing from source
 
-**Requirements:** a checked-out *complete source tree*, Arch Linux or another supported Linux installation, Fish shell for the included installer, Python 3, `unzip`, Rust 1.99.1, and the compatible Sunrise WASM build tool. The project pins the Sunrise API build to `2d8126336e579777eabf9b2fd8b3d476236a04f2`. Use a Sunrise game build with a matching WASM standard library.
+**Requirements:** a checked-out *complete source tree*, Arch Linux or another supported Linux installation, Fish shell for the included installer, Python 3, `unzip`, Rust 1.99.1, and the compatible Sunrise WASM build tool. The SDK revision is pinned in `Cargo.toml` and verified against the official Sunrise nightly during each CI run. Use a Sunrise game build with a matching WASM standard library.
 
 The source archive includes an isolated Rust setup script for Fish:
 
@@ -160,9 +178,12 @@ Sunrise QOL is an independent, incomplete port/reimplementation of Serilum's qua
 Original projects retain their own licensing and attribution requirements. Do not assume that an implementation, test, or API hook proves 1:1 compatibility.
 
 
-### In-game gameplay parity gate
+### In-game validation
 
-A passing WASM build and synthetic-host smoke test **do not** imply 1:1 gameplay parity. The PR and release workflows now also run the built mod against the real Sunrise `Game` world and player-break path; both the resulting block states and positive/negative cases are checked. The first suite tests Keep My Soil Tilled. Coverage and untested modules are recorded in `gameplay-evidence.json`. The release is blocked if this real-engine gate fails; other modules are not represented as verified until they gain equivalent cases. See [in-game validation](docs/GAMEPLAY-VALIDATION.md).
+The mandatory gameplay gate was removed from CI to keep builds fast and
+independent of private prepared Minecraft resources. Historical
+`tools/gameplay/` fixtures remain for optional manual use and are not treated
+as proof of 1:1 parity. See [gameplay validation](docs/GAMEPLAY-VALIDATION.md).
 
 The original First Join Message and Welcome Message options are now exposed in the suite UI: editable text and clickable HTTP(S) URLs, message colors, a per-world first-join broadcast, and dedicated-server gating. The Dismount Entity module also follows upstream success semantics without a passenger count cap. These are **source-level improvements**, not certified 1:1 gameplay parity.
 

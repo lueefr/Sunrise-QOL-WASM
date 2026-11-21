@@ -17,10 +17,11 @@ LEGACY_TAG_OBJECT = "3f51c263fd5f4743e4a7c4798e28cf7cbae3eeb8"
 # validated package and its release gate can change without touching src/.
 MOD_PATHS = (
     ".github/workflows/release.yml", ".github/workflows/sandbox.yml",
-    "tools/release.py", "src", "assets", "Cargo.toml",
-    "sunrise-mod.toml", "instalar.fish", "preparar-rust.fish",
+    "tools/release.py", ".github/actions/validate", "src", "assets", "data",
+    "licenses", "tools/parity", "Cargo.toml", "sunrise-mod.toml",
+    "instalar.fish", "preparar-rust.fish",
     "diagnosticar.fish", "tools/wasm_link_check.py",
-    "tools/migrate_settings.py", "tools/sdk_sync.py",
+    "tools/migrate_settings.py", "tools/sdk_sync.py", "tools/sdk_cache_prune.py",
     "tools/install_sdk_tool.sh", "tools/sandbox", "tests",
 )
 

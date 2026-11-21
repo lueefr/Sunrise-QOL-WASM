@@ -107,11 +107,15 @@ class SdkSyncTests(unittest.TestCase):
         self.assertIn('find "$tmp" -type f -name cargo-sunrise-mod', script)
         self.assertIn('release="sdk-$revision"', script)
 
+        shared = (root / ".github/actions/validate/action.yml").read_text()
+        self.assertIn('bash tools/install_sdk_tool.sh "$SDK_REVISION"', shared)
+        self.assertIn("steps.tool-cache.outputs.cache-hit != 'true'", shared)
+        self.assertIn("steps.sdk-cache.outputs.cache-hit != 'true'", shared)
         for path in (".github/workflows/release.yml",
                      ".github/workflows/sandbox.yml"):
             with self.subTest(path=path):
                 workflow = (root / path).read_text()
-                self.assertIn('bash tools/install_sdk_tool.sh "$SDK_REVISION"', workflow)
+                self.assertIn("uses: ./.github/actions/validate", workflow)
                 self.assertIn("steps.sdk.outputs.revision", workflow)
                 self.assertNotIn("cargo install --git https://github.com/sunrise-org/sunrise",
                                  workflow)
