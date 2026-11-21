@@ -22,6 +22,7 @@ on:
       - 'tools/wasm_link_check.py'
       - 'tools/sandbox/**'
       - 'tools/gameplay/**'
+      - 'tools/runner/**'
       - 'tools/parity/**'
       - 'tools/migrate_settings.py'
       - 'tests/**'

@@ -1,0 +1,9 @@
+FROM docker.io/library/ubuntu:24.04
+ENV DEBIAN_FRONTEND=noninteractive HOME=/runner CARGO_BUILD_JOBS=2 CARGO_INCREMENTAL=0
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl git jq python3 python3-yaml build-essential pkg-config unzip xz-utils zstd libicu74 libssl3t64 libkrb5-3 zlib1g libzstd-dev libasound2-dev libudev-dev libdbus-1-dev libx11-dev libxkbcommon-dev libwayland-dev clang cmake && rm -rf /var/lib/apt/lists/*
+WORKDIR /runner
+COPY actions-runner.tar.gz /tmp/runner.tar.gz
+RUN tar xzf /tmp/runner.tar.gz -C /runner --no-same-owner && rm /tmp/runner.tar.gz && useradd --uid 1001 --home-dir /runner --no-create-home --shell /bin/bash runner && chown -R 1001:1001 /runner
+COPY entrypoint.sh /entrypoint.sh
+USER 1001:1001
+ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]

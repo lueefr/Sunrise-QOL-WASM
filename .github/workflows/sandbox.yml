@@ -8,6 +8,7 @@ on:
       - '.github/workflows/sandbox.yml'
       - 'tools/sandbox/**'
       - 'tools/gameplay/**'
+      - 'tools/runner/**'
       - 'tools/sdk_sync.py'
       - 'tools/install_sdk_tool.sh'
   pull_request:
@@ -16,6 +17,7 @@ on:
       - '.github/workflows/sandbox.yml'
       - 'tools/sandbox/**'
       - 'tools/gameplay/**'
+      - 'tools/runner/**'
       - 'src/**'
       - 'tests/**'
       - 'tools/sdk_sync.py'
@@ -32,9 +34,21 @@ concurrency:
 
 jobs:
   sandbox:
+    # Private game data are available only to repository-owned branches.
+    # External contributions require review and a maintainer-owned branch.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ${{ vars.SUNRISE_QOL_GAMEPLAY_RUNNER || 'ubuntu-24.04' }}
     timeout-minutes: 110
     steps:
+      - name: Verify private game resources are mounted
+        if: vars.SUNRISE_QOL_GAMEPLAY_RUNNER != ''
+        env:
+          SUNRISE_TEST_RESOURCES: ${{ vars.SUNRISE_TEST_RESOURCES }}
+        run: |
+          for file in facts.json gameplay-facts.json block-behaviours.json; do
+            test -s "$SUNRISE_TEST_RESOURCES/$file" && test -r "$SUNRISE_TEST_RESOURCES/$file" || exit 1
+          done
+
       - name: Check out mod source
         uses: actions/checkout@v4
 

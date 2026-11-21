@@ -55,3 +55,15 @@ If resources are missing the job fails with a machine-readable
 `blocked_reason=missing-prepared-game-resources` instead of skipping or
 passing a fake test. PRs retain an explicitly **unverified** .smod artifact
 for manual testing without treating the artifact as a release.
+
+## Installed private runner
+
+The local runner uses rootless Podman with a fresh ephemeral GitHub registration per job. It mounts only the prepared `26.3` resource directory read-only at `/opt/sunrise-resources/26.3`; the personal home, SSH credentials and container daemon sockets are not mounted. The host wrapper obtains a short-lived registration token using the existing GitHub CLI login. It passes that token in a mode-0600 temporary file and removes the file when the container exits. The runner removes the token from its environment before accepting jobs.
+
+Repository variables: `SUNRISE_QOL_GAMEPLAY_RUNNER=sunrise-qol-private`, `SUNRISE_TEST_RESOURCES=/opt/sunrise-resources/26.3`. The sandbox job runs only for repository-owned branches; external contributions must be reviewed and brought to a maintainer branch. Repository policy also requires approval for every external contributor's workflow run. Do not remove those controls or approve unreviewed workflows that target the private runner.
+
+Reproducible container sources are in `tools/runner/`. Download the official Linux x64 runner archive to a private build directory as `actions-runner.tar.gz` and verify its SHA256 using GitHub's runner-downloads API before building this image. Copy the Containerfile and entrypoint into that directory; build with `podman build -t localhost/sunrise-qol-runner:latest DIRECTORY`. Never add the runner archive, registration credentials or game resources to Git.
+
+Install `tools/runner/run.sh` under the local runner directory. It reads `~/.config/sunrise-qol-runner/config.sh` containing `SUNRISE_RESOURCES`, `SUNRISE_RUNNER_REPOSITORY` and optional `SUNRISE_RUNNER_NAME`. Run through the user systemd service `sunrise-qol-runner.service`; `Restart=always` creates a clean container and ephemeral registration after each job. Jobs are limited to two CPUs, 6 GiB memory and 8 GiB memory plus swap. The computer must remain online and its user systemd session must remain active.
+
+The proprietary resource mount is excluded from repository caches and uploaded artifacts. CI uploads only the mod, test logs and structured evidence. Missing resources still fail the real-game gate.
