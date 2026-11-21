@@ -1,0 +1,247 @@
+{
+  "upstream": "Serilum/Furnace-Recycle",
+  "ref": "26.3.0",
+  "recipes": [
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_activator_rail.json",
+      "sha": "e5e076af097e10a3e3d8ece282b50d3a83cc32ef",
+      "input": "minecraft:activator_rail",
+      "result": {
+        "id": "minecraft:iron_nugget",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_anvil.json",
+      "sha": "f8ed058c88241b23de47d447463c521855ee0fa1",
+      "input": [
+        "minecraft:anvil",
+        "minecraft:chipped_anvil",
+        "minecraft:damaged_anvil"
+      ],
+      "result": {
+        "id": "minecraft:iron_block",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_bell.json",
+      "sha": "9284fc31f9b7499ba718762e156544cde4d5ceba",
+      "input": "minecraft:bell",
+      "result": {
+        "id": "minecraft:gold_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_blast_furnace.json",
+      "sha": "6e36804018f965d59787b5a4093196b9e5c1d530",
+      "input": "minecraft:blast_furnace",
+      "result": {
+        "id": "minecraft:iron_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_bucket.json",
+      "sha": "383caf5d897750290ceefcde5ae2461f985b2036",
+      "input": "minecraft:bucket",
+      "result": {
+        "id": "minecraft:iron_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_cauldron.json",
+      "sha": "f11c3b21c2596b8150089ba1dde19cba29f6e623",
+      "input": "minecraft:cauldron",
+      "result": {
+        "id": "minecraft:iron_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_crossbow.json",
+      "sha": "98384171dc15063a6d5c927ba4a2a8db419b22ab",
+      "input": "minecraft:crossbow",
+      "result": {
+        "id": "minecraft:iron_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_detector_rail.json",
+      "sha": "d8b8b8a6f6311c28ebd59e44fb81e3a0c966f2f6",
+      "input": "minecraft:detector_rail",
+      "result": {
+        "id": "minecraft:iron_nugget",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_flint_and_steel.json",
+      "sha": "8553d83f23c9bc7cfaefd7aec6e6d3c37cfd9213",
+      "input": "minecraft:flint_and_steel",
+      "result": {
+        "id": "minecraft:iron_nugget",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_heavy_weighted_pressure_plate.json",
+      "sha": "4f226b848bc98b2f4fbdf05374e4e9af4a872c0d",
+      "input": "minecraft:heavy_weighted_pressure_plate",
+      "result": {
+        "id": "minecraft:iron_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_hopper.json",
+      "sha": "1302bc8e383e2f2c471896b9a61103dae2e7dfb2",
+      "input": "minecraft:hopper",
+      "result": {
+        "id": "minecraft:iron_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_iron_bars.json",
+      "sha": "4c80d7fbeaa7eab222cab3827db3976cb87c1cfb",
+      "input": "minecraft:iron_bars",
+      "result": {
+        "id": "minecraft:iron_nugget",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_iron_chain.json",
+      "sha": "c0562eff21e2aab0638f346181e5424ed6477e9f",
+      "input": "minecraft:iron_chain",
+      "result": {
+        "id": "minecraft:iron_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_iron_door.json",
+      "sha": "821fade1af16d9408eb6df10210ff18016917ec7",
+      "input": "minecraft:iron_door",
+      "result": {
+        "id": "minecraft:iron_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_lantern.json",
+      "sha": "497b01a760d8e1e803f5f2ae5a54fdfd80d60909",
+      "input": [
+        "minecraft:lantern",
+        "minecraft:soul_lantern"
+      ],
+      "result": {
+        "id": "minecraft:iron_nugget",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_light_weighted_pressure_plate.json",
+      "sha": "ffe50ef361d3d8a0e845e456f2b0580acbed5fd5",
+      "input": "minecraft:light_weighted_pressure_plate",
+      "result": {
+        "id": "minecraft:gold_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_minecart.json",
+      "sha": "67bb4982717e7cadf6bbc021819f9da5fb7c5196",
+      "input": "minecraft:minecart",
+      "result": {
+        "id": "minecraft:iron_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_piston.json",
+      "sha": "3aa90c00cfab8d7de1d1b77aadc806453d351e3c",
+      "input": "minecraft:piston",
+      "result": {
+        "id": "minecraft:iron_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_powered_rail.json",
+      "sha": "e1603edd0bb539128a14cf774e87f677e9d7e0e8",
+      "input": "minecraft:powered_rail",
+      "result": {
+        "id": "minecraft:gold_nugget",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_rail.json",
+      "sha": "a41a7237e3e7708ca9b47efc936ffb75d7a34bc5",
+      "input": "minecraft:rail",
+      "result": {
+        "id": "minecraft:iron_nugget",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_shears.json",
+      "sha": "94c510f7ff0fd34736a53c454f1cfd7ae8083406",
+      "input": "minecraft:shears",
+      "result": {
+        "id": "minecraft:iron_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_shield.json",
+      "sha": "fd074e47d97618526f9ef841fc70cfb3801095b8",
+      "input": "minecraft:shield",
+      "result": {
+        "id": "minecraft:iron_nugget",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_smithing_table.json",
+      "sha": "f408a88b738fdd5ce286fc87516798368b9f727f",
+      "input": "minecraft:smithing_table",
+      "result": {
+        "id": "minecraft:iron_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_sticky_piston.json",
+      "sha": "3434eca5cf89b72bd0b11ede376dfcdd7f74a822",
+      "input": "minecraft:sticky_piston",
+      "result": {
+        "id": "minecraft:iron_ingot",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_stonecutter.json",
+      "sha": "b870f846000342d49c41d0fa74e71892128235b6",
+      "input": "minecraft:stonecutter",
+      "result": {
+        "id": "minecraft:iron_nugget",
+        "count": 1
+      }
+    },
+    {
+      "path": "Common/src/main/resources/data/furnacerecycle/recipe/smelt_tripwire_hook.json",
+      "sha": "97674c1761c3e4b8ad217fb899022f20b8a7e5e3",
+      "input": "minecraft:tripwire_hook",
+      "result": {
+        "id": "minecraft:iron_nugget",
+        "count": 1
+      }
+    }
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "sdk": "94256510f74e6843754e0a93fd9e4da7e45b1056",
+  "kind": "actual-game-control-observations",
+  "package_sha256": "84d326b1ed51362ee2f7e45f313ec36d0e83e54c1567fd479f58ab131687b4a5",
+  "module": "wool_tweaks_recipes",
+  "observations": [
+    {
+      "case": "disabled_recipe_absent",
+      "passed": true,
+      "response": {
+        "chat": [
+          "Unknown recipe: horizon_qol_suite:wool_tweaks/wool_to_string"
+        ],
+        "ok": true,
+        "result": 0,
+        "success": false
+      }
+    },
+    {
+      "case": "all_49_recipes_admitted",
+      "passed": true,
+      "recipes": [
+        "black_bed",
+        "black_carpet",
+        "black_wool",
+        "blue_bed",
+        "blue_carpet",
+        "blue_wool",
+        "brown_bed",
+        "brown_carpet",
+        "brown_wool",
+        "cyan_bed",
+        "cyan_carpet",
+        "cyan_wool",
+        "gray_bed",
+        "gray_carpet",
+        "gray_wool",
+        "green_bed",
+        "green_carpet",
+        "green_wool",
+        "light_blue_bed",
+        "light_blue_carpet",
+        "light_blue_wool",
+        "light_gray_bed",
+        "light_gray_carpet",
+        "light_gray_wool",
+        "lime_bed",
+        "lime_carpet",
+        "lime_wool",
+        "magenta_bed",
+        "magenta_carpet",
+        "magenta_wool",
+        "orange_bed",
+        "orange_carpet",
+        "orange_wool",
+        "pink_bed",
+        "pink_carpet",
+        "pink_wool",
+        "purple_bed",
+        "purple_carpet",
+        "purple_wool",
+        "red_bed",
+        "red_carpet",
+        "red_wool",
+        "white_bed",
+        "white_carpet",
+        "white_wool",
+        "wool_to_string",
+        "yellow_bed",
+        "yellow_carpet",
+        "yellow_wool"
+      ]
+    },
+    {
+      "case": "wool_to_four_strings_preview",
+      "passed": true,
+      "output": {
+        "count": 4,
+        "item": "minecraft:string",
+        "slot": 200
+      }
+    },
+    {
+      "case": "wool_to_four_strings_take",
+      "passed": true,
+      "counts": {
+        "minecraft:string": 4
+      }
+    },
+    {
+      "case": "white_dye_on_colored_wool_preview",
+      "passed": true,
+      "output": {
+        "count": 1,
+        "item": "minecraft:white_wool",
+        "slot": 200
+      }
+    },
+    {
+      "case": "white_dye_on_colored_wool_take",
+      "passed": true,
+      "counts": {
+        "minecraft:white_wool": 1
+      }
+    },
+    {
+      "case": "bed_recolor_preview",
+      "passed": true,
+      "output": {
+        "count": 1,
+        "item": "minecraft:blue_bed",
+        "slot": 200
+      }
+    },
+    {
+      "case": "bed_recolor_take",
+      "passed": true,
+      "counts": {
+        "minecraft:blue_bed": 1
+      }
+    },
+    {
+      "case": "carpet_ring_preview",
+      "passed": true,
+      "output": {
+        "count": 8,
+        "item": "minecraft:blue_carpet",
+        "slot": 200
+      }
+    },
+    {
+      "case": "carpet_ring_take",
+      "passed": true,
+      "counts": {
+        "minecraft:blue_carpet": 8
+      }
+    },
+    {
+      "case": "disabled_after_reload",
+      "passed": true,
+      "response": {
+        "chat": [
+          "Unknown recipe: horizon_qol_suite:wool_tweaks/wool_to_string"
+        ],
+        "ok": true,
+        "result": 0,
+        "success": false
+      }
+    }
+  ],
+  "fully_certified_one_to_one": false,
+  "limitations": [
+    "Requires /reload after toggling and after starting a world",
+    "No original Java mod differential run or multiplayer verification"
+  ]
+}

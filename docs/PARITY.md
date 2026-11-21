@@ -51,11 +51,34 @@ installer to stop before replacing the installed mod.
 | Welcome Message | Partial | All three default messages, independent text/colors/HTTP URL click options, preceding blank line and dedicated-server-only switch from original; real lifecycle, UI input and integrated-server checks pending |
 | Vein Miner | Initial | Bounded connected search; tool costs and player block events not fully ported |
 | Tree Harvester | Partial | Excludes stripped logs, groups mangrove roots with mangrove logs, separates mushroom and Nether-tree options, uses species-appropriate canopies and permits empty hands when mustHoldAxe is disabled. Bounded removal, player-placed log tracking, replanting, break-time synchronization and durability timing still differ. Shared Leaf Decay must be enabled for fast decay |
+| Wool Tweaks | Partial | Wool-tag blocks, vanilla carpets and both bed halves can be dyed, preserving facing/occupied state and source head-first removal ordering. One dye per survival/adventure use, creative exemption and same-color no-op. All 49 native recipes match source structure: wool/bed dyes, eight-carpet ring and wool to four strings. Recipes require /reload after toggling and world entry; custom bed/carpet classes, sleeping-player behavior, cross-mod callbacks, rollback failure and multiplayer prediction remain unverified |
 | Leaf Decay | Partial | Shared Leaves Be Gone / Leaves Us In Peace path: bounded queued decay, match-leaf and match-log options and per-tick work limits; Tree Harvester uses this same module instead of duplicating fast-decay behavior. The public WASM host does not expose vanilla `LeavesBlock.updateDistance` for the precise original scheduling, so true 1:1 timing and every custom species remain unverified |
 | Ench. Level LangPatch | Partial | Formats missing enchantment/potion tooltip translation levels; does not modify global language storage |
 | Tax Free Levels | Partial (anvil only) | One-level rename and existing-result limit; original flattened XP cost is NOT implemented |
 | Unlimited Enchantments | Partial | Combines equal-level enchantments at anvil when vanilla made output, up to 255; not a registry or enchantment-table patch |
 | Affordable Anvil | Initial | Modifies existing anvil output; cannot recreate result already rejected by vanilla |
+
+| Furnace Recycle | Functional port | 26 native smelting recipes, vanilla cooking, XP and inventory handling. Enable then /reload; repeat after world entry. Recipe IDs use this suite namespace. |
+
+| Village Bell Recipe | Functional port | Native 3x3 logs, stone and gold-block recipe. Enable then /reload, including after world entry. |
+
+| Kelp Fertilizer | Functional port | Right-click kelp invokes native growth and consumes one on successful use outside creative. Native dispenser-style helper differs on failed random attempts; dispenser kelp behavior is not overridden. |
+
+| No Feather Trample | Functional port | Players with Feather Falling boots or Slow Falling cannot trample farmland. Previous server tick snapshot; mobs and same-tick equipment changes are not covered. |
+
+| Thorny Bush Protection | Functional port | Players wearing any nonempty leg-slot stack ignore sweet berry bush damage while keeping slowing. Previous server tick equipment snapshot; damage commands with that source also suppressed. |
+
+| Stack Refill | Functional port | After right-click use empties a hand, move matching item/components from main inventory, preferring slot 35 downward. Both hands; selection changes cancel; three-second pending window. Tool break without use and container remainder replacement not covered. |
+
+| Sleep Sooner | Functional port | Bed right-click advances the clock to dusk from configurable start (12000 default); later start delays bed access. Uses native clock update and normal sleep checks; original randomized pre-sleep messages omitted. |
+
+| Surface Mushrooms | Functional port | Right-click a solid surface with a vanilla mushroom to plant above it without the placement light limit. Both hands, one item outside creative, refuses occupied positions; normal later survival/random ticks remain vanilla. |
+
+| Move Boats | Functional port | Sneak-right-click to carry the original entity two blocks ahead at eye height; stand then crouch to release. Moves the same entity without recreating it; cargo/passenger support depends on the runtime. Releases on disable, death, dimension change or rider entry. Uses public teleport each tick instead of direct position writes; remote prediction unverified. Server commands `/qolcarry boat`, `/qolcarry minecart`, `/qolcarry drop` work around missing client hit targets. |
+
+| Move Minecarts | Functional port | Sneak-right-click to carry the original entity two blocks ahead at eye height; stand then crouch to release. Moves the same entity without recreating it; cargo/passenger support depends on the runtime. Releases on disable, death, dimension change or rider entry. Uses public teleport each tick instead of direct position writes; remote prediction unverified. Server commands `/qolcarry boat`, `/qolcarry minecart`, `/qolcarry drop` work around missing client hit targets. |
+
+| Quick Paths | Functional port | Sneak-shovel selects a start; normal shovel click chooses the end; endpoint click restores created paths to grass. Staircase route up to 128 horizontal blocks, searches surface within ten vertical blocks, skips blocked columns and charges tool durability per converted block. Selection does not alter ground until completion; no five-minute undo expiry or plant clearance; runtime restart clears selections. |
 
 ## Outstanding 1:1 blockers
 

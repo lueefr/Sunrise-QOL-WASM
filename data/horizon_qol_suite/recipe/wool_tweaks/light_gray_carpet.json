@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "group": "carpet",
+  "pattern": [
+    "###",
+    "#$#",
+    "###"
+  ],
+  "key": {
+    "#": "#minecraft:wool_carpets",
+    "$": "minecraft:light_gray_dye"
+  },
+  "result": {
+    "id": "minecraft:light_gray_carpet",
+    "count": 8
+  },
+  "neoforge:conditions": [
+    {
+      "type": "horizon_qol_suite:wool_tweaks_enabled"
+    }
+  ]
+}

@@ -37,7 +37,7 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 [standalone sandbox workflow](https://github.com/lueefr/Sunrise-QOL-WASM/actions/workflows/sandbox.yml).
 
 ## Features
-**Checklist legend:** `[x]` means a matching implementation is present in the source archive, even if partial; `[ ]` means the behavior has not been ported. **No checked item has been certified as 1:1 or verified in-game.** Some entries require new Sunrise hooks.
+**Checklist legend:** `[x]` means a matching implementation is present in the source archive, even if partial; `[ ]` means the behavior has not been ported. **No checked item has been certified as 1:1. Selected real-game observations are recorded in docs/validation/.** Some entries require new Sunrise hooks.
 
 ### Bundle-inspired quality-of-life features
 
@@ -55,34 +55,34 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [x] Commands can apply enchantments above vanilla level limits *(partial: operators can run /enchant @s <enchantment> 6–255 on supported vanilla gear; standard lower levels and other selectors remain vanilla)*
 - [x] Bone meal supports additional plants and faster growth *(one-stage nether wart, registered modded age-based crops, cactus, sugar cane and vines; dispenser and gameplay parity pending)*
 - [x] Tamed companions follow their owners during command teleportation *(partial: capped scan of nearby owned, non-sitting, unleaded vanilla pets during /tp; no damage immunity, allay, or mounted-player parity yet)*
-- [ ] Metal equipment can be smelted back into materials
+- [x] Metal equipment can be smelted back into materials *(26 native Furnace Recycle recipes; enable and /reload)*
 - [x] Hoes can till and undo-till soil using the original six material-tier radii, crouching behavior, and durability costs *(Hoe Tweaks; crop break-speed replacement is now wired through the Sunrise break-speed event; some bush-block types and in-game parity remain unverified)*
 - [x] Undying totems can activate from inventory slots *(partial)*
 - [x] Farmland stays tilled after harvesting melons or pumpkins *(original 3×3 farmland check; gameplay validation pending)*
-- [ ] Kelp can be used as a fertilizer
-- [ ] Boats can be moved without breaking them
-- [ ] Minecarts can be repositioned without breaking them
+- [x] Kelp can be used as a fertilizer *(native growth helper on right click; consumes on successful use)*
+- [x] Boats can be moved without breaking them *(sneak-right-click to pick up, stand then crouch to release; `/qolcarry boat` and `/qolcarry drop` provide a server alternative)*
+- [x] Minecarts can be repositioned without breaking them *(same carrying controls; `/qolcarry minecart` provides a server alternative; native cargo support depends on the runtime)*
 - [ ] Animals can be tempted again without a waiting period
-- [ ] Slow-falling effects prevent accidental farmland trampling
+- [x] Slow-falling effects and Feather Falling boots prevent player farmland trampling *(equipment/effect snapshot each tick; mobs pending)*
 - [x] Drinking milk restores configurable hunger and saturation *(finished-consumption hook; gameplay validation pending)*
 - [x] Connected ore veins can be harvested together *(partial)*
-- [ ] Paths can be created across a selected route
+- [x] Paths can be created across a selected route *(Quick Paths: sneak-shovel start, normal shovel end, click end again to undo; maximum 128 blocks)*
 - [ ] Some utility blocks can be accessed without placing them
 - [ ] Fishing lines can be recast automatically after a catch
 - [x] Mature crops can be harvested with right click and automatically replanted *(Right Click Harvest; basic vanilla crops, sugar cane, cactus and age-based modded crops on farmland; Fortune through original loot tables, configurable hoe requirement, tiered radius, hunger and XP; API/gameplay parity pending)*
 - [x] Shulkers can return after a configurable respawn delay *(partial)*
 - [ ] Connected scaffolding drops are collected near the broken block
-- [ ] Allowed sleeping times can be adjusted
+- [x] Allowed sleeping times can be adjusted *(Sleep Sooner; configurable earliest time, default 12000)*
 - [x] Landing on hay bales can eliminate fall damage *(registered hay landing hook for players; gameplay validation pending)*
-- [ ] Used-up hand stacks refill from inventory automatically
+- [x] Used-up hand stacks refill from inventory automatically *(right-click use, both hands; matching item components from main inventory)*
 - [ ] Lapis lazuli can stay in an enchanting table for reuse
 - [x] Slime spawning can be disabled in superflat worlds *(partial; requires manual world confirmation)*
-- [ ] Mushrooms can be planted under bright surface conditions
-- [ ] Leggings protect players from sweet berry bush damage
+- [x] Mushrooms can be planted under bright surface conditions *(solid surface right-click; vanilla later survival checks)*
+- [x] Leggings protect players from sweet berry bush damage *(any nonempty leg slot; snapshot each tick)*
 - [x] Entire trees can be felled with accelerated leaf decay and replanting *(partial)*
 - [ ] Enchanting tables can function underwater with surrounding bookshelves
-- [ ] Village bells receive a crafting recipe
-- [ ] Wool crafting, dyeing, and string conversion become more flexible
+- [x] Village bells receive a crafting recipe *(enable and /reload)*
+- [x] Wool, carpets and beds can be dyed in the world and through crafting; one wool can become four strings *(Wool Tweaks; reload-dependent recipe admission, custom subclasses and multiplayer parity remain partial)*
 - [ ] Death drops can be protected inside a chest with equipment displayed
 - [x] Zombies can be prevented from breaking doors *(removes BreakDoor goal when zombies join; existing-mob and multiplayer tests pending)*
 
@@ -165,3 +165,7 @@ Original projects retain their own licensing and attribution requirements. Do no
 A passing WASM build and synthetic-host smoke test **do not** imply 1:1 gameplay parity. The PR and release workflows now also run the built mod against the real Sunrise `Game` world and player-break path; both the resulting block states and positive/negative cases are checked. The first suite tests Keep My Soil Tilled. Coverage and untested modules are recorded in `gameplay-evidence.json`. The release is blocked if this real-engine gate fails; other modules are not represented as verified until they gain equivalent cases. See [in-game validation](docs/GAMEPLAY-VALIDATION.md).
 
 The original First Join Message and Welcome Message options are now exposed in the suite UI: editable text and clickable HTTP(S) URLs, message colors, a per-world first-join broadcast, and dedicated-server gating. The Dismount Entity module also follows upstream success semantics without a passenger count cap. These are **source-level improvements**, not certified 1:1 gameplay parity.
+
+### Wool Tweaks recipes
+
+Enable **Wool Tweaks** in the QOL menu, then run `/reload` as the server operator to load its 49 recipes. Run `/reload` again after disabling it and after opening a world. Interaction dyeing follows the switch immediately. Recipe inputs, outputs and shapes match the original; recipe IDs use `horizon_qol_suite:wool_tweaks/`. This reload requirement differs from the original standalone mod. The same enable-then-`/reload` procedure applies to **Furnace Recycle** and **Village Bell Recipe**, also after entering a world.

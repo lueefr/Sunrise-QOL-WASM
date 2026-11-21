@@ -1,0 +1,175 @@
+{
+  "sdk": "94256510f74e6843754e0a93fd9e4da7e45b1056",
+  "kind": "actual-game-control-observations",
+  "module": "wool_tweaks",
+  "package_sha256": "84d326b1ed51362ee2f7e45f313ec36d0e83e54c1567fd479f58ab131687b4a5",
+  "observations": [
+    {
+      "case": "disabled",
+      "block": "minecraft:white_wool",
+      "dye_count": 8,
+      "passed": true
+    },
+    {
+      "case": "survival_wool_spends_one",
+      "block": "minecraft:red_wool",
+      "dye_count": 7,
+      "passed": true
+    },
+    {
+      "case": "same_color_spends_nothing",
+      "block": "minecraft:red_wool",
+      "dye_count": 8,
+      "passed": true
+    },
+    {
+      "case": "survival_carpet_spends_one",
+      "block": "minecraft:red_carpet",
+      "dye_count": 7,
+      "passed": true
+    },
+    {
+      "case": "creative_spends_nothing",
+      "block": "minecraft:red_wool",
+      "dye_count": 8,
+      "passed": true
+    },
+    {
+      "case": "adventure_dyeing_follows_original",
+      "block": "minecraft:red_wool",
+      "dye_count": 7,
+      "passed": true
+    },
+    {
+      "case": "unrelated_block",
+      "block": "minecraft:stone",
+      "dye_count": 8,
+      "passed": true
+    },
+    {
+      "case": "moss_carpet_is_not_colored_wool_carpet",
+      "block": "minecraft:moss_carpet",
+      "dye_count": 8,
+      "passed": true
+    },
+    {
+      "case": "offhand_survival_spends_one",
+      "block": "minecraft:red_wool",
+      "dye_count": 7,
+      "passed": true
+    },
+    {
+      "case": "bed_north_foot_creativeFalse_offhandFalse_sameFalse_occupiedFalse",
+      "states": [
+        "minecraft:red_bed[facing=north,occupied=false,part=foot]",
+        "minecraft:red_bed[facing=north,occupied=false,part=head]"
+      ],
+      "dye_count": 7,
+      "passed": true
+    },
+    {
+      "case": "bed_north_head_creativeFalse_offhandFalse_sameFalse_occupiedFalse",
+      "states": [
+        "minecraft:red_bed[facing=north,occupied=false,part=foot]",
+        "minecraft:red_bed[facing=north,occupied=false,part=head]"
+      ],
+      "dye_count": 7,
+      "passed": true
+    },
+    {
+      "case": "bed_south_foot_creativeFalse_offhandFalse_sameFalse_occupiedFalse",
+      "states": [
+        "minecraft:red_bed[facing=south,occupied=false,part=foot]",
+        "minecraft:red_bed[facing=south,occupied=false,part=head]"
+      ],
+      "dye_count": 7,
+      "passed": true
+    },
+    {
+      "case": "bed_south_head_creativeFalse_offhandFalse_sameFalse_occupiedFalse",
+      "states": [
+        "minecraft:red_bed[facing=south,occupied=false,part=foot]",
+        "minecraft:red_bed[facing=south,occupied=false,part=head]"
+      ],
+      "dye_count": 7,
+      "passed": true
+    },
+    {
+      "case": "bed_east_foot_creativeFalse_offhandFalse_sameFalse_occupiedFalse",
+      "states": [
+        "minecraft:red_bed[facing=east,occupied=false,part=foot]",
+        "minecraft:red_bed[facing=east,occupied=false,part=head]"
+      ],
+      "dye_count": 7,
+      "passed": true
+    },
+    {
+      "case": "bed_east_head_creativeFalse_offhandFalse_sameFalse_occupiedFalse",
+      "states": [
+        "minecraft:red_bed[facing=east,occupied=false,part=foot]",
+        "minecraft:red_bed[facing=east,occupied=false,part=head]"
+      ],
+      "dye_count": 7,
+      "passed": true
+    },
+    {
+      "case": "bed_west_foot_creativeFalse_offhandFalse_sameFalse_occupiedFalse",
+      "states": [
+        "minecraft:red_bed[facing=west,occupied=false,part=foot]",
+        "minecraft:red_bed[facing=west,occupied=false,part=head]"
+      ],
+      "dye_count": 7,
+      "passed": true
+    },
+    {
+      "case": "bed_west_head_creativeFalse_offhandFalse_sameFalse_occupiedFalse",
+      "states": [
+        "minecraft:red_bed[facing=west,occupied=false,part=foot]",
+        "minecraft:red_bed[facing=west,occupied=false,part=head]"
+      ],
+      "dye_count": 7,
+      "passed": true
+    },
+    {
+      "case": "bed_north_head_creativeTrue_offhandFalse_sameFalse_occupiedFalse",
+      "states": [
+        "minecraft:red_bed[facing=north,occupied=false,part=foot]",
+        "minecraft:red_bed[facing=north,occupied=false,part=head]"
+      ],
+      "dye_count": 8,
+      "passed": true
+    },
+    {
+      "case": "bed_west_foot_creativeFalse_offhandTrue_sameFalse_occupiedFalse",
+      "states": [
+        "minecraft:red_bed[facing=west,occupied=false,part=foot]",
+        "minecraft:red_bed[facing=west,occupied=false,part=head]"
+      ],
+      "dye_count": 7,
+      "passed": true
+    },
+    {
+      "case": "bed_east_head_creativeFalse_offhandFalse_sameTrue_occupiedFalse",
+      "states": [
+        "minecraft:red_bed[facing=east,occupied=false,part=foot]",
+        "minecraft:red_bed[facing=east,occupied=false,part=head]"
+      ],
+      "dye_count": 8,
+      "passed": true
+    },
+    {
+      "case": "bed_south_foot_creativeFalse_offhandFalse_sameFalse_occupiedTrue",
+      "states": [
+        "minecraft:red_bed[facing=south,occupied=true,part=foot]",
+        "minecraft:red_bed[facing=south,occupied=true,part=head]"
+      ],
+      "dye_count": 7,
+      "passed": true
+    }
+  ],
+  "fully_certified_one_to_one": false,
+  "limitations": [
+    "No original-mod differential run, multiplayer or custom species",
+    "Recipe changes are checked separately; occupied test uses synthetic block state, not a sleeping player"
+  ]
+}

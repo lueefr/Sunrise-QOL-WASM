@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:smelting",
+  "group": "iron_nugget",
+  "ingredient": "minecraft:rail",
+  "result": {
+    "id": "minecraft:iron_nugget",
+    "count": 1
+  },
+  "experience": 0.1,
+  "cookingtime": 200,
+  "neoforge:conditions": [
+    {
+      "type": "horizon_qol_suite:furnace_recycle_enabled"
+    }
+  ]
+}

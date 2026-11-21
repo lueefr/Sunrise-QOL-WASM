@@ -63,7 +63,7 @@ jobs:
       - name: Install Python and validate source
         run: python3 -m unittest discover -s tests -p 'test*.py' -v
 
-      - name: Export 44-module source parity coverage
+      - name: Export complete source parity coverage
         run: python3 tools/parity/report.py --output target/parity-coverage.json
 
       - name: Update manifests and release notes

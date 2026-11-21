@@ -310,6 +310,8 @@ const HANDS: &[OptionSpec] = &[
 
 // Only modules with actual hook implementations are listed.
 // Enchantment extraction will join Enchanting when a working hook is available.
+const SLEEP: &[OptionSpec] = &[range("sleep_start", "Earliest Sleep Time (ticks)", 12000., 0., 24000., 100.)];
+
 const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "unlimited_enchantments", label: "Enchantment Levels", options: UNLIMITED, category: Category::Enchanting },
     ModuleSpec { key: "enchant_command", label: "Extended Enchant Command", options: &[], category: Category::Enchanting },
@@ -318,6 +320,7 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "enchantment_level_indicator", label: "Max-Level Indicators", options: ENCHANT, category: Category::Enchanting },
     ModuleSpec { key: "ench_level_langpatch", label: "Level Formatting", options: LANGPATCH, category: Category::Enchanting },
     ModuleSpec { key: "inventory_totem", label: "Inventory Totems", options: &[], category: Category::Inventory },
+    ModuleSpec { key: "stack_refill", label: "Stack Refill", options: &[], category: Category::Inventory },
     ModuleSpec { key: "inventory_mending", label: "XP Item Repair", options: MENDING, category: Category::Inventory },
     ModuleSpec { key: "bottled_air", label: "Bottled Air", options: BOTTLED_AIR, category: Category::Inventory },
     ModuleSpec { key: "nutritious_milk", label: "Nutritious Milk", options: NUTRITIOUS_MILK, category: Category::Inventory },
@@ -330,6 +333,11 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "tree_harvester", label: "Tree Harvesting", options: TREE, category: Category::Gathering },
     ModuleSpec { key: "leaf_decay", label: "Leaf Decay", options: LEAF_DECAY, category: Category::Gathering },
     ModuleSpec { key: "extended_bonemeal", label: "Extended Bone Meal", options: BONEMEAL, category: Category::Gathering },
+    ModuleSpec { key: "furnace_recycle", label: "Furnace Recycle", options: &[], category: Category::Gathering },
+    ModuleSpec { key: "kelp_fertilizer", label: "Kelp Fertilizer", options: &[], category: Category::Gathering },
+    ModuleSpec { key: "surface_mushrooms", label: "Surface Mushrooms", options: &[], category: Category::Gathering },
+    ModuleSpec { key: "quick_paths", label: "Quick Paths", options: &[], category: Category::Gathering },
+    ModuleSpec { key: "wool_tweaks", label: "Wool Tweaks", options: &[], category: Category::Gathering },
     ModuleSpec { key: "hoe_tweaks", label: "Hoe Tweaks", options: HOE, category: Category::Gathering },
     ModuleSpec { key: "right_click_harvest", label: "Right Click Harvest", options: RIGHT_HARVEST, category: Category::Gathering },
     ModuleSpec { key: "double_doors", label: "Paired Doors", options: DOORS, category: Category::World },
@@ -337,10 +345,16 @@ const MODULES: &[ModuleSpec] = &[
     ModuleSpec { key: "zombie_proof_doors", label: "Zombie-Proof Doors", options: &[], category: Category::World },
     ModuleSpec { key: "beacon_placement", label: "Beacon Placement", options: BEACON, category: Category::World },
     ModuleSpec { key: "conduit_placement", label: "Conduit Placement", options: CONDUIT, category: Category::World },
+    ModuleSpec { key: "no_feather_trample", label: "No Feather Trample", options: &[], category: Category::World },
+    ModuleSpec { key: "thorny_bush_protection", label: "Thorny Bush Protection", options: &[], category: Category::World },
+    ModuleSpec { key: "village_bell_recipe", label: "Village Bell Recipe", options: &[], category: Category::World },
+    ModuleSpec { key: "sleep_sooner", label: "Sleep Sooner", options: SLEEP, category: Category::World },
     ModuleSpec { key: "keep_soil_tilled", label: "Keep Soil Tilled", options: &[], category: Category::World },
     ModuleSpec { key: "softer_hay_bales", label: "Softer Hay Bales", options: &[], category: Category::World },
     ModuleSpec { key: "spawner_control", label: "Spawner Control", options: &[], category: Category::World },
     ModuleSpec { key: "cycle_paintings", label: "Painting Cycling", options: &[], category: Category::World },
+    ModuleSpec { key: "move_boats", label: "Move Boats", options: &[], category: Category::World },
+    ModuleSpec { key: "move_minecarts", label: "Move Minecarts", options: &[], category: Category::World },
     ModuleSpec { key: "dismount_entity", label: "Passenger Removal", options: DISMOUNT, category: Category::World },
     ModuleSpec { key: "ground_elytra_fireworks", label: "Ground Elytra Fireworks", options: ELYTRA, category: Category::World },
     ModuleSpec { key: "followers_teleport", label: "Followers Teleport Too", options: FOLLOWERS, category: Category::World },

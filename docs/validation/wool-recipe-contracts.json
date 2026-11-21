@@ -1,0 +1,305 @@
+{
+  "kind": "source-recipe-structure-comparison",
+  "repository": "Serilum/Wool-Tweaks",
+  "ref": "26.3.0",
+  "recipe_count": 49,
+  "matching": 49,
+  "comparison": "Parsed recipe JSON matches the original after removing only our module-admission neoforge:conditions. File names and recipe IDs use our namespace.",
+  "certified_one_to_one": false,
+  "rows": [
+    {
+      "recipe": "black_bed.json",
+      "upstream": "black_bed_from_bed.json",
+      "sha": "c9f70b7fc27e70b6227b5d600cc9314f6f230db7",
+      "matched": true
+    },
+    {
+      "recipe": "black_carpet.json",
+      "upstream": "black_carpet_from_carpet.json",
+      "sha": "225d75a591fc49da36f793e508ad0ef276ea51c2",
+      "matched": true
+    },
+    {
+      "recipe": "black_wool.json",
+      "upstream": "black_wool.json",
+      "sha": "ab38f39a9358f5ddcb3e0fe7b7b31781891c0795",
+      "matched": true
+    },
+    {
+      "recipe": "blue_bed.json",
+      "upstream": "blue_bed_from_bed.json",
+      "sha": "9ad8fc961e640ca0d8ab535629d9cf0504a5c97f",
+      "matched": true
+    },
+    {
+      "recipe": "blue_carpet.json",
+      "upstream": "blue_carpet_from_carpet.json",
+      "sha": "697042f7956c9b489f97847c0993ed7234515364",
+      "matched": true
+    },
+    {
+      "recipe": "blue_wool.json",
+      "upstream": "blue_wool.json",
+      "sha": "397e28de79ce72de53ef7bdbcac9cf709c6ebcb6",
+      "matched": true
+    },
+    {
+      "recipe": "brown_bed.json",
+      "upstream": "brown_bed_from_bed.json",
+      "sha": "562ec8ce9edf0a7ea6a4937d24fca5e3a6e44676",
+      "matched": true
+    },
+    {
+      "recipe": "brown_carpet.json",
+      "upstream": "brown_carpet_from_carpet.json",
+      "sha": "ba00368f3e5acb745aa398c79817ebd81c05fdf8",
+      "matched": true
+    },
+    {
+      "recipe": "brown_wool.json",
+      "upstream": "brown_wool.json",
+      "sha": "74a0427b2d6d6c04f0671aaef21f81fd7b1ad8ec",
+      "matched": true
+    },
+    {
+      "recipe": "cyan_bed.json",
+      "upstream": "cyan_bed_from_bed.json",
+      "sha": "44652c3ce8791b4c9f20a5f1bcca0f6c19a6d801",
+      "matched": true
+    },
+    {
+      "recipe": "cyan_carpet.json",
+      "upstream": "cyan_carpet_from_carpet.json",
+      "sha": "a58dbbb7d9ed3f1917aa9ccd925b49b2d4bd68c5",
+      "matched": true
+    },
+    {
+      "recipe": "cyan_wool.json",
+      "upstream": "cyan_wool.json",
+      "sha": "994669abc0f354fffb02a67e834e4b9a7ec640c9",
+      "matched": true
+    },
+    {
+      "recipe": "gray_bed.json",
+      "upstream": "gray_bed_from_bed.json",
+      "sha": "899002ddc560c4bc69e19aa9bf6eaf07d1a5b5c3",
+      "matched": true
+    },
+    {
+      "recipe": "gray_carpet.json",
+      "upstream": "gray_carpet_from_carpet.json",
+      "sha": "693b8dc3c921534dac4c30fad2773f2a9e199ab5",
+      "matched": true
+    },
+    {
+      "recipe": "gray_wool.json",
+      "upstream": "gray_wool.json",
+      "sha": "13016d2df916bf10a5d5ec6b2a0c9245307b4552",
+      "matched": true
+    },
+    {
+      "recipe": "green_bed.json",
+      "upstream": "green_bed_from_bed.json",
+      "sha": "98e2c21054beabb7475366a1d24655528e627817",
+      "matched": true
+    },
+    {
+      "recipe": "green_carpet.json",
+      "upstream": "green_carpet_from_carpet.json",
+      "sha": "1fcc0280b6935df756e80bde03fd3a3ef5b56fd6",
+      "matched": true
+    },
+    {
+      "recipe": "green_wool.json",
+      "upstream": "green_wool.json",
+      "sha": "920e3a2c1f0120e1f8f9f5c893d8def117c0aaad",
+      "matched": true
+    },
+    {
+      "recipe": "light_blue_bed.json",
+      "upstream": "light_blue_bed_from_bed.json",
+      "sha": "34820ddb4ed32b37341cc67dafdb0593a5e6c334",
+      "matched": true
+    },
+    {
+      "recipe": "light_blue_carpet.json",
+      "upstream": "light_blue_carpet_from_carpet.json",
+      "sha": "058ddcf51f734df51645107dba3437fdae67ae30",
+      "matched": true
+    },
+    {
+      "recipe": "light_blue_wool.json",
+      "upstream": "light_blue_wool.json",
+      "sha": "43c608fa215e114f4b205474d8b3b6df1583842d",
+      "matched": true
+    },
+    {
+      "recipe": "light_gray_bed.json",
+      "upstream": "light_gray_bed_from_bed.json",
+      "sha": "811ed67fb84d0a034c35952ac833fd43e80ba06c",
+      "matched": true
+    },
+    {
+      "recipe": "light_gray_carpet.json",
+      "upstream": "light_gray_carpet_from_carpet.json",
+      "sha": "1b9b209899519df24a8d01e42b1d2f6960c34b0e",
+      "matched": true
+    },
+    {
+      "recipe": "light_gray_wool.json",
+      "upstream": "light_gray_wool.json",
+      "sha": "e448a946ca971755957742bf6d6fdf0b17f9f036",
+      "matched": true
+    },
+    {
+      "recipe": "lime_bed.json",
+      "upstream": "lime_bed_from_bed.json",
+      "sha": "343c7d910b362aa3025e5a3eb19114790c6ec24c",
+      "matched": true
+    },
+    {
+      "recipe": "lime_carpet.json",
+      "upstream": "lime_carpet_from_carpet.json",
+      "sha": "a86468730a56725f3d05bc3deabd5c8b2d7f7e09",
+      "matched": true
+    },
+    {
+      "recipe": "lime_wool.json",
+      "upstream": "lime_wool.json",
+      "sha": "42068c7bee0df4ebe42e40631dc9493852c8de7e",
+      "matched": true
+    },
+    {
+      "recipe": "magenta_bed.json",
+      "upstream": "magenta_bed_from_bed.json",
+      "sha": "51d6206ae2e1dec619faa9305d6463c09eec5e3a",
+      "matched": true
+    },
+    {
+      "recipe": "magenta_carpet.json",
+      "upstream": "magenta_carpet_from_carpet.json",
+      "sha": "bb2f1b87ca6d8b2d6df545f773ededfb7dd323a8",
+      "matched": true
+    },
+    {
+      "recipe": "magenta_wool.json",
+      "upstream": "magenta_wool.json",
+      "sha": "03c51df22de2df550e13bc8814e973dedb172ad7",
+      "matched": true
+    },
+    {
+      "recipe": "orange_bed.json",
+      "upstream": "orange_bed_from_bed.json",
+      "sha": "374ee8933a86e5d5237b13cc2fa926b8f90e6ad9",
+      "matched": true
+    },
+    {
+      "recipe": "orange_carpet.json",
+      "upstream": "orange_carpet_from_carpet.json",
+      "sha": "f8468f012f2d53fb611bcb4b21426052811d8a23",
+      "matched": true
+    },
+    {
+      "recipe": "orange_wool.json",
+      "upstream": "orange_wool.json",
+      "sha": "e3ce5a7432fb3d7b3c91397718c75dd06adeb820",
+      "matched": true
+    },
+    {
+      "recipe": "pink_bed.json",
+      "upstream": "pink_bed_from_bed.json",
+      "sha": "7639e1302c61c56d3294f0271f3f58b45a8ec756",
+      "matched": true
+    },
+    {
+      "recipe": "pink_carpet.json",
+      "upstream": "pink_carpet_from_carpet.json",
+      "sha": "b599480ba9253994fd7979c0549e544f855940e9",
+      "matched": true
+    },
+    {
+      "recipe": "pink_wool.json",
+      "upstream": "pink_wool.json",
+      "sha": "61cbfb38cf7d7a2c46e79d1734c426b013f168a3",
+      "matched": true
+    },
+    {
+      "recipe": "purple_bed.json",
+      "upstream": "purple_bed_from_bed.json",
+      "sha": "db1bd8b733bb3d6bf4c4838e48db99ba473b11cb",
+      "matched": true
+    },
+    {
+      "recipe": "purple_carpet.json",
+      "upstream": "purple_carpet_from_carpet.json",
+      "sha": "ca982f076e6b2c89d96ec3ec299be0e3092e42ee",
+      "matched": true
+    },
+    {
+      "recipe": "purple_wool.json",
+      "upstream": "purple_wool.json",
+      "sha": "6959790dc8d6bc8f85483f2e3a43ce11cf86e9eb",
+      "matched": true
+    },
+    {
+      "recipe": "red_bed.json",
+      "upstream": "red_bed_from_bed.json",
+      "sha": "f9124bcc2307c1b0e480d9071366916ce649edca",
+      "matched": true
+    },
+    {
+      "recipe": "red_carpet.json",
+      "upstream": "red_carpet_from_carpet.json",
+      "sha": "50fa153ca39cc7f0459627021e0094f38edb3725",
+      "matched": true
+    },
+    {
+      "recipe": "red_wool.json",
+      "upstream": "red_wool.json",
+      "sha": "525d573c47b6c5969d0c2ae3c6f632e067db6ce3",
+      "matched": true
+    },
+    {
+      "recipe": "white_bed.json",
+      "upstream": "white_bed_from_bed.json",
+      "sha": "827dbb89dc09d65f7ac94d09dc09fac085392719",
+      "matched": true
+    },
+    {
+      "recipe": "white_carpet.json",
+      "upstream": "white_carpet_from_carpet.json",
+      "sha": "88b05dec8887ad510f2c01fb7f4b1c8f24d6dd12",
+      "matched": true
+    },
+    {
+      "recipe": "white_wool.json",
+      "upstream": "white_wool.json",
+      "sha": "fbc6a7cd7298b74db43d554d3cf47ec1af10ddec",
+      "matched": true
+    },
+    {
+      "recipe": "wool_to_string.json",
+      "upstream": "wool_to_string.json",
+      "sha": "68d544d81e3165cea108c0f41033729353acba72",
+      "matched": true
+    },
+    {
+      "recipe": "yellow_bed.json",
+      "upstream": "yellow_bed_from_bed.json",
+      "sha": "9f09b61966460a80a54b5e9ce930fe576690154e",
+      "matched": true
+    },
+    {
+      "recipe": "yellow_carpet.json",
+      "upstream": "yellow_carpet_from_carpet.json",
+      "sha": "bab926083be59051a01b5fc277c2062ed5ba6ed3",
+      "matched": true
+    },
+    {
+      "recipe": "yellow_wool.json",
+      "upstream": "yellow_wool.json",
+      "sha": "1a4a71828d318a86d533d57ae581cbbf1b77dcb1",
+      "matched": true
+    }
+  ]
+}

@@ -1,0 +1,171 @@
+{
+  "scenarios": [
+    {
+      "case": "furnace_recycle_off",
+      "passed": true,
+      "response": {
+        "chat": [
+          "Unknown recipe: horizon_qol_suite:furnace_recycle/smelt_bucket"
+        ],
+        "ok": true,
+        "result": 0,
+        "success": false
+      }
+    },
+    {
+      "case": "furnace_recycle_on",
+      "passed": true,
+      "response": {
+        "chat": [
+          "Unlocked 1 recipe(s) for Player84087"
+        ],
+        "ok": true,
+        "result": 1,
+        "success": true
+      }
+    },
+    {
+      "case": "village_bell_recipe_off",
+      "passed": true,
+      "response": {
+        "chat": [
+          "Unknown recipe: horizon_qol_suite:village_bell_recipe/bell"
+        ],
+        "ok": true,
+        "result": 0,
+        "success": false
+      }
+    },
+    {
+      "case": "village_bell_recipe_on",
+      "passed": true,
+      "response": {
+        "chat": [
+          "Unlocked 1 recipe(s) for Player84087"
+        ],
+        "ok": true,
+        "result": 1,
+        "success": true
+      }
+    },
+    {
+      "case": "bucket_smelted",
+      "passed": true,
+      "items": [
+        "21, 91, 0 has the following block data: [{count: 1, Slot: 1b, id: \"minecraft:coal\"}, {count: 2, Slot: 2b, id: \"minecraft:iron_ingot\"}]"
+      ]
+    },
+    {
+      "case": "kelp_grows_wheat",
+      "passed": true,
+      "state": {
+        "block": "minecraft:wheat",
+        "loaded": true,
+        "pos": [
+          20,
+          91,
+          1
+        ],
+        "state": "minecraft:wheat[age=5]"
+      },
+      "counts": {
+        "minecraft:kelp": 1
+      }
+    },
+    {
+      "case": "kelp_invalid_no_consumption",
+      "passed": true
+    },
+    {
+      "case": "leggings_block_berry",
+      "passed": true,
+      "response": {
+        "chat": [
+          "Target is invulnerable to the given damage type"
+        ],
+        "ok": true,
+        "result": 0,
+        "success": false
+      }
+    },
+    {
+      "case": "bare_legs_take_berry",
+      "passed": true,
+      "response": {
+        "chat": [
+          "Applied 1.0 damage to Player84087"
+        ],
+        "ok": true,
+        "result": 1,
+        "success": true
+      }
+    },
+    {
+      "case": "leggings_do_not_block_other_damage",
+      "passed": true,
+      "response": {
+        "chat": [
+          "Applied 1.0 damage to Player84087"
+        ],
+        "ok": true,
+        "result": 1,
+        "success": true
+      }
+    },
+    {
+      "case": "disabled_protection_vanilla_damage",
+      "passed": true,
+      "response": {
+        "chat": [
+          "Applied 1.0 damage to Player84087"
+        ],
+        "ok": true,
+        "result": 1,
+        "success": true
+      }
+    },
+    {
+      "case": "feather_falling_preserves_farmland",
+      "passed": true,
+      "state": {
+        "block": "minecraft:farmland",
+        "loaded": true,
+        "pos": [
+          25,
+          90,
+          0
+        ],
+        "state": "minecraft:farmland[moisture=7]"
+      }
+    },
+    {
+      "case": "slow_falling_preserves_farmland",
+      "passed": true,
+      "state": {
+        "block": "minecraft:farmland",
+        "loaded": true,
+        "pos": [
+          26,
+          90,
+          0
+        ],
+        "state": "minecraft:farmland[moisture=7]"
+      }
+    },
+    {
+      "case": "unprotected_farmland_tramples",
+      "passed": true,
+      "state": {
+        "block": "minecraft:dirt",
+        "loaded": true,
+        "pos": [
+          27,
+          90,
+          0
+        ],
+        "state": "minecraft:dirt"
+      }
+    }
+  ],
+  "package_sha256": "441296622e147a28cba9af55bbb69b43d3e6ce32b45859d48d2b80d21e6aff4e"
+}
