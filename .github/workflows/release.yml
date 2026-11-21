@@ -139,7 +139,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          cp target/sunrise-mod/horizon_qol_suite.smod "dist/Sunrise-QOL-$VERSION.smod"
+          cp target/sunrise-mod/sunrise_qol.smod "dist/Sunrise-QOL-$VERSION.smod"
           (cd dist && sha256sum *.smod > SHA256SUMS.txt)
       - name: Commit version and tag only after a successful build
         if: steps.publish.outputs.build == 'true'
