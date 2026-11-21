@@ -108,7 +108,7 @@ class ProjectTests(unittest.TestCase):
         gui = (ROOT / 'src/gui.rs').read_text()
         hooks = (ROOT / 'src/lib.rs').read_text()
         for statement in (
-            '"open_ui", "qol.config.open", ["qol.config.open.value"], 0',
+            '"open_ui", "qol.config.open", ["qol.config.open.value", "qol.config.open.value"], 0',
             'SettingSpec::choice(',
         ):
             self.assertIn(statement, settings)
@@ -121,6 +121,29 @@ class ProjectTests(unittest.TestCase):
         self.assertIn('host.observed_screen_id()', gui)
         self.assertNotIn('Config(i)', gui)
         self.assertNotIn('mouse Config coordinates', gui)
+
+    def test_reopen_and_tooltips(self):
+        settings = (ROOT / 'src/settings.rs').read_text()
+        gui = (ROOT / 'src/gui.rs').read_text()
+        self.assertIn('["qol.config.open.value", "qol.config.open.value"]', settings)
+        self.assertIn('self.overlay.store(true, Ordering::Relaxed)', gui)
+        self.assertIn('fn module_info(key: &str)', gui)
+        self.assertIn('fn option_info(module: &ModuleSpec, option: OptionSpec)', gui)
+        self.assertIn('self.hint([x, y, w - 6., 20.], module_info(module.key))', gui)
+        self.assertIn('option_info(module, *opt)', gui)
+        self.assertIn('screen.hovered(event.screen.mouse)', gui)
+        self.assertIn('event.draw.gui_tooltip(&[Text::literal(hint)]', gui)
+        self.assertLess(gui.index('let _ = event.draw.pop_clip()'),
+                        gui.index('event.draw.gui_tooltip('))
+
+    def test_simple_module_label_and_button_both_switch(self):
+        gui = (ROOT / 'src/gui.rs').read_text()
+        self.assertIn('let simple = module.options.is_empty();', gui)
+        self.assertIn('if simple { Action::Switch(module.key, false) } else { Action::Expand(index) }', gui)
+        self.assertIn('if simple { module.label.to_owned() } else', gui)
+        self.assertIn('if open && !simple {', gui)
+        self.assertIn('if active { "ON" } else { "OFF" }', gui)
+        self.assertNotIn('No Additional Options', gui)
 
     def test_overlay_hides_native_options_rendering(self):
         gui = (ROOT / 'src/gui.rs').read_text()
@@ -302,6 +325,15 @@ class DurabilityRegressionTests(unittest.TestCase):
         self.assertIn('host.tags().is_in_tag(item, key)', src)
         self.assertIn('r.item_part_tag(tag, Protect)', src)
         self.assertIn('fn allowlist_keeps_wear_for_ids_and_tags()', src)
+
+    def test_copper_armor_and_spears_are_protected(self):
+        src = (ROOT / 'src/durability.rs').read_text()
+        self.assertIn('"wooden", "stone", "copper", "iron"', src)
+        self.assertIn('"sword", "spear", "pickaxe", "axe", "shovel", "hoe"', src)
+        self.assertIn('"leather", "chainmail", "copper", "iron"', src)
+        self.assertIn('event.amount = 0;', src)
+        self.assertIn('Flow::Cancel', src)
+        self.assertIn('on(host, "what_durability")', src)
 
     def test_anvil_cost_changes_only_after_upgrading(self):
         src = (ROOT / 'src/unlimited.rs').read_text()
