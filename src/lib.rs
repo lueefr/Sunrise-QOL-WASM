@@ -44,6 +44,7 @@ mod zombie;
 mod right_harvest;
 mod hoe;
 mod wool;
+mod wool_recipes;
 
 use mod_api::{
     AnvilUpdateEvent, BlockChangedEvent, LevelHost, ClientHost, EntityJoinLevelEvent, EntityLeaveLevelEvent,
@@ -90,6 +91,10 @@ impl Hooks for SunriseQol {
         zoom::register(r);
         durability::register(r);
         soft_hay::register(r);
+    }
+
+    fn register_load_conditions(&self, _: &RegistrationContext, event: &mut mod_api::RegisterLoadConditionsEvent<'_>) {
+        wool_recipes::register(event);
     }
 
     fn setting_changed(&self, host: &mut dyn ClientHost, event: &mut SettingChangedEvent<'_>) {
@@ -221,10 +226,12 @@ impl Hooks for SunriseQol {
     fn server_started(&self, host: &mut dyn ServerHost, event: &mut ServerStartedEvent) {
         messages::started(event);
         soft_hay::refresh(host);
+        wool_recipes::refresh(host);
     }
 
     fn server_tick(&self, host: &mut dyn ServerHost, event: &mut ServerTickEvent<'_>) {
         soft_hay::refresh(host);
+        wool_recipes::refresh(host);
         self.decay.tick(host, event);
         self.doors.tick(host, event);
         self.automatic_doors.tick(host, event);
@@ -307,6 +314,7 @@ impl Hooks for SunriseQol {
         self.wither_skulls.reset();
         self.dragon_drops.reset();
         soft_hay::reset();
+        wool_recipes::reset();
         messages::reset();
     }
 

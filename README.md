@@ -82,7 +82,7 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [x] Entire trees can be felled with accelerated leaf decay and replanting *(partial)*
 - [ ] Enchanting tables can function underwater with surrounding bookshelves
 - [ ] Village bells receive a crafting recipe
-- [x] Wool and colored carpets can be dyed in the world *(Wool Tweaks, initial: bed dyeing and crafting/string conversion remain pending)*
+- [x] Wool, carpets and beds can be dyed in the world and through crafting; one wool can become four strings *(Wool Tweaks; reload-dependent recipe admission, custom subclasses and multiplayer parity remain partial)*
 - [ ] Death drops can be protected inside a chest with equipment displayed
 - [x] Zombies can be prevented from breaking doors *(removes BreakDoor goal when zombies join; existing-mob and multiplayer tests pending)*
 
@@ -165,3 +165,7 @@ Original projects retain their own licensing and attribution requirements. Do no
 A passing WASM build and synthetic-host smoke test **do not** imply 1:1 gameplay parity. The PR and release workflows now also run the built mod against the real Sunrise `Game` world and player-break path; both the resulting block states and positive/negative cases are checked. The first suite tests Keep My Soil Tilled. Coverage and untested modules are recorded in `gameplay-evidence.json`. The release is blocked if this real-engine gate fails; other modules are not represented as verified until they gain equivalent cases. See [in-game validation](docs/GAMEPLAY-VALIDATION.md).
 
 The original First Join Message and Welcome Message options are now exposed in the suite UI: editable text and clickable HTTP(S) URLs, message colors, a per-world first-join broadcast, and dedicated-server gating. The Dismount Entity module also follows upstream success semantics without a passenger count cap. These are **source-level improvements**, not certified 1:1 gameplay parity.
+
+### Wool Tweaks recipes
+
+Enable **Wool Tweaks** in the QOL menu, then run `/reload` as the server operator to load its 49 recipes. Run `/reload` again after disabling it and after opening a world. Interaction dyeing follows the switch immediately. Recipe inputs, outputs and shapes match the original; recipe IDs use `horizon_qol_suite:wool_tweaks/`. This reload requirement differs from the original standalone mod and remains a parity limitation.

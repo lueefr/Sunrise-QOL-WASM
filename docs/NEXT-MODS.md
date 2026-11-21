@@ -6,9 +6,11 @@ The next batch starts after PR #8 merged at `c91a584ce82903f20c2cd50e4085f3ac21b
 
 Reference: [26.3.0 WoolClickEvent](https://github.com/Serilum/Wool-Tweaks/blob/26.3.0/Common/src/main/java/com/serilum/wooltweaks/events/WoolClickEvent.java).
 
-Initial implementation: wool-tag blocks and the sixteen vanilla colored carpets, vanilla dyes, both hands, one dye consumed outside creative, same-color no-op, swing and continued vanilla interaction. The module starts OFF. Inventory-write refusal attempts to restore the original block.
+Implemented: wool-tag blocks and sixteen vanilla colored carpets/beds, both hands, one dye outside creative, same-color no-op, swing and continued vanilla interaction. Beds retain facing and occupied state; head is removed before foot, then partner placed before clicked half, following the original update order. A removal already performed by a neighbor update is accepted as a no-op. Both halves are checked before modification; a malformed/missing pair is not repaired as the source might do. Block/inventory refusal attempts to restore the original pair using suppressed neighbor-shape updates, but cannot undo external callbacks or guarantee rollback after a second refusal.
 
-Next: beds (both halves, facing and occupied state), crafting recipes, wool-to-string conversion, runtime custom carpet/bed class classification, and client prediction. Permission checks can differ from the source's unconditional callback. Actual block writes do not participate in the inventory transaction API; failure rollback is best effort and cannot undo external callbacks.
+All 49 recipe definitions are independently constructed from the original behavior and structurally match its parsed JSON. Native vanilla serializers handle grid matching, ingredient consumption, remainders, display and server synchronization. Our admission condition is the only added recipe JSON field. Names/IDs use our namespace; see `validation/wool-recipe-contracts.json` for original blob hashes.
+
+The module starts OFF. **Run `/reload` after enabling/disabling recipes and after opening a world.** The load-condition gate cannot read private settings during startup admission; its state is refreshed on server start/ticks. This requirement differs from the standalone mod. Do not claim full 1:1. Custom carpet/bed class classification, an actually sleeping player's state, multiplayer prediction, cross-mod callbacks and failure rollback remain pending.
 
 ## Thorny Bush Protection
 

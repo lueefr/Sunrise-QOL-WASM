@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "group": "wool",
+  "ingredients": [
+    "#minecraft:wool",
+    "minecraft:orange_dye"
+  ],
+  "result": {
+    "id": "minecraft:orange_wool"
+  },
+  "neoforge:conditions": [
+    {
+      "type": "horizon_qol_suite:wool_tweaks_enabled"
+    }
+  ]
+}
