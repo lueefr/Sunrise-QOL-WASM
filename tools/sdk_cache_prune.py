@@ -10,7 +10,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 SHA = re.compile(r"[0-9a-f]{40}\Z")
-KINDS = ("cli", "sdk", "std", "runtime")
+KINDS = ("cli", "sdk", "std", "runtime", "loader")
 
 
 def outdated(caches: list[dict], revision: str, platform: str) -> list[int]:
