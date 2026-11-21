@@ -138,6 +138,29 @@ class ReleasePolicyTests(unittest.TestCase):
             finally:
                 release.ROOT = root
 
+    def test_release_finishes_with_assets_after_validation(self):
+        workflow = (SCRIPT.parents[1] / ".github/workflows/release.yml").read_text()
+        self.assertIn("branches: [main]", workflow)
+        self.assertIn("python3 tools/release.py plan", workflow)
+        self.assertIn("python3 tools/release.py stamp", workflow)
+        self.assertIn("uses: ./.github/actions/validate", workflow)
+        self.assertIn("sha256sum *.smod > SHA256SUMS.txt", workflow)
+        self.assertIn("gh release create", workflow)
+        self.assertIn("gh release upload", workflow)
+        self.assertIn("grep -Fxq 'SHA256SUMS.txt'", workflow)
+        self.assertIn("Resuming incomplete release", workflow)
+        self.assertLess(workflow.index("Compile and verify the mod in Sunrise"),
+                        workflow.index("Package release artifacts"))
+        self.assertLess(workflow.index("Package release artifacts"),
+                        workflow.index("Commit version and tag only after a successful build"))
+        self.assertLess(workflow.index("Commit version and tag only after a successful build"),
+                        workflow.index("Publish release and changelog"))
+        self.assertEqual(release.next_version((1, 1, 3)), (1, 1, 4))
+
+    def test_non_code_build_inputs_trigger_versioning(self):
+        for name in ("data", "licenses", "tools/parity", ".github/actions/validate"):
+            self.assertIn(name, release.MOD_PATHS)
+
     def test_documentation_only_does_not_count(self):
         root = release.ROOT
         with tempfile.TemporaryDirectory() as directory:
