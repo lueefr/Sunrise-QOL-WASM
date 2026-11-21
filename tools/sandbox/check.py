@@ -66,16 +66,46 @@ def verify_harvest_tags(package: Path) -> dict:
     }
 
 
+def verify_identity(package: Path) -> dict:
+    """The renamed mod must bundle no obsolete resource or recipe namespace."""
+    with ZipFile(package) as archive:
+        files = set(archive.namelist())
+        required = {
+            "assets/sunrise_qol/lang/en_us.json",
+            "assets/sunrise_qol/lang/pt_br.json",
+            "data/sunrise_qol/recipe/wool_tweaks/black_wool.json",
+        }
+        missing = sorted(required - files)
+        legacy = sorted(name for name in files
+                        if name.startswith(("assets/horizon_qol_suite/",
+                                            "data/horizon_qol_suite/")))
+        recipes = [name for name in files
+                   if name.startswith("data/sunrise_qol/recipe/") and name.endswith(".json")]
+        wrong = [name for name in recipes
+                 if b'"horizon_qol_suite:' in archive.read(name)
+                 or b'"sunrise_qol:' not in archive.read(name)]
+    return {
+        "missing_namespaced_files": missing,
+        "legacy_namespaced_files": legacy,
+        "wrong_recipe_conditions": sorted(wrong),
+        "namespaced_recipe_count": len(recipes),
+        "identity_passed": not missing and not legacy and not wrong and len(recipes) == 76,
+    }
+
+
 def main() -> None:
     if len(sys.argv) != 3:
         sys.exit("Usage: python tools/sandbox/check.py package.smod sunrise-wasm-std.wasm")
     result = verify(Path(sys.argv[1]), Path(sys.argv[2]))
     result.update(verify_harvest_tags(Path(sys.argv[1])))
+    result.update(verify_identity(Path(sys.argv[1])))
     print(json.dumps(result, indent=2))
     if not result["passed"]:
         sys.exit("Unresolved Rust symbols: the .smod is incompatible with this std member")
     if not result["harvest_tags_passed"]:
         sys.exit("The .smod does not contain all original Right Click Harvest tags")
+    if not result["identity_passed"]:
+        sys.exit("The .smod still has legacy namespaces or missing Sunrise QOL assets")
 
 
 if __name__ == "__main__":
