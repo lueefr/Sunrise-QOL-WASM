@@ -44,7 +44,16 @@ def migrate(game: Path, root: Path) -> int:
     for source in sources:
         if source.is_symlink() or not source.is_dir():
             continue
-        for name in sorted(names):
+        owned = names
+        if source == old_private:
+            # The private store may include unlisted keys (e.g. itemsWithDurability).
+            # Preserve user data without allowing paths outside the new mod folder.
+            extra = {entry.name for entry in source.iterdir()
+                     if entry.is_file() and not entry.is_symlink()
+                     and re.fullmatch(r"[A-Za-z0-9_.-]+", entry.name)
+                     and entry.name not in (".", "..")}
+            owned = names | extra
+        for name in sorted(owned):
             moved += copy_value(source / name, target / name)
     # Preserve the former Tree Harvester leaf-decay setting if it has not been set.
     new_key = target / "accelerateleafdecay"
