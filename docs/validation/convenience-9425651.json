@@ -1,0 +1,451 @@
+{
+  "scenarios": [
+    {
+      "case": "last_placed_block_refills",
+      "passed": true,
+      "inventory": {
+        "armor": [
+          {
+            "item": null,
+            "part": "head",
+            "slot": 500
+          },
+          {
+            "item": null,
+            "part": "chest",
+            "slot": 501
+          },
+          {
+            "item": null,
+            "part": "legs",
+            "slot": 502
+          },
+          {
+            "item": null,
+            "part": "feet",
+            "slot": 503
+          }
+        ],
+        "carried": null,
+        "counts": {
+          "minecraft:stone": 10
+        },
+        "held": {
+          "count": 10,
+          "item": "minecraft:stone"
+        },
+        "hotbar": [
+          {
+            "count": 10,
+            "item": "minecraft:stone",
+            "slot": 0
+          },
+          {
+            "item": null,
+            "slot": 1
+          },
+          {
+            "item": null,
+            "slot": 2
+          },
+          {
+            "item": null,
+            "slot": 3
+          },
+          {
+            "item": null,
+            "slot": 4
+          },
+          {
+            "item": null,
+            "slot": 5
+          },
+          {
+            "item": null,
+            "slot": 6
+          },
+          {
+            "item": null,
+            "slot": 7
+          },
+          {
+            "item": null,
+            "slot": 8
+          }
+        ],
+        "main": [
+          {
+            "item": null,
+            "slot": 9
+          },
+          {
+            "item": null,
+            "slot": 10
+          },
+          {
+            "item": null,
+            "slot": 11
+          },
+          {
+            "item": null,
+            "slot": 12
+          },
+          {
+            "item": null,
+            "slot": 13
+          },
+          {
+            "item": null,
+            "slot": 14
+          },
+          {
+            "item": null,
+            "slot": 15
+          },
+          {
+            "item": null,
+            "slot": 16
+          },
+          {
+            "item": null,
+            "slot": 17
+          },
+          {
+            "item": null,
+            "slot": 18
+          },
+          {
+            "item": null,
+            "slot": 19
+          },
+          {
+            "item": null,
+            "slot": 20
+          },
+          {
+            "item": null,
+            "slot": 21
+          },
+          {
+            "item": null,
+            "slot": 22
+          },
+          {
+            "item": null,
+            "slot": 23
+          },
+          {
+            "item": null,
+            "slot": 24
+          },
+          {
+            "item": null,
+            "slot": 25
+          },
+          {
+            "item": null,
+            "slot": 26
+          },
+          {
+            "item": null,
+            "slot": 27
+          },
+          {
+            "item": null,
+            "slot": 28
+          },
+          {
+            "item": null,
+            "slot": 29
+          },
+          {
+            "item": null,
+            "slot": 30
+          },
+          {
+            "item": null,
+            "slot": 31
+          },
+          {
+            "item": null,
+            "slot": 32
+          },
+          {
+            "item": null,
+            "slot": 33
+          },
+          {
+            "item": null,
+            "slot": 34
+          },
+          {
+            "item": null,
+            "slot": 35
+          }
+        ],
+        "offhand": {
+          "item": null,
+          "slot": 504
+        },
+        "selected": 1
+      }
+    },
+    {
+      "case": "disabled_refill_leaves_hand_empty",
+      "passed": true,
+      "inventory": {
+        "armor": [
+          {
+            "item": null,
+            "part": "head",
+            "slot": 500
+          },
+          {
+            "item": null,
+            "part": "chest",
+            "slot": 501
+          },
+          {
+            "item": null,
+            "part": "legs",
+            "slot": 502
+          },
+          {
+            "item": null,
+            "part": "feet",
+            "slot": 503
+          }
+        ],
+        "carried": null,
+        "counts": {},
+        "held": null,
+        "hotbar": [
+          {
+            "item": null,
+            "slot": 0
+          },
+          {
+            "item": null,
+            "slot": 1
+          },
+          {
+            "item": null,
+            "slot": 2
+          },
+          {
+            "item": null,
+            "slot": 3
+          },
+          {
+            "item": null,
+            "slot": 4
+          },
+          {
+            "item": null,
+            "slot": 5
+          },
+          {
+            "item": null,
+            "slot": 6
+          },
+          {
+            "item": null,
+            "slot": 7
+          },
+          {
+            "item": null,
+            "slot": 8
+          }
+        ],
+        "main": [
+          {
+            "item": null,
+            "slot": 9
+          },
+          {
+            "item": null,
+            "slot": 10
+          },
+          {
+            "item": null,
+            "slot": 11
+          },
+          {
+            "item": null,
+            "slot": 12
+          },
+          {
+            "item": null,
+            "slot": 13
+          },
+          {
+            "item": null,
+            "slot": 14
+          },
+          {
+            "item": null,
+            "slot": 15
+          },
+          {
+            "item": null,
+            "slot": 16
+          },
+          {
+            "item": null,
+            "slot": 17
+          },
+          {
+            "item": null,
+            "slot": 18
+          },
+          {
+            "item": null,
+            "slot": 19
+          },
+          {
+            "item": null,
+            "slot": 20
+          },
+          {
+            "item": null,
+            "slot": 21
+          },
+          {
+            "item": null,
+            "slot": 22
+          },
+          {
+            "item": null,
+            "slot": 23
+          },
+          {
+            "item": null,
+            "slot": 24
+          },
+          {
+            "item": null,
+            "slot": 25
+          },
+          {
+            "item": null,
+            "slot": 26
+          },
+          {
+            "item": null,
+            "slot": 27
+          },
+          {
+            "item": null,
+            "slot": 28
+          },
+          {
+            "item": null,
+            "slot": 29
+          },
+          {
+            "item": null,
+            "slot": 30
+          },
+          {
+            "item": null,
+            "slot": 31
+          },
+          {
+            "item": null,
+            "slot": 32
+          },
+          {
+            "item": null,
+            "slot": 33
+          },
+          {
+            "item": null,
+            "slot": 34
+          },
+          {
+            "item": null,
+            "slot": 35
+          }
+        ],
+        "offhand": {
+          "item": null,
+          "slot": 504
+        },
+        "selected": 1
+      }
+    },
+    {
+      "case": "bright_surface_mushroom",
+      "passed": true,
+      "state": {
+        "block": "minecraft:red_mushroom",
+        "loaded": true,
+        "pos": [
+          20,
+          91,
+          1
+        ],
+        "state": "minecraft:red_mushroom"
+      }
+    },
+    {
+      "case": "disabled_bright_mushroom_rejected",
+      "passed": true,
+      "state": {
+        "block": "minecraft:air",
+        "loaded": true,
+        "pos": [
+          20,
+          91,
+          1
+        ],
+        "state": "minecraft:air"
+      }
+    },
+    {
+      "case": "too_early_no_clock_advance",
+      "passed": true,
+      "time": 11000
+    },
+    {
+      "case": "early_bed_advances_to_dusk",
+      "passed": true,
+      "time": 12540
+    },
+    {
+      "case": "move_boats_carried_same_entity",
+      "passed": true,
+      "position": [
+        "Oak Boat has the following entity data: [26.5d, 92.62000000476837d, 2.5d]"
+      ],
+      "uuid": [
+        "Oak Boat has the following entity data: [I; 754453226, 703350695, -1690963311, 80157138]"
+      ]
+    },
+    {
+      "case": "move_boats_released",
+      "passed": true,
+      "position": [
+        "Oak Boat has the following entity data: [26.63049999741465d, 92.38000000476836d, 2.5d]"
+      ]
+    },
+    {
+      "case": "move_minecarts_carried_same_entity",
+      "passed": true,
+      "position": [
+        "Minecart has the following entity data: [26.5d, 92.62000000476837d, 2.5d]"
+      ],
+      "uuid": [
+        "Minecart has the following entity data: [I; -1105325406, 963726026, -1551708281, 513966674]"
+      ]
+    },
+    {
+      "case": "move_minecarts_released",
+      "passed": true,
+      "position": [
+        "Minecart has the following entity data: [26.5d, 92.38790000662803d, 2.5d]"
+      ]
+    }
+  ],
+  "package_sha256": "8df488113f38d88331561172135162f5e62e2054aa5ca67752e8143449c3ec30"
+}

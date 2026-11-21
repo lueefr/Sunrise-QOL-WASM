@@ -58,6 +58,26 @@ installer to stop before replacing the installed mod.
 | Unlimited Enchantments | Partial | Combines equal-level enchantments at anvil when vanilla made output, up to 255; not a registry or enchantment-table patch |
 | Affordable Anvil | Initial | Modifies existing anvil output; cannot recreate result already rejected by vanilla |
 
+| Furnace Recycle | Functional port | 26 native smelting recipes, vanilla cooking, XP and inventory handling. Enable then /reload; repeat after world entry. Recipe IDs use this suite namespace. |
+
+| Village Bell Recipe | Functional port | Native 3x3 logs, stone and gold-block recipe. Enable then /reload, including after world entry. |
+
+| Kelp Fertilizer | Functional port | Right-click kelp invokes native growth and consumes one on successful use outside creative. Native dispenser-style helper differs on failed random attempts; dispenser kelp behavior is not overridden. |
+
+| No Feather Trample | Functional port | Players with Feather Falling boots or Slow Falling cannot trample farmland. Previous server tick snapshot; mobs and same-tick equipment changes are not covered. |
+
+| Thorny Bush Protection | Functional port | Players wearing any nonempty leg-slot stack ignore sweet berry bush damage while keeping slowing. Previous server tick equipment snapshot; damage commands with that source also suppressed. |
+
+| Stack Refill | Functional port | After right-click use empties a hand, move matching item/components from main inventory, preferring slot 35 downward. Both hands; selection changes cancel; three-second pending window. Tool break without use and container remainder replacement not covered. |
+
+| Sleep Sooner | Functional port | Bed right-click advances the clock to dusk from configurable start (12000 default); later start delays bed access. Uses native clock update and normal sleep checks; original randomized pre-sleep messages omitted. |
+
+| Surface Mushrooms | Functional port | Right-click a solid surface with a vanilla mushroom to plant above it without the placement light limit. Both hands, one item outside creative, refuses occupied positions; normal later survival/random ticks remain vanilla. |
+
+| Move Boats | Functional port | Sneak-right-click to carry the original entity two blocks ahead at eye height; stand then crouch to release. Moves the same entity without recreating it; cargo/passenger support depends on the runtime. Releases on disable, death, dimension change or rider entry. Uses public teleport each tick instead of direct position writes; remote prediction unverified. Server commands `/qolcarry boat`, `/qolcarry minecart`, `/qolcarry drop` work around missing client hit targets. |
+
+| Move Minecarts | Functional port | Sneak-right-click to carry the original entity two blocks ahead at eye height; stand then crouch to release. Moves the same entity without recreating it; cargo/passenger support depends on the runtime. Releases on disable, death, dimension change or rider entry. Uses public teleport each tick instead of direct position writes; remote prediction unverified. Server commands `/qolcarry boat`, `/qolcarry minecart`, `/qolcarry drop` work around missing client hit targets. |
+
 ## Outstanding 1:1 blockers
 
 - **Full Brightness Toggle:** the pinned public Sunrise WASM client API exposes neither

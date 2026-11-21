@@ -22,7 +22,7 @@ class ThirdBatchTests(unittest.TestCase):
         checks = re.findall(r"^- \[([ x])\] (.*)$", block, re.M)
         index = next(i for i, (_, line) in enumerate(checks) if line.startswith("Commands can apply enchantments"))
         self.assertEqual([v for v, _ in checks[index:index + 3]], ["x", "x", "x"])
-        self.assertEqual(checks[index + 3][0], " ")
+        self.assertEqual(checks[index + 3][0], "x")
 
     def test_enchant_permission_and_limits(self):
         for term in ('"enchant_command"', 'permission_level(host).unwrap_or(0) < 2',

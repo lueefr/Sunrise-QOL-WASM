@@ -45,6 +45,12 @@ mod right_harvest;
 mod hoe;
 mod wool;
 mod wool_recipes;
+mod kelp;
+mod plant_protection;
+mod refill;
+mod sleep;
+mod mushrooms;
+mod move_vehicles;
 
 use mod_api::{
     AnvilUpdateEvent, BlockChangedEvent, LevelHost, ClientHost, EntityJoinLevelEvent, EntityLeaveLevelEvent,
@@ -65,6 +71,9 @@ use mod_api::{
 
 #[derive(Default)]
 pub struct SunriseQol {
+    plant_protection: plant_protection::Protection,
+    refill: refill::Refill,
+    vehicles: move_vehicles::Vehicles,
     mining: mining::Mining,
     decay: decay::Decay,
     villagers: grief::Villagers,
@@ -95,6 +104,17 @@ impl Hooks for SunriseQol {
 
     fn register_load_conditions(&self, _: &RegistrationContext, event: &mut mod_api::RegisterLoadConditionsEvent<'_>) {
         wool_recipes::register(event);
+    }
+
+    fn register_commands(&self, _: &mut dyn ServerHost, event: &mut mod_api::RegisterCommandsEvent<'_>) {
+        for usage in ["qolcarry boat", "qolcarry minecart", "qolcarry drop"] {
+            event.commands.push(mod_api::Command::new(usage));
+        }
+    }
+
+    fn run_mod_command(&self, host: &mut dyn ServerHost, event: &mut mod_api::RunModCommandEvent<'_>) -> Flow {
+        let mod_api::CommandSource::Player { player, .. } = event.source else { return Flow::Continue; };
+        self.vehicles.command(host, player.uuid(), &event.command.literals.join(" "))
     }
 
     fn setting_changed(&self, host: &mut dyn ClientHost, event: &mut SettingChangedEvent<'_>) {
@@ -157,13 +177,17 @@ impl Hooks for SunriseQol {
     fn right_click_item(&self, side: HostSide<'_>, event: &mut RightClickItemEvent<'_>) -> Flow {
         match side {
             HostSide::Client(host) => self.elytra.clicked(HostSide::Client(host), event),
-            HostSide::Server(host) => bottled_air::use_bottle(HostSide::Server(host), event),
+            HostSide::Server(host) => {
+                self.refill.arm(host, event.click.hand, Some(event.click.stack));
+                bottled_air::use_bottle(HostSide::Server(host), event)
+            },
         }
     }
 
     fn entity_interact(&self, side: HostSide<'_>, event: &mut EntityInteractEvent<'_>) -> Option<InteractionResult> {
         let HostSide::Server(host) = side else { return None; };
         if let Some(answer) = painting::interact(host, event) { return Some(answer); }
+        if let Some(answer) = self.vehicles.click(host, event) { return Some(answer); }
         dismount::interact(host, event)
     }
 
@@ -177,6 +201,10 @@ impl Hooks for SunriseQol {
             HostSide::Server(host) => host,
         };
         wool::click(host, event);
+        self.refill.arm(host, event.click.hand, event.click.stack);
+        if sleep::click(host, event) == Flow::Cancel { return Flow::Cancel; }
+        if mushrooms::click(host, event) == Flow::Cancel { return Flow::Cancel; }
+        if kelp::click(host, event) == Flow::Cancel { return Flow::Cancel; }
         if hoe::click(host, event) == Flow::Cancel { return Flow::Cancel; }
         if self.beacon.click(host, event) == Flow::Cancel { return Flow::Cancel; }
         if self.conduit.click(host, event) == Flow::Cancel { return Flow::Cancel; }
@@ -230,6 +258,9 @@ impl Hooks for SunriseQol {
     }
 
     fn server_tick(&self, host: &mut dyn ServerHost, event: &mut ServerTickEvent<'_>) {
+        self.plant_protection.tick(host, event);
+        self.refill.tick(host, event);
+        self.vehicles.tick(host, event);
         soft_hay::refresh(host);
         wool_recipes::refresh(host);
         self.decay.tick(host, event);
@@ -259,6 +290,14 @@ impl Hooks for SunriseQol {
 
     fn living_damage_post(&self, _: &mut dyn HitHost, event: &mut LivingDamagePostEvent<'_>) {
         self.dragon_drops.damage(event);
+    }
+
+    fn living_incoming_damage(&self, _: &mut dyn HitHost, event: &mut mod_api::LivingIncomingDamageEvent<'_>) -> Flow {
+        self.plant_protection.damage(event)
+    }
+
+    fn farmland_trample(&self, _: &dyn mod_api::LoopContext, event: &mut mod_api::FarmlandTrampleEvent) -> Flow {
+        self.plant_protection.trample(event)
     }
 
     fn living_death(&self, host: &mut dyn ServerHost, event: &mut LivingDeathEvent<'_>) -> Flow {
@@ -315,6 +354,9 @@ impl Hooks for SunriseQol {
         self.dragon_drops.reset();
         soft_hay::reset();
         wool_recipes::reset();
+        self.plant_protection.reset();
+        self.refill.reset();
+        self.vehicles.reset();
         messages::reset();
     }
 

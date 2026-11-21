@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "LLL",
+    "SGS",
+    "S S"
+  ],
+  "key": {
+    "L": "#minecraft:logs",
+    "G": "minecraft:gold_block",
+    "S": "minecraft:stone"
+  },
+  "result": {
+    "id": "minecraft:bell",
+    "count": 1
+  },
+  "neoforge:conditions": [
+    {
+      "type": "horizon_qol_suite:village_bell_recipe_enabled"
+    }
+  ]
+}

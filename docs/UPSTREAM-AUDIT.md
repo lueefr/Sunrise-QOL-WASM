@@ -36,3 +36,7 @@ This is a **behavioral** comparison against published original Java sources, not
 - Keep all modules disabled by default, preserve existing stored settings and leave Sound Controller / Individual Sounds excluded.
 
 See [PARITY.md](PARITY.md) for the full module-by-module backlog.
+
+## Functional ports (equivalence scope)
+
+The user relaxed literal parity to equivalent behavior. Independent implementations now cover Furnace Recycle (26 recipe contracts in validation/furnace-recipe-contracts.json), Village Bell Recipe, Kelp Fertilizer, Thorny Bush Protection, No Feather Trample, Stack Refill, Sleep Sooner, Surface Mushrooms, Move Boats and Move Minecarts. Reference branches are Serilum 26.3.0; relevant event/mixin paths were read, not incorporated. Exact API differences remain in PARITY.md. The original code is not copied.

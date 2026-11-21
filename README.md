@@ -55,15 +55,15 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [x] Commands can apply enchantments above vanilla level limits *(partial: operators can run /enchant @s <enchantment> 6–255 on supported vanilla gear; standard lower levels and other selectors remain vanilla)*
 - [x] Bone meal supports additional plants and faster growth *(one-stage nether wart, registered modded age-based crops, cactus, sugar cane and vines; dispenser and gameplay parity pending)*
 - [x] Tamed companions follow their owners during command teleportation *(partial: capped scan of nearby owned, non-sitting, unleaded vanilla pets during /tp; no damage immunity, allay, or mounted-player parity yet)*
-- [ ] Metal equipment can be smelted back into materials
+- [x] Metal equipment can be smelted back into materials *(26 native Furnace Recycle recipes; enable and /reload)*
 - [x] Hoes can till and undo-till soil using the original six material-tier radii, crouching behavior, and durability costs *(Hoe Tweaks; crop break-speed replacement is now wired through the Sunrise break-speed event; some bush-block types and in-game parity remain unverified)*
 - [x] Undying totems can activate from inventory slots *(partial)*
 - [x] Farmland stays tilled after harvesting melons or pumpkins *(original 3×3 farmland check; gameplay validation pending)*
-- [ ] Kelp can be used as a fertilizer
-- [ ] Boats can be moved without breaking them
-- [ ] Minecarts can be repositioned without breaking them
+- [x] Kelp can be used as a fertilizer *(native growth helper on right click; consumes on successful use)*
+- [x] Boats can be moved without breaking them *(sneak-right-click to pick up, stand then crouch to release; `/qolcarry boat` and `/qolcarry drop` provide a server alternative)*
+- [x] Minecarts can be repositioned without breaking them *(same carrying controls; `/qolcarry minecart` provides a server alternative; native cargo support depends on the runtime)*
 - [ ] Animals can be tempted again without a waiting period
-- [ ] Slow-falling effects prevent accidental farmland trampling
+- [x] Slow-falling effects and Feather Falling boots prevent player farmland trampling *(equipment/effect snapshot each tick; mobs pending)*
 - [x] Drinking milk restores configurable hunger and saturation *(finished-consumption hook; gameplay validation pending)*
 - [x] Connected ore veins can be harvested together *(partial)*
 - [ ] Paths can be created across a selected route
@@ -72,16 +72,16 @@ See [sandbox design and limitations](docs/SANDBOX.md) or run the
 - [x] Mature crops can be harvested with right click and automatically replanted *(Right Click Harvest; basic vanilla crops, sugar cane, cactus and age-based modded crops on farmland; Fortune through original loot tables, configurable hoe requirement, tiered radius, hunger and XP; API/gameplay parity pending)*
 - [x] Shulkers can return after a configurable respawn delay *(partial)*
 - [ ] Connected scaffolding drops are collected near the broken block
-- [ ] Allowed sleeping times can be adjusted
+- [x] Allowed sleeping times can be adjusted *(Sleep Sooner; configurable earliest time, default 12000)*
 - [x] Landing on hay bales can eliminate fall damage *(registered hay landing hook for players; gameplay validation pending)*
-- [ ] Used-up hand stacks refill from inventory automatically
+- [x] Used-up hand stacks refill from inventory automatically *(right-click use, both hands; matching item components from main inventory)*
 - [ ] Lapis lazuli can stay in an enchanting table for reuse
 - [x] Slime spawning can be disabled in superflat worlds *(partial; requires manual world confirmation)*
-- [ ] Mushrooms can be planted under bright surface conditions
-- [ ] Leggings protect players from sweet berry bush damage
+- [x] Mushrooms can be planted under bright surface conditions *(solid surface right-click; vanilla later survival checks)*
+- [x] Leggings protect players from sweet berry bush damage *(any nonempty leg slot; snapshot each tick)*
 - [x] Entire trees can be felled with accelerated leaf decay and replanting *(partial)*
 - [ ] Enchanting tables can function underwater with surrounding bookshelves
-- [ ] Village bells receive a crafting recipe
+- [x] Village bells receive a crafting recipe *(enable and /reload)*
 - [x] Wool, carpets and beds can be dyed in the world and through crafting; one wool can become four strings *(Wool Tweaks; reload-dependent recipe admission, custom subclasses and multiplayer parity remain partial)*
 - [ ] Death drops can be protected inside a chest with equipment displayed
 - [x] Zombies can be prevented from breaking doors *(removes BreakDoor goal when zombies join; existing-mob and multiplayer tests pending)*
@@ -168,4 +168,4 @@ The original First Join Message and Welcome Message options are now exposed in t
 
 ### Wool Tweaks recipes
 
-Enable **Wool Tweaks** in the QOL menu, then run `/reload` as the server operator to load its 49 recipes. Run `/reload` again after disabling it and after opening a world. Interaction dyeing follows the switch immediately. Recipe inputs, outputs and shapes match the original; recipe IDs use `horizon_qol_suite:wool_tweaks/`. This reload requirement differs from the original standalone mod and remains a parity limitation.
+Enable **Wool Tweaks** in the QOL menu, then run `/reload` as the server operator to load its 49 recipes. Run `/reload` again after disabling it and after opening a world. Interaction dyeing follows the switch immediately. Recipe inputs, outputs and shapes match the original; recipe IDs use `horizon_qol_suite:wool_tweaks/`. This reload requirement differs from the original standalone mod. The same enable-then-`/reload` procedure applies to **Furnace Recycle** and **Village Bell Recipe**, also after entering a world.

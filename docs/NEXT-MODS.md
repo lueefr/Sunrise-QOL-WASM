@@ -12,13 +12,17 @@ All 49 recipe definitions are independently constructed from the original behavi
 
 The module starts OFF. **Run `/reload` after enabling/disabling recipes and after opening a world.** The load-condition gate cannot read private settings during startup admission; its state is refreshed on server start/ticks. This requirement differs from the standalone mod. Do not claim full 1:1. Custom carpet/bed class classification, an actually sleeping player's state, multiplayer prediction, cross-mod callbacks and failure rollback remain pending.
 
+## Functional ports after the scope change
+
+The user now accepts equivalent behavior through available APIs, without literal 1:1. Thorny Bush Protection and No Feather Trample use per-tick player snapshots; Kelp Fertilizer uses the native growth helper. These are implemented and their observed gameplay cases are in `validation/cultivation-9425651.json`. The sections below describe strict upstream differences, not current implementation blockers.
+
 ## Thorny Bush Protection
 
 References: [SweetBerryBushMixin](https://github.com/Serilum/Thorny-Bush-Protection/blob/26.3.0/Common/src/main/java/com/serilum/thornybushprotection/mixin/SweetBerryBushMixin.java), [Util](https://github.com/Serilum/Thorny-Bush-Protection/blob/26.3.0/Common/src/main/java/com/serilum/thornybushprotection/util/Util.java), [ConfigHandler](https://github.com/Serilum/Thorny-Bush-Protection/blob/26.3.0/Common/src/main/java/com/serilum/thornybushprotection/config/ConfigHandler.java), branch 26.3.0.
 
 Required behavior: interrupt only the berry bush's own hurt call for players, with `negateBushDamageForPlayers=true`; by default any nonempty LEGS stack qualifies, not a suffix check for a leggings item. Preserve slowing and all other damage.
 
-SDK integration pending: a block's `entity_inside` Part cannot suppress its vanilla hurt call, and hit hosts do not lend the victim's live equipment as ServerHost does. Cancelling every `sweet_berry_bush` damage source would also affect commands and other mods, unlike the original. Equipment cached from the preceding tick can be stale and is not an exact substitute. No misleading working toggle is exposed.
+SDK integration pending: a block's `entity_inside` Part cannot suppress its vanilla hurt call, and hit hosts do not lend the victim's live equipment as ServerHost does. Cancelling every `sweet_berry_bush` damage source would also affect commands and other mods, unlike the original. Equipment cached from the preceding tick can be stale and is not an exact substitute. The functional adaptation is now exposed; its broader damage-source cancellation and snapshot timing are documented.
 
 ## No Feather Trample
 

@@ -7,6 +7,19 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 NAMES = {
+    "move_boats": "Move Boats",
+    "move_minecarts": "Move Minecarts",
+
+    "stack_refill": "Stack Refill",
+    "sleep_sooner": "Sleep Sooner",
+    "surface_mushrooms": "Surface Mushrooms",
+
+    "furnace_recycle": "Furnace Recycle",
+    "kelp_fertilizer": "Kelp Fertilizer",
+    "no_feather_trample": "No Feather Trample",
+    "thorny_bush_protection": "Thorny Bush Protection",
+    "village_bell_recipe": "Village Bell Recipe",
+
     "wool_tweaks": "Wool Tweaks",
     "unlimited_enchantments": "Unlimited Enchantments",
     "enchant_command": "Extended Enchant Command",
